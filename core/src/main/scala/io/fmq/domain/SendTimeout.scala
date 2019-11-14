@@ -26,7 +26,7 @@ object SendTimeout {
   def fromInt(value: Int): SendTimeout = value match {
     case -1    => Infinity
     case 0     => NoDelay
-    case other => FixedTimeout(FiniteDuration(other, TimeUnit.MILLISECONDS))
+    case other => FixedTimeout(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
   }
 
 }

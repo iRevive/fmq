@@ -33,7 +33,7 @@ object Linger {
   def fromInt(value: Int): Linger = value match {
     case -1    => Infinity
     case 0     => Immediately
-    case other => FixedTimeout(FiniteDuration(other, TimeUnit.MILLISECONDS))
+    case other => FixedTimeout(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
   }
 
 }

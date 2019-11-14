@@ -10,7 +10,7 @@ To use ƒMQ in an existing SBT project with Scala 2.12 or a later version, add t
  
 ```scala
 libraryDependencies ++= Seq(
-  "io.irevive" %% "fmq-core" % "<version>"
+  "io.github.irevive" %% "fmq-core" % "<version>"
 )
 ```
 

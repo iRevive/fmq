@@ -26,7 +26,7 @@ object ReceiveTimeout {
   def fromInt(value: Int): ReceiveTimeout = value match {
     case -1    => WaitUntilAvailable
     case 0     => NoDelay
-    case other => FixedTimeout(FiniteDuration(other, TimeUnit.MILLISECONDS))
+    case other => FixedTimeout(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
   }
 
 }

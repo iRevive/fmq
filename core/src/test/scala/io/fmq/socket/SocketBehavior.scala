@@ -6,10 +6,11 @@ import io.fmq.domain.{Identity, Linger, ReceiveTimeout, SendTimeout}
 import io.fmq.socket.SocketBehavior.MkSocket
 import io.fmq.socket.internal.SocketApi
 import io.fmq.{Context, IOSpec}
+import org.scalatest.Inside
 
 import scala.concurrent.duration._
 
-trait SocketBehavior {
+trait SocketBehavior extends Inside {
   self: IOSpec =>
 
   private[fmq] def supportedOperations[A <: SocketApi[IO]](mkSocket: MkSocket[A]): Unit = {
@@ -65,7 +66,9 @@ trait SocketBehavior {
       for {
         identity1 <- socket.setIdentity(identity) >> socket.identity
       } yield {
-        identity1 shouldBe identity
+        inside(identity1) {
+          case Identity.Fixed(value) => value should not be empty
+        }
       }
     }
 
