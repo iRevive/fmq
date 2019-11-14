@@ -1,6 +1,6 @@
 # ƒMQ
 [![Build Status](https://travis-ci.org/iRevive/fmq.svg?branch=master)](https://travis-ci.org/iRevive/fmq?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/iRevive/fmq/badge.svg?branch=master)](https://coveralls.io/github/iRevive/fmq?branch=master)
+[![codecov](https://codecov.io/gh/iRevive/fmq/branch/master/graph/badge.svg)](https://codecov.io/gh/iRevive/fmq)
 
 Functional library for ZeroMQ built-in on top of [cats-effect](https://github.com/typelevel/cats-effect) and [JeroMQ](https://github.com/zeromq/jeromq).
 
