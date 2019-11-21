@@ -1,27 +1,22 @@
 package io.fmq
 package socket
 
-import cats.Applicative
-import cats.effect.Resource
-import io.fmq.domain.{Address, SubscribeTopic}
-import io.fmq.socket.internal.{ConnectedSocket, ReceiveApi, Socket, SocketApi}
+import cats.effect.{Blocker, ContextShift, Resource, Sync}
+import cats.syntax.functor._
+import io.fmq.domain.Protocol.tcp
+import io.fmq.domain.SubscribeTopic
+import io.fmq.socket.api.ReceiveOptions
+import io.fmq.socket.internal.Bind
+import org.zeromq.ZMQ
 
-final class Subscriber[F[_]: Applicative] private[fmq] (
+final class Subscriber[F[_]: ContextShift, H[_]: Sync] private[fmq] (
     val topic: SubscribeTopic,
-    val socket: Socket[F]
-) extends SocketApi[F] {
+    protected val socket: ZMQ.Socket,
+    blocker: Blocker
+)(implicit protected val F: Sync[F])
+    extends ReceiveOptions[F] {
 
-  def connect(address: Address.Const): Resource[F, Subscriber.Connected[F]] =
-    for {
-      connected <- socket.connect(address)
-    } yield new Subscriber.Connected(connected)
-
-}
-
-object Subscriber {
-
-  final class Connected[F[_]](connectedSocket: ConnectedSocket[F]) extends SocketApi[F] with ReceiveApi[F] {
-    override protected def socket: Socket[F] = connectedSocket.socket
-  }
+  def connect(protocol: tcp.HostPort): Resource[F, ConsumerSocket[H]] =
+    Bind.connect[F](protocol, socket, blocker).as(new ConsumerSocket[H](socket, protocol.port))
 
 }

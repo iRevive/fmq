@@ -11,7 +11,7 @@ object SendTimeout {
   /**
     * Does not send message and does not wait if the message cannot be send
     */
-  final case object NoDelay extends SendTimeout(0)
+  final case object Immediately extends SendTimeout(0)
 
   /**
     * Block until the message is sent
@@ -21,12 +21,12 @@ object SendTimeout {
   /**
     * Try to send the message for that amount of time before returning error
     */
-  final case class FixedTimeout(duration: FiniteDuration) extends SendTimeout(duration.toMillis.toInt)
+  final case class Fixed(duration: FiniteDuration) extends SendTimeout(duration.toMillis.toInt)
 
   def fromInt(value: Int): SendTimeout = value match {
     case -1    => Infinity
-    case 0     => NoDelay
-    case other => FixedTimeout(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
+    case 0     => Immediately
+    case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
   }
 
 }

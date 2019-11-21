@@ -1,5 +1,4 @@
-package io.fmq
-package socket
+package io.fmq.socket
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
@@ -8,18 +7,18 @@ import io.fmq.socket.api.SendOptions
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
 
-final class Publisher[F[_]: ContextShift, H[_]: Sync] private[fmq] (
+final class Pull[F[_]: ContextShift, H[_]: Sync] private[fmq] (
     protected val socket: ZMQ.Socket,
     blocker: Blocker
 )(implicit protected val F: Sync[F])
     extends SendOptions[F] {
 
-  def bind(protocol: tcp.HostPort): Resource[F, ProducerSocket[H]] =
-    Bind.bind[F](protocol, socket, blocker).as(new ProducerSocket(socket, protocol.port))
+  def bind(protocol: tcp.HostPort): Resource[F, ConsumerSocket[H]] =
+    Bind.bind[F](protocol, socket, blocker).as(new ConsumerSocket(socket, protocol.port))
 
-  def bindToRandomPort(protocol: tcp.Host): Resource[F, ProducerSocket[H]] =
+  def bindToRandomPort(protocol: tcp.Host): Resource[F, ConsumerSocket[H]] =
     for {
       port <- Bind.bindToRandomPort[F](protocol, socket, blocker)
-    } yield new ProducerSocket(socket, port)
+    } yield new ConsumerSocket(socket, port)
 
 }

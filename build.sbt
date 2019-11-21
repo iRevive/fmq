@@ -14,6 +14,15 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= Dependencies.core
   )
 
+lazy val bench = (project in file("bench"))
+  .settings(commonSettings)
+  .settings(commandSettings)
+  .settings(
+    name                := s"${Settings.name}-bench",
+    libraryDependencies += Dependencies.fs2
+  )
+  .dependsOn(core)
+
 lazy val docs = project
   .in(file("docs"))
   .enablePlugins(MicrositesPlugin)
@@ -23,7 +32,7 @@ lazy val docs = project
   .dependsOn(core)
   .settings(
     micrositeName           := "fmq",
-    micrositeDescription    := "fMQ - Functional ZeroMQ library",
+    micrositeDescription    := "Functional ZeroMQ library",
     micrositeAuthor         := "Maksim Ochenashko",
     micrositeGithubOwner    := "iRevive",
     micrositeGithubRepo     := "fmq",
@@ -54,9 +63,10 @@ lazy val docs = project
       file("LICENSE") -> ExtraMdFileConfig(
         "license.md",
         "page",
-        Map("title" -> "license", "section" -> "license", "position" -> "101")
+        Map("title" -> "License", "section" -> "license", "position" -> "101")
       )
-    )
+    ),
+    libraryDependencies += Dependencies.fs2
   )
 
 lazy val commonSettings = Seq(

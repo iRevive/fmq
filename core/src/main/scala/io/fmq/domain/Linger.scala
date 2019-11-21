@@ -28,12 +28,12 @@ object Linger {
     * attempting to terminate the socket's context with Ctx#term() shall block until either all pending messages
     * have been sent to a peer, or the linger period expires, after which any pending messages shall be discarded.
     */
-  final case class FixedTimeout(duration: FiniteDuration) extends Linger(duration.toMillis.toInt)
+  final case class Fixed(duration: FiniteDuration) extends Linger(duration.toMillis.toInt)
 
   def fromInt(value: Int): Linger = value match {
     case -1    => Infinity
     case 0     => Immediately
-    case other => FixedTimeout(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
+    case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
   }
 
 }
