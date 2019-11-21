@@ -5,6 +5,8 @@ import cats.effect.laws.discipline.SyncTests
 import cats.effect.laws.util.TestInstances
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
+import cats.laws.discipline.SemigroupalTests
+import cats.laws.discipline.SemigroupalTests.Isomorphisms
 import org.scalacheck.{Arbitrary, Cogen, Gen}
 import org.scalatest.FunSuite
 import org.scalatestplus.scalacheck.Checkers
@@ -15,6 +17,8 @@ import scala.concurrent.ExecutionContext
 class ConnectionIOSpec extends FunSuite with Checkers with TestInstances {
 
   import ConnectionIOSpec.ConnectionIOScalaCheckInstances._
+
+  implicit val iso: SemigroupalTests.Isomorphisms[ConnectionIO] = Isomorphisms.invariant(Connection.connectionIOSync)
 
   checkAll("ConnectionIO", SyncTests[ConnectionIO].sync[Int, Int, Int])
 
