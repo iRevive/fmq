@@ -7,5 +7,5 @@ collections:
   tut:
     output: true
 version: 0.0.1
-org: docs
+org: io.github.irevive
 markdown: kramdown
