@@ -1,10 +1,5 @@
 import sbt._
 
-object Settings {
-  val organization = "io.github.irevive"
-  val name         = "fmq"
-}
-
 object Versions {
   val scala_212  = "2.12.10"
   val scala_213  = "2.13.1"
