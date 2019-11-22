@@ -33,14 +33,15 @@ lazy val docs = project
   .settings(noPublishSettings)
   .dependsOn(core)
   .settings(
-    micrositeName           := "fmq",
-    micrositeDescription    := "Functional ZeroMQ library",
-    micrositeAuthor         := "Maksim Ochenashko",
-    micrositeGithubOwner    := "iRevive",
-    micrositeGithubRepo     := "fmq",
-    micrositeBaseUrl        := "/fmq",
-    micrositeFooterText     := None,
-    micrositeHighlightTheme := "atom-one-light",
+    micrositeName             := "fmq",
+    micrositeDescription      := "Functional ZeroMQ library",
+    micrositeAuthor           := "Maksim Ochenashko",
+    micrositeGithubOwner      := "iRevive",
+    micrositeGithubRepo       := "fmq",
+    micrositeBaseUrl          := "/fmq",
+    micrositeDocumentationUrl := "https://www.javadoc.io/doc/io.github.irevive/fmq-core_2.13",
+    micrositeFooterText       := None,
+    micrositeHighlightTheme   := "atom-one-light",
     micrositePalette := Map(
       "brand-primary"   -> "#3e5b95",
       "brand-secondary" -> "#294066",
