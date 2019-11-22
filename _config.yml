@@ -1,11 +1,11 @@
 name: fmq
 baseurl: /fmq
-description: fMQ - Functional ZeroMQ library
+description: Functional ZeroMQ library
 highlighter: rouge
 docs: true
 collections:
   tut:
     output: true
-version: 0.0.1-SNAPSHOT
-org: io.github.irevive
+version: 0.0.0+7-e6019bae-SNAPSHOT
+org: docs
 markdown: kramdown
