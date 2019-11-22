@@ -10,7 +10,6 @@ lazy val fmq = project
 lazy val core = (project in file("core"))
   .settings(commonSettings)
   .settings(commandSettings)
-  .settings(releaseSettings)
   .settings(
     name                := "fmq-core",
     libraryDependencies ++= Dependencies.core
@@ -102,15 +101,17 @@ lazy val commandSettings = {
 }
 
 lazy val noPublishSettings = Seq(
-  publish         := (()),
-  publishLocal    := (()),
+  publish         := {},
+  publishLocal    := {},
   publishArtifact := false,
   publish / skip  := true
 )
 
-lazy val releaseSettings = Seq(
-  organization := "io.github.irevive",
-  homepage     := Some(url("https://github.com/iRevive/fmq")),
-  licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),
-  developers   := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive")))
+inThisBuild(
+  Seq(
+    organization := "io.github.irevive",
+    homepage     := Some(url("https://github.com/iRevive/fmq")),
+    licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers   := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive")))
+  )
 )
