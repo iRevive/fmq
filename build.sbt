@@ -10,6 +10,7 @@ lazy val fmq = project
 lazy val core = (project in file("core"))
   .settings(commonSettings)
   .settings(commandSettings)
+  .settings(releaseSettings)
   .settings(
     name                := "fmq-core",
     libraryDependencies ++= Dependencies.core
@@ -101,8 +102,8 @@ lazy val commandSettings = {
 }
 
 lazy val noPublishSettings = Seq(
-  publish         := (),
-  publishLocal    := (),
+  publish         := (()),
+  publishLocal    := (()),
   publishArtifact := false,
   publish / skip  := true
 )
