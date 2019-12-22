@@ -17,9 +17,11 @@ libraryDependencies += "io.github.irevive" %% "fmq-core" % "<version>"
 
 Check the [official guide](https://irevive.github.io/fmq/) for additional information.
 
-## Supported sockets
+## Sockets matrix
 
-* Pub
-* Sub
-* Push
-* Pull
+| Socket | Can publish | Can receive | Connectivity method |
+|--------|-------------|-------------|---------------------|
+| Pub    | true        | false       | Bind                |
+| Sub    | false       | true        | Connect             |
+| Push   | true        | false       | Connect             |
+| Pull   | false       | true        | Bind                |
