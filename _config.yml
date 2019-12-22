@@ -6,6 +6,6 @@ docs: true
 collections:
   tut:
     output: true
-version: 0.2.1+1-59a72034-SNAPSHOT
+version: 0.2.1+1-762b5463-SNAPSHOT
 org: io.github.irevive
 markdown: kramdown
