@@ -7,6 +7,7 @@ position: 1
 
 # Getting Started
 
-- **[Blocking receive](./blocking-receive.md)**: Select appropriate evaluation strategy.
-- **[Publisher](./publisher.md)**: Publisher.
-- **[Subscriber](./subscriber.md)**: Subscriber.
+- **[Consuming strategy](./consuming-strategy.md)**: select appropriate evaluation strategy.
+- **[Publisher](./publisher.md)**: socket allocation, configuration, etc.
+- **[Subscriber](./subscriber.md)**: socket allocation, configuration, etc.
+- **[Examples](/.examples/index.md)**: list of examples: pub-sub, push-pull.

@@ -1,20 +1,18 @@
 package io.fmq
 package socket
 
-import cats.arrow.FunctionK
-import cats.effect.{Blocker, IO, Resource, Sync, Timer}
+import cats.effect.syntax.effect._
+import cats.effect.{Effect, IO, Resource, Sync, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import fs2.Stream
 import io.fmq.domain._
-import io.fmq.free.{ConnectionIO, Executor}
 import io.fmq.socket.SocketBehavior.SocketResource
 import io.fmq.socket.api.CommonOptions
 import org.scalatest.Inside._
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
@@ -24,7 +22,7 @@ import scala.concurrent.duration._
 trait SocketBehavior {
   self: IOSpec =>
 
-  protected def socketSpec[H[_]: Sync: ToIO](socketResource: SocketResource[IO, H]): Unit = {
+  protected def socketSpec[H[_]: Sync: Effect](socketResource: SocketResource[IO, H]): Unit = {
 
     "send multipart data" in withRandomPortPair { pair =>
       val SocketResource.Pair(producer, consumer) = pair
@@ -44,7 +42,7 @@ trait SocketBehavior {
           hasMore2 shouldBe false
         }
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program)
+      Timer[IO].sleep(200.millis) >> program.toIO
     }
 
     "bind to specific port" in withContext() { ctx: Context[IO] =>
@@ -62,7 +60,7 @@ trait SocketBehavior {
               result <- collectMessages(consumer, messages.length.toLong)
             } yield result shouldBe messages
 
-          Timer[IO].sleep(200.millis) >> ToIO[H].apply(program)
+          Timer[IO].sleep(200.millis) >> program.toIO
       }
     }
 
@@ -77,7 +75,7 @@ trait SocketBehavior {
           result <- collectMessages(consumer, messages.length.toLong)
         } yield result shouldBe messages
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program)
+      Timer[IO].sleep(200.millis) >> program.toIO
     }
 
     "operate sendTimeout" in withRandomPortPair { pair =>
@@ -96,7 +94,7 @@ trait SocketBehavior {
         timeout3 shouldBe SendTimeout.Fixed(5.seconds)
       }
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program)
+      Timer[IO].sleep(200.millis) >> program.toIO
     }
 
     "operate receiveTimeout" in withRandomPortPair { pair =>
@@ -115,7 +113,7 @@ trait SocketBehavior {
         timeout3 shouldBe ReceiveTimeout.Fixed(5.seconds)
       }
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program)
+      Timer[IO].sleep(200.millis) >> program.toIO
     }
 
     "operate linger" in withRandomPortPair { pair =>
@@ -136,7 +134,7 @@ trait SocketBehavior {
         }
       }
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program(producer)) >> ToIO[H].apply(program(consumer))
+      Timer[IO].sleep(200.millis) >> program(producer).toIO >> program(consumer).toIO
     }
 
     "operate identity" in withRandomPortPair { pair =>
@@ -153,7 +151,7 @@ trait SocketBehavior {
           }
         }
 
-      Timer[IO].sleep(200.millis) >> ToIO[H].apply(program(producer)) >> ToIO[H].apply(program(consumer))
+      Timer[IO].sleep(200.millis) >> program(producer).toIO >> program(consumer).toIO
     }
 
     def withRandomPortPair[A](fa: SocketResource.Pair[H] => IO[A]): A =
@@ -165,11 +163,6 @@ trait SocketBehavior {
 
   protected def collectMessages[F[_]: Sync](consumer: ConsumerSocket[F], limit: Long): F[List[String]] =
     Stream.repeatEval(consumer.recvString).take(limit).compile.toList
-
-  protected implicit val id: ToIO[IO] = FunctionK.id
-
-  protected implicit lazy val connectionIO: ToIO[ConnectionIO] =
-    Executor[IO].executeK(Blocker.liftExecutionContext(ExecutionContext.global))
 
 }
 

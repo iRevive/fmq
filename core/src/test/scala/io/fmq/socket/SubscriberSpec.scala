@@ -31,9 +31,9 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO])] =
         for {
-          pub        <- ctx.createPublisher[IO]
+          pub        <- ctx.createPublisher
           publisher  <- pub.bindToRandomPort(protocol)
-          sub        <- ctx.createSubscriber[IO](topic)
+          sub        <- ctx.createSubscriber(topic)
           subscriber <- sub.connect(Protocol.tcp("localhost", publisher.port))
         } yield (publisher, subscriber)
 
@@ -97,8 +97,8 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
   def withRandomPortSocket[A](topic: SubscribeTopic)(fa: SocketResource.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
       (for {
-        pub      <- ctx.createPublisher[IO]
-        sub      <- ctx.createSubscriber[IO](topic)
+        pub      <- ctx.createPublisher
+        sub      <- ctx.createSubscriber(topic)
         producer <- pub.bindToRandomPort(Protocol.tcp("localhost"))
         consumer <- sub.connect(Protocol.tcp("localhost", producer.port))
       } yield SocketResource.Pair(producer, consumer)).use(fa)

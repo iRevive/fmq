@@ -32,6 +32,7 @@ The great disadvantage of this solution is evaluation of the lightweight operati
 ```scala mdoc
 import cats.effect.syntax.concurrent._
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import fmq.ConsumerSocket
 import fs2.Stream
 import fs2.concurrent.Queue
 

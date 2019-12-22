@@ -8,23 +8,23 @@ import org.zeromq.{ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private[fmq] (ctx: ZContext, blocker: Blocker) {
 
-  def createSubscriber[H[_]: Sync](topic: SubscribeTopic): Resource[F, Subscriber[F, H]] =
+  def createSubscriber(topic: SubscribeTopic): Resource[F, Subscriber[F]] =
     for {
       socket <- createSocket(SocketType.Sub)
       _      <- subscribe(socket, topic.value)
     } yield new Subscriber(topic, socket, blocker)
 
-  def createPublisher[H[_]: Sync]: Resource[F, Publisher[F, H]] =
+  def createPublisher: Resource[F, Publisher[F]] =
     for {
       socket <- createSocket(SocketType.Pub)
     } yield new Publisher(socket, blocker)
 
-  def createPull[H[_]: Sync]: Resource[F, Pull[F, H]] =
+  def createPull: Resource[F, Pull[F]] =
     for {
       socket <- createSocket(SocketType.Pull)
-    } yield new Pull[F, H](socket, blocker)
+    } yield new Pull[F](socket, blocker)
 
-  def createPush[H[_]: Sync]: Resource[F, Push[F, H]] =
+  def createPush: Resource[F, Push[F]] =
     for {
       socket <- createSocket(SocketType.Push)
     } yield new Push(socket, blocker)

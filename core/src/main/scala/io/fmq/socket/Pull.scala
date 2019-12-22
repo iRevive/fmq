@@ -7,16 +7,16 @@ import io.fmq.socket.api.SendOptions
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
 
-final class Pull[F[_]: ContextShift, H[_]: Sync] private[fmq] (
+final class Pull[F[_]: ContextShift] private[fmq](
     protected val socket: ZMQ.Socket,
     blocker: Blocker
 )(implicit protected val F: Sync[F])
     extends SendOptions[F] {
 
-  def bind(protocol: tcp.HostPort): Resource[F, ConsumerSocket[H]] =
+  def bind(protocol: tcp.HostPort): Resource[F, ConsumerSocket[F]] =
     Bind.bind[F](protocol, socket, blocker).as(new ConsumerSocket(socket, protocol.port))
 
-  def bindToRandomPort(protocol: tcp.Host): Resource[F, ConsumerSocket[H]] =
+  def bindToRandomPort(protocol: tcp.Host): Resource[F, ConsumerSocket[F]] =
     for {
       port <- Bind.bindToRandomPort[F](protocol, socket, blocker)
     } yield new ConsumerSocket(socket, port)
