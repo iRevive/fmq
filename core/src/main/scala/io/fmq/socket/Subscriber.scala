@@ -9,7 +9,7 @@ import io.fmq.socket.api.ReceiveOptions
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
 
-final class Subscriber[F[_]: ContextShift] private[fmq](
+final class Subscriber[F[_]: ContextShift] private[fmq] (
     val topic: SubscribeTopic,
     protected val socket: ZMQ.Socket,
     blocker: Blocker

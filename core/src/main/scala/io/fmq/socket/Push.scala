@@ -7,7 +7,7 @@ import io.fmq.socket.api.SendOptions
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
 
-final class Push[F[_]: ContextShift] private[fmq](
+final class Push[F[_]: ContextShift] private[fmq] (
     protected val socket: ZMQ.Socket,
     blocker: Blocker
 )(implicit protected val F: Sync[F])
