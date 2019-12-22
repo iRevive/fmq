@@ -29,8 +29,8 @@ trait SocketBehavior {
 
       val program =
         for {
-          _        <- producer.sendUtf8StringMore("A")
-          _        <- producer.sendUtf8String("We would like to see this")
+          _        <- producer.sendStringMore("A")
+          _        <- producer.sendString("We would like to see this")
           msg1     <- consumer.recvString
           hasMore1 <- consumer.hasReceiveMore
           msg2     <- consumer.recvString
@@ -56,7 +56,7 @@ trait SocketBehavior {
 
           val program =
             for {
-              _      <- messages.traverse(producer.sendUtf8String)
+              _      <- messages.traverse(producer.sendString)
               result <- collectMessages(consumer, messages.length.toLong)
             } yield result shouldBe messages
 
@@ -71,7 +71,7 @@ trait SocketBehavior {
 
       val program =
         for {
-          _      <- messages.traverse(producer.sendUtf8String)
+          _      <- messages.traverse(producer.sendString)
           result <- collectMessages(consumer, messages.length.toLong)
         } yield result shouldBe messages
 

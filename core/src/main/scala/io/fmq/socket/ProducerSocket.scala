@@ -17,7 +17,7 @@ final class ProducerSocket[F[_]](
   def send(bytes: Array[Byte]): F[Unit]     = F.delay(socket.send(bytes)).void
   def sendMore(bytes: Array[Byte]): F[Unit] = F.delay(socket.sendMore(bytes)).void
 
-  def sendUtf8String(string: String): F[Unit]     = send(string.getBytes(StandardCharsets.UTF_8))
-  def sendUtf8StringMore(string: String): F[Unit] = sendMore(string.getBytes(StandardCharsets.UTF_8))
+  def sendString(string: String): F[Unit]     = send(string.getBytes(StandardCharsets.UTF_8))
+  def sendStringMore(string: String): F[Unit] = sendMore(string.getBytes(StandardCharsets.UTF_8))
 
 }

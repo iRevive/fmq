@@ -24,10 +24,10 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val topic    = SubscribeTopic.utf8String("B")
 
       def sendA(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendUtf8StringMore("A") >> producer.sendUtf8String("We don't want to see this")
+        producer.sendStringMore("A") >> producer.sendString("We don't want to see this")
 
       def sendB(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendUtf8StringMore("B") >> producer.sendUtf8String("We would like to see this")
+        producer.sendStringMore("B") >> producer.sendString("We would like to see this")
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO])] =
         for {
@@ -63,7 +63,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- messages.traverse(producer.sendUtf8String)
+        _      <- messages.traverse(producer.sendString)
         result <- collectMessages(consumer, 3L)
       } yield result shouldBe List("my-topic-1", "my-topic2", "my-topic-3")
     }
@@ -87,7 +87,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- messages.traverse(producer.sendUtf8String)
+        _      <- messages.traverse(producer.sendString)
         result <- collectMessages(consumer, messages.length.toLong)
       } yield result shouldBe messages
     }

@@ -15,20 +15,20 @@ import cats.FlatMap
 import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
-import io.fmq.socket.Publisher
+import io.fmq.ProducerSocket
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Connected[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendUtf8StringMore(topicA) >> publisher.sendUtf8String("We don't want to see this")
+    publisher.sendStringMore(topicA) >> publisher.sendString("We don't want to see this")
 
   private def sendB: F[Unit] =
-    publisher.sendUtf8StringMore(topicB) >> publisher.sendUtf8String("We would like to see this")
+    publisher.sendStringMore(topicB) >> publisher.sendString("We would like to see this")
 
 }
 ```
@@ -38,19 +38,18 @@ Then we can use :
 ```scala mdoc:silent
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
 import cats.effect.syntax.concurrent._
-import cats.syntax.flatMap._
 import fs2.Stream
 import fs2.concurrent.Queue
-import io.fmq.socket.Subscriber
+import io.fmq.ConsumerSocket
 
-class Consumer[F[_]: Concurrent: ContextShift](subscriber: Subscriber.Connected[F], blocker: Blocker) {
+class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket[F], blocker: Blocker) {
 
   def consume: Stream[F, List[String]] = {
     def process(queue: Queue[F, List[String]]) =
-      blocker.blockOn(Stream.repeatEval(readBatch.compile.toList).compile.drain)
+      blocker.blockOn(Stream.repeatEval(readBatch.compile.toList).through(queue.enqueue).compile.drain)
 
     for {
-      queue  <- Stream.eval(fs2.concurrent.Queue.unbounded[F, List[String]])
+      queue  <- Stream.eval(Queue.unbounded[F, List[String]])
       _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
       result <- queue.dequeue
     } yield result
@@ -58,8 +57,8 @@ class Consumer[F[_]: Concurrent: ContextShift](subscriber: Subscriber.Connected[
 
   private def readBatch: Stream[F, String] =
     for {
-      s <- Stream.eval(subscriber.recvString)
-      r <- Stream.eval(subscriber.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
+      s <- Stream.eval(socket.recvString)
+      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
     } yield r
 
 }
@@ -83,7 +82,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
   private val appResource =
     for {
-      pub    <- context.createPublisher.flatMap(_.bind(protocol))
+      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(protocol))
       addr   <- Resource.pure(Protocol.tcp("localhost", pub.port))
       subA   <- context.createSubscriber(SubscribeTopic.utf8String(topicA)).flatMap(_.connect(addr))
       subB   <- context.createSubscriber(SubscribeTopic.utf8String(topicB)).flatMap(_.connect(addr))

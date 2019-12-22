@@ -4,31 +4,88 @@ title:  "Subscriber"
 number: 3
 ---
 
-# Configuration
+# Subscriber
 
-The main `RabbitMQ` configuration should be defined as `Fs2RabbitConfig`. You choose how to get the information, either from an `application.conf` file, from the environment or provided by an external system. A popular option that fits well the tech stack is [Pure Config](https://pureconfig.github.io/).
+The subscriber socket can subscribe to a specific topic and can only receive messages.
 
-```tut:book:silent
-import cats.data.NonEmptyList
-import dev.profunktor.fs2rabbit.config.{Fs2RabbitConfig, Fs2RabbitNodeConfig}
+## Allocation
 
-val config = Fs2RabbitConfig(
-  virtualHost = "/",
-  nodes = NonEmptyList.one(
-    Fs2RabbitNodeConfig(
-      host = "127.0.0.1",
-      port = 5672
-    )
-  ),
-  username = Some("guest"),
-  password = Some("guest"),
-  ssl = false,
-  connectionTimeout = 3,
-  requeueOnNack = false,
-  internalQueueSize = Some(500),
-  automaticRecovery = true
-)
+The subscriber can be created within the `Context`.     
+
+```scala mdoc:silent
+import cats.effect.{Blocker, ContextShift, Resource, IO}
+import io.fmq.Context
+import io.fmq.domain.SubscribeTopic
+import io.fmq.socket.Subscriber
+
+import scala.concurrent.ExecutionContext
+
+implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+
+val topicSubscriberResource: Resource[IO, Subscriber[IO]] =
+  for {
+    blocker    <- Blocker[IO]
+    context    <- Context.create[IO](1, blocker)
+    subscriber <- context.createSubscriber(SubscribeTopic.utf8String("my-topic"))
+  } yield subscriber
+
+val allSubscriberResource: Resource[IO, Subscriber[IO]] =
+  for {
+    blocker    <- Blocker[IO]
+    context    <- Context.create[IO](1, blocker)
+    subscriber <- context.createSubscriber(SubscribeTopic.All)
+  } yield subscriber
 ```
 
-The `internalQueueSize` indicates the size of the fs2's bounded queue used internally to communicate with the AMQP Java driver.
-The `automaticRecovery` indicates whether the AMQP Java driver should try to [recover broken connections](https://www.rabbitmq.com/api-guide.html#recovery).
+The `Subscriber[F]` is a valid instance of the socket but it's not connect to the network yet. 
+Subscriber can connect to the specific port and host.
+
+```scala mdoc:silent
+import io.fmq.domain.{Protocol, Port}
+import io.fmq.ConsumerSocket
+
+val connected: Resource[IO, ConsumerSocket[IO]] = 
+  for {
+    subscriber <- topicSubscriberResource
+    connected  <- subscriber.connect(Protocol.tcp("localhost", Port(31234)))
+  } yield connected
+```
+
+Since `subscriber.connect` returns `Resource[F, ConsumerSocket[IO]]` the connection will be released automatically. 
+
+## Configuration
+
+Both `Subscriber[F]` and `ConsumerSocket[F]` have the same configuration methods:
+```scala mdoc:silent
+import io.fmq.domain.{ReceiveTimeout, Linger}
+import io.fmq.socket.Subscriber
+
+def configureSubscriber(subscriber: Subscriber[IO]): IO[Unit] = 
+  for {
+    _ <- subscriber.setReceiveTimeout(ReceiveTimeout.Infinity)
+    _ <- subscriber.setLinger(Linger.Immediately)
+  } yield ()
+```
+
+## Consume messages
+
+Only connected subscriber can consume messages:
+
+```scala mdoc:silent
+import cats.syntax.flatMap._
+import io.fmq.ConsumerSocket
+import fs2.Stream
+
+def consumeSingleMessage(socket: ConsumerSocket[IO]): IO[String] = 
+  socket.recvString
+
+def consumeBatchMessage(socket: ConsumerSocket[IO]): IO[List[String]] = {
+  def readBatch: Stream[IO, String] =
+    for {
+      s <- Stream.eval(socket.recvString)
+      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
+    } yield r
+
+  readBatch.compile.toList
+}
+```
