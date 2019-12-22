@@ -1,0 +1,13 @@
+options:
+  - title: Guide
+    url: guide.html
+    menu_section: guide
+
+  - title: Examples
+    url: examples/
+    menu_section: examples
+
+    nested_options:
+      - title: PubSub
+        url: examples/pubsub.html
+        menu_section: examples

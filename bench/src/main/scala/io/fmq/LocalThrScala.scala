@@ -2,13 +2,15 @@ package io.fmq
 
 import java.util.concurrent.TimeUnit
 
-import cats.effect.{Blocker, Clock, ExitCode, IO, IOApp, Sync}
+import cats.effect.syntax.concurrent._
+import cats.effect.{Blocker, Clock, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.~>
+import fs2.Stream
+import fs2.concurrent.Queue
 import io.fmq.domain.{Port, Protocol}
-import io.fmq.free.{ConnectionIO, Executor}
-import io.fmq.socket.ConsumerSocket
+import io.fmq.free.Executor
 
 object LocalThrScala extends IOApp {
 
@@ -34,6 +36,11 @@ object LocalThrScala extends IOApp {
             .flatMap(_.bind(protocol))
             .use(socket => measureCycle(socket, messageCount, messageSize))
 
+          val ioBackground = ctx
+            .createPull[IO]
+            .flatMap(_.bind(protocol))
+            .use(socket => measureBackground(socket, blocker, messageCount, messageSize))
+
           val connectionIOStream =
             ctx
               .createPull[ConnectionIO]
@@ -51,6 +58,8 @@ object LocalThrScala extends IOApp {
             _ <- ioStream
             _ <- log[IO]("Measure IO cycle performance") >> log[IO]("")
             _ <- ioCycle
+            _ <- log[IO]("Measure fs2.Stream[IO] background performance") >> log[IO]("")
+            _ <- ioBackground
 
             _ <- log[IO]("Measure fs2.Stream[ConnectionIO] performance") >> log[IO]("")
             _ <- connectionIOStream
@@ -62,7 +71,7 @@ object LocalThrScala extends IOApp {
   }
 
   def measureStream[F[_]: Sync: Clock](pull: ConsumerSocket[F], messageCount: Long, messageSize: Int): F[Unit] = {
-    val io = fs2.Stream
+    val io = Stream
       .eval(pull.recv)
       .repeatN(messageCount)
       .compile
@@ -84,6 +93,25 @@ object LocalThrScala extends IOApp {
     for {
       _ <- implicitly[ToIO[F]].apply(pull.recv)
       _ <- measureTime(io, messageCount, messageSize)
+    } yield ()
+  }
+
+  def measureBackground[F[_]: Concurrent: ContextShift: Clock](
+                                           pull: ConsumerSocket[F], blocker: Blocker, messageCount: Long, messageSize: Int
+                                         ): F[Unit] = {
+
+    def process(queue: Queue[F, Array[Byte]]) =
+      blocker.blockOn(Stream.eval(pull.recv).repeatN(messageCount).through(queue.enqueue).compile.drain)
+
+      val io = for {
+      queue  <- Stream.eval(Queue.unbounded[F, Array[Byte]])
+      _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+      result <- queue.dequeue
+    } yield result
+
+    for {
+      _ <- pull.recv
+      _ <- measureTime(io.compile.drain, messageCount, messageSize)
     } yield ()
   }
 

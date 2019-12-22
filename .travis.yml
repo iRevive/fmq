@@ -27,7 +27,7 @@ jobs:
       scala: *scala_version_212
       script: sbt ++$TRAVIS_SCALA_VERSION ci
     - name: site
-      scala: *scala_version_212
+      scala: *scala_version_213
       install:
         - rvm use 2.6.0 --install --fuzzy
         - gem update --system
@@ -40,7 +40,7 @@ jobs:
       script: sbt ci-release
     - stage: release
       name: microsite
-      scala: *scala_version_212
+      scala: *scala_version_213
       install:
         - rvm use 2.6.0 --install --fuzzy
         - gem update --system

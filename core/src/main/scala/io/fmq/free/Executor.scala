@@ -2,6 +2,8 @@ package io.fmq.free
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import cats.~>
+import io.fmq.free.ConnectionIO.ConnectionIO
+import io.fmq.free.Interpreter.Interpreter
 
 sealed abstract class Executor[F[_]] {
 

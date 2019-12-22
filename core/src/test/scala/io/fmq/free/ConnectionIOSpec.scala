@@ -18,7 +18,7 @@ class ConnectionIOSpec extends FunSuite with Checkers with TestInstances {
 
   import ConnectionIOSpec.ConnectionIOScalaCheckInstances._
 
-  implicit val iso: SemigroupalTests.Isomorphisms[ConnectionIO] = Isomorphisms.invariant(Connection.connectionIOSync)
+  implicit val iso: SemigroupalTests.Isomorphisms[ConnectionIO] = Isomorphisms.invariant(ConnectionIO.connectionIOSync)
 
   checkAll("ConnectionIO", SyncTests[ConnectionIO].sync[Int, Int, Int])
 
@@ -61,10 +61,10 @@ object ConnectionIOSpec {
       )
 
     def genDelay[A: Arbitrary]: Gen[ConnectionIO[A]] =
-      Arbitrary.arbitrary[A].map(Connection.delay(_))
+      Arbitrary.arbitrary[A].map(ConnectionIO.delay(_))
 
     def genFail[A]: Gen[ConnectionIO[A]] =
-      Arbitrary.arbitrary[Throwable].map(Connection.raiseError[A])
+      Arbitrary.arbitrary[Throwable].map(ConnectionIO.raiseError[A])
 
   }
 

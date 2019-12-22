@@ -1,0 +1,138 @@
+---
+layout: docs
+title:  "PubSub"
+number: 16
+---
+
+# PubSub
+
+The example shows how to create one publisher and three subscribers with different subscription rules.
+
+First of all, let's introduce a `Producer` that sends messages with a specific topic:
+
+```scala mdoc:silent
+import cats.FlatMap
+import cats.effect.Timer
+import cats.syntax.flatMap._
+import fs2.Stream
+import io.fmq.socket.Publisher
+
+import scala.concurrent.duration._
+
+class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Connected[F], topicA: String, topicB: String) {
+
+  def generate: Stream[F, Unit] =
+    Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
+
+  private def sendA: F[Unit] =
+    publisher.sendUtf8StringMore(topicA) >> publisher.sendUtf8String("We don't want to see this")
+
+  private def sendB: F[Unit] =
+    publisher.sendUtf8StringMore(topicB) >> publisher.sendUtf8String("We would like to see this")
+
+}
+```
+
+Then we can use : 
+
+```scala mdoc:silent
+import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import cats.effect.syntax.concurrent._
+import cats.syntax.flatMap._
+import fs2.Stream
+import fs2.concurrent.Queue
+import io.fmq.socket.Subscriber
+
+class Consumer[F[_]: Concurrent: ContextShift](subscriber: Subscriber.Connected[F], blocker: Blocker) {
+
+  def consume: Stream[F, List[String]] = {
+    def process(queue: Queue[F, List[String]]) =
+      blocker.blockOn(Stream.repeatEval(readBatch.compile.toList).compile.drain)
+
+    for {
+      queue  <- Stream.eval(fs2.concurrent.Queue.unbounded[F, List[String]])
+      _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+      result <- queue.dequeue
+    } yield result
+  }
+
+  private def readBatch: Stream[F, String] =
+    for {
+      s <- Stream.eval(subscriber.recvString)
+      r <- Stream.eval(subscriber.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
+    } yield r
+
+}
+```
+
+And the demo program that evaluates producer and subscribers in parallel:
+
+```scala mdoc:silent
+import cats.effect.{Concurrent, ContextShift, Resource, Sync, Timer}
+import fs2.Stream
+import io.fmq.Context
+import io.fmq.domain.{Protocol, SubscribeTopic}
+
+class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+
+  private def log(message: String): F[Unit] = Sync[F].delay(println(message))
+
+  private val topicA   = "my-topic-a"
+  private val topicB   = "my-topic-b"
+  private val protocol = Protocol.tcp("localhost")
+
+  private val appResource =
+    for {
+      pub    <- context.createPublisher.flatMap(_.bind(protocol))
+      addr   <- Resource.pure(Protocol.tcp("localhost", pub.port))
+      subA   <- context.createSubscriber(SubscribeTopic.utf8String(topicA)).flatMap(_.connect(addr))
+      subB   <- context.createSubscriber(SubscribeTopic.utf8String(topicB)).flatMap(_.connect(addr))
+      subAll <- context.createSubscriber(SubscribeTopic.All).flatMap(_.connect(addr))
+    } yield (pub, subA, subB, subAll)
+
+  val program: Stream[F, Unit] =
+    Stream
+      .resource(appResource)
+      .flatMap {
+        case (publisher, subscriberA, subscriberB, subscriberAll) =>
+          val producer    = new Producer[F](publisher, topicA, topicB)
+          val consumerA   = new Consumer[F](subscriberA, blocker)
+          val consumerB   = new Consumer[F](subscriberB, blocker)
+          val consumerAll = new Consumer[F](subscriberAll, blocker)
+
+          Stream(
+            producer.generate,
+            consumerA.consume.evalMap(batch => log(s"ConsumerA. Received $batch")),
+            consumerB.consume.evalMap(batch => log(s"ConsumerB. Received $batch")),
+            consumerAll.consume.evalMap(batch => log(s"ConsumerAll. Received $batch"))
+          ).parJoin(4)
+      }
+
+}
+```
+
+At the edge of out program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
+Define the entry point:
+
+```scala mdoc:silent
+import cats.effect.{Blocker, ExitCode, IO, IOApp}
+import cats.syntax.functor._
+import io.fmq.Context
+
+object PubSub extends IOApp {
+
+ override def run(args: List[String]): IO[ExitCode] =
+   Blocker[IO]
+     .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
+     .use { case (ctx, blocker) => new Demo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+
+}
+```
+
+The output will be:
+```text
+ConsumerA. Received List(my-topic-a, We don't want to see this)
+ConsumerAll. Received List(my-topic-a, We don't want to see this)
+ConsumerB. Received List(my-topic-b, We would like to see this)
+ConsumerAll. Received List(my-topic-b, We would like to see this)
+```

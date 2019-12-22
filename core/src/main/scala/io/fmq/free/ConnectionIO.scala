@@ -3,7 +3,7 @@ package io.fmq.free
 import cats.effect.{ExitCase, Sync}
 import cats.free.Free
 
-object Connection {
+object ConnectionIO {
 
   sealed trait ConnectionOp[A]
 
@@ -45,16 +45,16 @@ object Connection {
       def bracketCase[A, B](
           acquire: ConnectionIO[A]
       )(use: A => ConnectionIO[B])(release: (A, ExitCase[Throwable]) => ConnectionIO[Unit]): ConnectionIO[B] =
-        Connection.bracketCase(acquire)(use)(release)
+        ConnectionIO.bracketCase(acquire)(use)(release)
 
       def pure[A](x: A): ConnectionIO[A] =
         monad.pure(x)
 
       def handleErrorWith[A](fa: ConnectionIO[A])(f: Throwable => ConnectionIO[A]): ConnectionIO[A] =
-        Connection.handleErrorWith(fa, f)
+        ConnectionIO.handleErrorWith(fa, f)
 
       def raiseError[A](e: Throwable): ConnectionIO[A] =
-        Connection.raiseError(e)
+        ConnectionIO.raiseError(e)
 
       def flatMap[A, B](fa: ConnectionIO[A])(f: A => ConnectionIO[B]): ConnectionIO[B] =
         monad.flatMap(fa)(f)
@@ -63,7 +63,7 @@ object Connection {
         monad.tailRecM(a)(f)
 
       def suspend[A](thunk: => ConnectionIO[A]): ConnectionIO[A] =
-        monad.flatten(Connection.delay(thunk))
+        monad.flatten(ConnectionIO.delay(thunk))
     }
 
 }

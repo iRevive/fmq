@@ -2,7 +2,7 @@ package io.fmq.free
 
 import cats.effect.Sync
 import cats.~>
-import io.fmq.free.Connection.ConnectionOp
+import io.fmq.free.ConnectionIO.ConnectionOp
 
 object Interpreter {
 
