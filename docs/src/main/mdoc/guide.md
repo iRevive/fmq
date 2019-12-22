@@ -7,7 +7,7 @@ position: 1
 
 # Getting Started
 
-- **[Consuming strategy](./consuming-strategy.md)**: select appropriate evaluation strategy.
-- **[Publisher](./publisher.md)**: socket allocation, configuration, etc.
-- **[Subscriber](./subscriber.md)**: socket allocation, configuration, etc.
-- **[Examples](./examples/index.md)**: list of examples: pub-sub, push-pull.
+- **[Consuming strategy](./consuming-strategy.html)**: select appropriate evaluation strategy.
+- **[Publisher](./publisher.html)**: socket allocation, configuration, etc.
+- **[Subscriber](./subscriber.html)**: socket allocation, configuration, etc.
+- **[Examples](./examples/index.html)**: list of examples: pub-sub, push-pull.
