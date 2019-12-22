@@ -7,7 +7,7 @@ Functional library for ZeroMQ built-in on top of [cats-effect](https://github.co
 
 ## Quick Start
 
-To use ƒMQ in an existing SBT project with Scala 2.12 or a later version, add the following dependencies to your `build.sbt` depending on your needs:
+To use ƒMQ in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your `build.sbt`:
  
 ```scala
 libraryDependencies += "io.github.irevive" %% "fmq-core" % "<version>"
