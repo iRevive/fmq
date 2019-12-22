@@ -2,6 +2,7 @@ package io.fmq
 
 import cats.effect.{Blocker, IO}
 import cats.syntax.functor._
+import org.scalatest.OptionValues._
 
 import scala.concurrent.duration._
 
