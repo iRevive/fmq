@@ -54,7 +54,7 @@ Since `publisher.bind` and `publisher.bindToRandomPort` return `Resource[F, Prod
 
 ## Configuration
 
-Both `Publisher[F]` and `ProducerSocket[F]` have the same configuration methods:
+The settings can be changed until the socket is connected:  
 
 ```scala mdoc:silent
 import io.fmq.domain.{SendTimeout, Linger}
