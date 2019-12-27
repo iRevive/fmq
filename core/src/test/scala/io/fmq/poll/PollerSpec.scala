@@ -95,12 +95,6 @@ class PollerSpec extends IOSpec with SocketBehavior {
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
 
-      def sendA(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendStringMore("Topic-A") >> producer.sendString("We don't want to see this")
-
-      def sendB(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendStringMore("Topic-B") >> producer.sendString("We would like to see this")
-
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
           pub       <- ctx.createPublisher
@@ -116,7 +110,7 @@ class PollerSpec extends IOSpec with SocketBehavior {
         Kleisli(socket => socket.recvString >>= queue.enqueue1)
 
       def producerHandler: ProducerHandler[IO] =
-        Kleisli(socket => sendA(socket) >> sendB(socket))
+        Kleisli(socket => socket.sendString("Topic-A") >> socket.sendString("Topic-B"))
 
       def program(
           producer: ProducerSocket[IO],
@@ -132,24 +126,18 @@ class PollerSpec extends IOSpec with SocketBehavior {
           _            <- poller.registerConsumer(consumerA, consumerHandler(queueA))
           _            <- poller.registerConsumer(consumerB, consumerHandler(queueB))
           totalEvents1 <- poller.poll(timeout)
-          _            <- IO.delay(println("after poll1"))
           totalEvents2 <- poller.poll(timeout)
-          _            <- IO.delay(println("after poll2"))
           totalEvents3 <- poller.poll(timeout)
-          _            <- IO.delay(println("after poll3"))
-          a1           <- queueA.dequeue1
-          _            <- IO.delay(println("after a1"))
-          a2           <- queueA.dequeue1
-          _            <- IO.delay(println("after a2"))
-          b1           <- queueB.dequeue1
-          _            <- IO.delay(println("after b1"))
-          b2           <- queueB.dequeue1
+          a1           <- queueA.tryDequeue1
+          a2           <- queueA.tryDequeue1
+          b1           <- queueB.tryDequeue1
+          b2           <- queueB.tryDequeue1
         } yield {
           totalEvents1 shouldBe 1
           totalEvents2 shouldBe 3
           totalEvents3 shouldBe 3
-          List(a1, a2) shouldBe List("Topic-A", "We don't want to see this")
-          List(b1, b2) shouldBe List("Topic-B", "We would like to see this")
+          List(a1, a2) shouldBe List(Some("Topic-A"), Some("Topic-A"))
+          List(b1, b2) shouldBe List(Some("Topic-B"), Some("Topic-B"))
         }
 
       create.use((program _).tupled)
