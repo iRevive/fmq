@@ -33,7 +33,7 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: Strin
 }
 ```
 
-Then we can use : 
+Then let's implement a consumer logic: 
 
 ```scala mdoc:silent
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource}

@@ -11,7 +11,7 @@ import org.zeromq.ZMQ
 
 final class Subscriber[F[_]: ContextShift] private[fmq] (
     val topic: SubscribeTopic,
-    protected val socket: ZMQ.Socket,
+    protected[fmq] val socket: ZMQ.Socket,
     blocker: Blocker
 )(implicit protected val F: Sync[F])
     extends ReceiveOptions[F] {

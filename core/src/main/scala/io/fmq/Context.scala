@@ -3,10 +3,11 @@ package io.fmq
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
 import io.fmq.domain.{SocketType, SubscribeTopic}
+import io.fmq.poll.Poller
 import io.fmq.socket._
 import org.zeromq.{ZContext, ZMQ}
 
-final class Context[F[_]: Sync: ContextShift] private[fmq] (ctx: ZContext, blocker: Blocker) {
+final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
 
   def createSubscriber(topic: SubscribeTopic): Resource[F, Subscriber[F]] =
     for {
@@ -28,6 +29,9 @@ final class Context[F[_]: Sync: ContextShift] private[fmq] (ctx: ZContext, block
     for {
       socket <- createSocket(SocketType.Push)
     } yield new Push(socket, blocker)
+
+  def createPoller: Resource[F, Poller[F]] =
+    Poller.create[F](ctx)
 
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 
