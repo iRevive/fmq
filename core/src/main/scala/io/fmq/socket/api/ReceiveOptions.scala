@@ -11,7 +11,7 @@ object ReceiveOptions {
   private[socket] trait Get[F[_]] {
     self: SocketOptions[F] =>
 
-    def receiveTimeout: F[ReceiveTimeout]                   = F.delay(ReceiveTimeout.fromInt(socket.getReceiveTimeOut))
+    def receiveTimeout: F[ReceiveTimeout] = F.delay(ReceiveTimeout.fromInt(socket.getReceiveTimeOut))
   }
 
   private[socket] trait Set[F[_]] {
