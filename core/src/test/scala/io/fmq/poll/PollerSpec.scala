@@ -26,9 +26,6 @@ class PollerSpec extends IOSpec with SocketBehavior {
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
 
-      def send(producer: ProducerSocket[IO], text: String): IO[Unit] =
-        producer.sendString(text)
-
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
           pub       <- ctx.createPublisher
@@ -55,24 +52,21 @@ class PollerSpec extends IOSpec with SocketBehavior {
           queueB             <- Queue.unbounded[IO, String]
           _                  <- poller.registerConsumer(consumerA, handler(queueA))
           _                  <- poller.registerConsumer(consumerB, handler(queueB))
-          events1            <- poller.poll(timeout)
+          _                  <- poller.poll(timeout)
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-A")
-          events2            <- poller.poll(timeout)
+          _                  <- producer.sendString("Topic-A")
+          _                  <- poller.poll(timeout)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-B")
-          events3            <- poller.poll(timeout)
+          _                  <- producer.sendString("Topic-B")
+          _                  <- Timer[IO].sleep(100.millis)
+          _                  <- poller.poll(timeout)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-A")
-          _                  <- send(producer, "Topic-B")
-          events4            <- poller.poll(timeout)
+          _                  <- producer.sendString("Topic-A")
+          _                  <- producer.sendString("Topic-B")
+          _                  <- Timer[IO].sleep(100.millis)
+          _                  <- poller.poll(timeout)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
-          events1 shouldBe 0
-          events2 shouldBe 1
-          events3 shouldBe 1
-          events4 shouldBe 2
-
           queueA1 shouldBe empty
           queueB1 shouldBe empty
 
@@ -90,16 +84,8 @@ class PollerSpec extends IOSpec with SocketBehavior {
     }
 
     "read from multiple sockets" in withContext(15.seconds) { ctx: Context[IO] =>
-      val timeout = PollTimeout.Fixed(200.millis)
-
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
-
-      def sendA(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendStringMore("Topic-A") >> producer.sendString("We don't want to see this")
-
-      def sendB(producer: ProducerSocket[IO]): IO[Unit] =
-        producer.sendStringMore("Topic-B") >> producer.sendString("We would like to see this")
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
@@ -116,37 +102,34 @@ class PollerSpec extends IOSpec with SocketBehavior {
         Kleisli(socket => socket.recvString >>= queue.enqueue1)
 
       def producerHandler: ProducerHandler[IO] =
-        Kleisli(socket => sendA(socket) >> sendB(socket))
+        Kleisli(socket => socket.sendString("Topic-A") >> socket.sendString("Topic-B"))
 
       def program(
           producer: ProducerSocket[IO],
           consumerA: ConsumerSocket[IO],
           consumerB: ConsumerSocket[IO],
           poller: Poller[IO]
-      ): IO[Assertion] =
-        for {
-          _            <- Timer[IO].sleep(200.millis)
-          queueA       <- Queue.unbounded[IO, String]
-          queueB       <- Queue.unbounded[IO, String]
-          _            <- poller.registerProducer(producer, producerHandler)
-          _            <- poller.registerConsumer(consumerA, consumerHandler(queueA))
-          _            <- poller.registerConsumer(consumerB, consumerHandler(queueB))
-          totalEvents1 <- poller.poll(timeout)
-          _            <- sendA(producer)
-          _            <- sendB(producer)
-          totalEvents2 <- poller.poll(timeout)
-          totalEvents3 <- poller.poll(timeout)
-          a1           <- queueA.dequeue1
-          a2           <- queueA.dequeue1
-          b1           <- queueB.dequeue1
-          b2           <- queueB.dequeue1
-        } yield {
-          totalEvents1 shouldBe 1
-          totalEvents2 shouldBe 3
-          totalEvents3 shouldBe 3
-          List(a1, a2) shouldBe List("Topic-A", "We don't want to see this")
-          List(b1, b2) shouldBe List("Topic-B", "We would like to see this")
+      ): IO[Assertion] = {
+        val poll = poller.poll(PollTimeout.Infinity).foreverM
+
+        Resource.make(poll.start)(_.cancel).use { _ =>
+          for {
+            _      <- Timer[IO].sleep(200.millis)
+            queueA <- Queue.unbounded[IO, String]
+            queueB <- Queue.unbounded[IO, String]
+            _      <- poller.registerProducer(producer, producerHandler)
+            _      <- poller.registerConsumer(consumerA, consumerHandler(queueA))
+            _      <- poller.registerConsumer(consumerB, consumerHandler(queueB))
+            a1     <- queueA.dequeue1
+            a2     <- queueA.dequeue1
+            b1     <- queueB.dequeue1
+            b2     <- queueB.dequeue1
+          } yield {
+            List(a1, a2) shouldBe List("Topic-A", "Topic-A")
+            List(b1, b2) shouldBe List("Topic-B", "Topic-B")
+          }
         }
+      }
 
       create.use((program _).tupled)
     }

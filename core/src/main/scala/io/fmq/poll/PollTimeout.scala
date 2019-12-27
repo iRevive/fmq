@@ -7,12 +7,12 @@ sealed abstract class PollTimeout(val value: Long)
 object PollTimeout {
 
   /**
-    * Wait until a new message for *every* socket is available
+    * Wait until new event is available
     */
   final case object Infinity extends PollTimeout(-1L)
 
   /**
-    * Wait fixed duration for the new message
+    * Wait fixed duration until new event is available
     */
   final case class Fixed(duration: FiniteDuration) extends PollTimeout(duration.toMillis)
 
