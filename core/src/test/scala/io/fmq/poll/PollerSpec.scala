@@ -52,24 +52,19 @@ class PollerSpec extends IOSpec with SocketBehavior {
           queueB             <- Queue.unbounded[IO, String]
           _                  <- poller.registerConsumer(consumerA, handler(queueA))
           _                  <- poller.registerConsumer(consumerB, handler(queueB))
-          events1            <- poller.poll(timeout)
+          _                  <- poller.poll(timeout)
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.sendString("Topic-A")
-          events2            <- poller.poll(timeout)
+          _                  <- poller.poll(timeout)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.sendString("Topic-B")
-          events3            <- poller.poll(timeout)
+          _                  <- poller.poll(timeout)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.sendString("Topic-A")
           _                  <- producer.sendString("Topic-B")
-          events4            <- poller.poll(timeout)
+          _                  <- poller.poll(timeout)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
-          events1 //shouldBe 0
-          events2 //shouldBe 1
-          events3 //shouldBe 1
-          events4 //shouldBe 2
-
           queueA1 shouldBe empty
           queueB1 shouldBe empty
 
@@ -116,23 +111,20 @@ class PollerSpec extends IOSpec with SocketBehavior {
           poller: Poller[IO]
       ): IO[Assertion] =
         for {
-          _            <- Timer[IO].sleep(200.millis)
-          queueA       <- Queue.unbounded[IO, String]
-          queueB       <- Queue.unbounded[IO, String]
-          _            <- poller.registerProducer(producer, producerHandler)
-          _            <- poller.registerConsumer(consumerA, consumerHandler(queueA))
-          _            <- poller.registerConsumer(consumerB, consumerHandler(queueB))
-          totalEvents1 <- poller.poll(timeout)
-          totalEvents2 <- poller.poll(timeout)
-          totalEvents3 <- poller.poll(timeout)
-          a1           <- queueA.tryDequeue1
-          a2           <- queueA.tryDequeue1
-          b1           <- queueB.tryDequeue1
-          b2           <- queueB.tryDequeue1
+          _      <- Timer[IO].sleep(200.millis)
+          queueA <- Queue.unbounded[IO, String]
+          queueB <- Queue.unbounded[IO, String]
+          _      <- poller.registerProducer(producer, producerHandler)
+          _      <- poller.registerConsumer(consumerA, consumerHandler(queueA))
+          _      <- poller.registerConsumer(consumerB, consumerHandler(queueB))
+          _      <- poller.poll(timeout)
+          _      <- poller.poll(timeout)
+          _      <- poller.poll(timeout)
+          a1     <- queueA.tryDequeue1
+          a2     <- queueA.tryDequeue1
+          b1     <- queueB.tryDequeue1
+          b2     <- queueB.tryDequeue1
         } yield {
-          totalEvents1 //shouldBe 1
-          totalEvents2 //shouldBe 3
-          totalEvents3 //shouldBe 3
           List(a1, a2) shouldBe List(Some("Topic-A"), Some("Topic-A"))
           List(b1, b2) shouldBe List(Some("Topic-B"), Some("Topic-B"))
         }
