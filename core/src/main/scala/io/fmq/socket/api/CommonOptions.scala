@@ -1,18 +1,25 @@
 package io.fmq.socket.api
 
-import cats.effect.Sync
 import io.fmq.domain.{Identity, Linger}
-import org.zeromq.ZMQ
 
-trait CommonOptions[F[_]] {
+object CommonOptions {
 
-  protected def F: Sync[F]
-  private[fmq] def socket: ZMQ.Socket
+  private[socket] trait All[F[_]] extends Get[F] with Set[F] {
+    self: SocketOptions[F] =>
+  }
 
-  def identity: F[Identity]                    = F.delay(Identity(socket.getIdentity))
-  def setIdentity(identity: Identity): F[Unit] = F.void(F.delay(socket.setIdentity(identity.value)))
+  private[socket] trait Get[F[_]] {
+    self: SocketOptions[F] =>
 
-  def linger: F[Linger]                  = F.delay(Linger.fromInt(socket.getLinger))
-  def setLinger(linger: Linger): F[Unit] = F.void(F.delay(socket.setLinger(linger.value)))
+    def identity: F[Identity] = F.delay(Identity(socket.getIdentity))
+    def linger: F[Linger]     = F.delay(Linger.fromInt(socket.getLinger))
+  }
+
+  private[socket] trait Set[F[_]] {
+    self: SocketOptions[F] =>
+
+    def setIdentity(identity: Identity): F[Unit] = F.void(F.delay(socket.setIdentity(identity.value)))
+    def setLinger(linger: Linger): F[Unit]       = F.void(F.delay(socket.setLinger(linger.value)))
+  }
 
 }

@@ -2,14 +2,17 @@ package io.fmq.socket
 
 import cats.effect.Sync
 import io.fmq.domain.Port
-import io.fmq.socket.api.ReceiveOptions
+import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-final class ConsumerSocket[F[_]] private[fmq] (
+final class ConsumerSocket[F[_]: Sync] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     val port: Port
-)(implicit protected val F: Sync[F])
-    extends ReceiveOptions[F] {
+) extends SocketOptions[F]
+    with CommonOptions.Get[F]
+    with ReceiveOptions.Get[F] {
+
+  override protected def F: Sync[F] = implicitly[Sync[F]]
 
   /**
     * The operation blocks a thread until a new message is available.
@@ -42,5 +45,7 @@ final class ConsumerSocket[F[_]] private[fmq] (
     * @see [[recv]]
     */
   def recvString: F[String] = Sync[F].delay(socket.recvStr())
+
+  def hasReceiveMore: F[Boolean] = F.delay(socket.hasReceiveMore)
 
 }

@@ -5,14 +5,17 @@ import java.nio.charset.StandardCharsets
 import cats.effect.Sync
 import cats.syntax.functor._
 import io.fmq.domain.Port
-import io.fmq.socket.api.SendOptions
+import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-final class ProducerSocket[F[_]] private[fmq] (
+final class ProducerSocket[F[_]: Sync] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     val port: Port
-)(implicit protected val F: Sync[F])
-    extends SendOptions[F] {
+) extends SocketOptions[F]
+    with CommonOptions.Get[F]
+    with SendOptions.Get[F] {
+
+  override protected def F: Sync[F] = implicitly[Sync[F]]
 
   def send(bytes: Array[Byte]): F[Unit]     = F.delay(socket.send(bytes)).void
   def sendMore(bytes: Array[Byte]): F[Unit] = F.delay(socket.sendMore(bytes)).void

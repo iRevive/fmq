@@ -2,11 +2,22 @@ package io.fmq.socket.api
 
 import io.fmq.domain.ReceiveTimeout
 
-trait ReceiveOptions[F[_]] extends CommonOptions[F] {
+object ReceiveOptions {
 
-  def receiveTimeout: F[ReceiveTimeout]                   = F.delay(ReceiveTimeout.fromInt(socket.getReceiveTimeOut))
-  def setReceiveTimeout(timeout: ReceiveTimeout): F[Unit] = F.void(F.delay(socket.setReceiveTimeOut(timeout.value)))
+  private[socket] trait All[F[_]] extends Get[F] with Set[F] {
+    self: SocketOptions[F] =>
+  }
 
-  def hasReceiveMore: F[Boolean] = F.delay(socket.hasReceiveMore)
+  private[socket] trait Get[F[_]] {
+    self: SocketOptions[F] =>
+
+    def receiveTimeout: F[ReceiveTimeout]                   = F.delay(ReceiveTimeout.fromInt(socket.getReceiveTimeOut))
+  }
+
+  private[socket] trait Set[F[_]] {
+    self: SocketOptions[F] =>
+
+    def setReceiveTimeout(timeout: ReceiveTimeout): F[Unit] = F.void(F.delay(socket.setReceiveTimeOut(timeout.value)))
+  }
 
 }

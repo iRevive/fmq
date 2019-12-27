@@ -21,7 +21,7 @@ class PollerSpec extends IOSpec with SocketBehavior {
   "Poller[IO]" should {
 
     "not call event handler if message is not available yet" in withContext() { ctx: Context[IO] =>
-      val timeout = PollTimeout.Fixed(100.millis)
+      val timeout = PollTimeout.Fixed(200.millis)
 
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")

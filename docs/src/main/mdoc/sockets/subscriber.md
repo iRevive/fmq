@@ -55,7 +55,8 @@ Since `subscriber.connect` returns `Resource[F, ConsumerSocket[IO]]` the connect
 
 ## Configuration
 
-Both `Subscriber[F]` and `ConsumerSocket[F]` have the same configuration methods:
+The settings can be changed until the socket is connected:  
+
 ```scala mdoc:silent
 import io.fmq.domain.{ReceiveTimeout, Linger}
 import io.fmq.socket.Subscriber
