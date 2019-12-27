@@ -14,7 +14,7 @@ object ReceiveTimeout {
   final case object Immediately extends ReceiveTimeout(0)
 
   /**
-    * Wait infinity for the new message
+    * Wait until the new message is available
     */
   final case object Infinity extends ReceiveTimeout(-1)
 

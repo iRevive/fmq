@@ -8,8 +8,8 @@ import io.fmq.domain.Port
 import io.fmq.socket.api.SendOptions
 import org.zeromq.ZMQ
 
-final class ProducerSocket[F[_]](
-    protected val socket: ZMQ.Socket,
+final class ProducerSocket[F[_]] private[fmq] (
+    protected[fmq] val socket: ZMQ.Socket,
     val port: Port
 )(implicit protected val F: Sync[F])
     extends SendOptions[F] {

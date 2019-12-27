@@ -5,8 +5,8 @@ import io.fmq.domain.Port
 import io.fmq.socket.api.ReceiveOptions
 import org.zeromq.ZMQ
 
-final class ConsumerSocket[F[_]](
-    protected val socket: ZMQ.Socket,
+final class ConsumerSocket[F[_]] private[fmq] (
+    protected[fmq] val socket: ZMQ.Socket,
     val port: Port
 )(implicit protected val F: Sync[F])
     extends ReceiveOptions[F] {
