@@ -9,3 +9,4 @@ position: 2
 
 ### Simple
 - **[PubSub](./pubsub.html)**: Example of data manipulation using single `Publisher` and `Subscriber`.
+- **[Poller](./poller.html)**: Example of data manipulation using single `Poller`.
