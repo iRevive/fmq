@@ -32,7 +32,6 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
       items   <- itemsRef.get
       polling <- items.map(item => (item, toZmqPollItem(item))).pure[F]
       events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, items.size, timeout.value))
-      _       <- Sync[F].delay(println(s"Polling result ${polling.mkString(", ")}. Total ${events.toString}"))
       _       <- polling.traverse((dispatchItem _).tupled)
     } yield events
 

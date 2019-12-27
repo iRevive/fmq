@@ -16,7 +16,7 @@ def handler(queue: Queue[F, String]): ConsumerHandler[F] =
 
 Then the `poller.poll` operation can be evaluated on the blocking context:
 ```scala
-blocker.blockOn(fs.Stream.repeatEval(poller.poll(PollTimeout.Infinity)).compile.drain)
+blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM)
 ```
 
 Thus all consuming operations is being executed on the one blocking thread, while the processing can be performed on the general context.  
@@ -65,8 +65,6 @@ import io.fmq.Context
 import io.fmq.domain.{Protocol, SubscribeTopic}
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
 
-import scala.concurrent.duration._
-
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
@@ -103,7 +101,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
             } yield ()
           
           // evaluates poll on a blocking context
-          val poll = blocker.blockOn(Stream.repeatEval(poller.poll(PollTimeout.Fixed(15.millis))).compile.drain)
+          val poll = blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM[Unit])
           
           for {
             queueA   <- Stream.eval(Queue.unbounded[F, String])
