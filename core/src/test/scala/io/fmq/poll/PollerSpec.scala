@@ -63,6 +63,7 @@ class PollerSpec extends IOSpec with SocketBehavior {
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.sendString("Topic-A")
           _                  <- producer.sendString("Topic-B")
+          _                  <- Timer[IO].sleep(100.millis)
           _                  <- poller.poll(timeout)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
