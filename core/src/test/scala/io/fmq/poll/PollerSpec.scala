@@ -26,9 +26,6 @@ class PollerSpec extends IOSpec with SocketBehavior {
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
 
-      def send(producer: ProducerSocket[IO], text: String): IO[Unit] =
-        producer.sendString(text)
-
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
           pub       <- ctx.createPublisher
@@ -57,14 +54,14 @@ class PollerSpec extends IOSpec with SocketBehavior {
           _                  <- poller.registerConsumer(consumerB, handler(queueB))
           events1            <- poller.poll(timeout)
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-A")
+          _                  <- producer.sendString("Topic-A")
           events2            <- poller.poll(timeout)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-B")
+          _                  <- producer.sendString("Topic-B")
           events3            <- poller.poll(timeout)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- send(producer, "Topic-A")
-          _                  <- send(producer, "Topic-B")
+          _                  <- producer.sendString("Topic-A")
+          _                  <- producer.sendString("Topic-B")
           events4            <- poller.poll(timeout)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
