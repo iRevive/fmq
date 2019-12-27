@@ -98,11 +98,17 @@ class PollerSpec extends IOSpec with SocketBehavior {
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 
-      def consumerHandler(queue: Queue[IO, String]): ConsumerHandler[IO] =
-        Kleisli(socket => socket.recvString >>= queue.enqueue1)
+      def log(message: String) = IO.delay(println(message))
+
+      def consumerHandler(consumer: String, queue: Queue[IO, String]): ConsumerHandler[IO] =
+        Kleisli { socket =>
+          log(s"$consumer. handler") >> (socket.recvString >>= queue.enqueue1) >> log(s"$consumer. handler done")
+        }
 
       def producerHandler: ProducerHandler[IO] =
-        Kleisli(socket => socket.sendString("Topic-A") >> socket.sendString("Topic-B"))
+        Kleisli { socket =>
+          log("producer start") >> socket.sendString("Topic-A") >> socket.sendString("Topic-B") >> log("producer end")
+        }
 
       def program(
           producer: ProducerSocket[IO],
@@ -115,8 +121,8 @@ class PollerSpec extends IOSpec with SocketBehavior {
           queueA <- Queue.unbounded[IO, String]
           queueB <- Queue.unbounded[IO, String]
           _      <- poller.registerProducer(producer, producerHandler)
-          _      <- poller.registerConsumer(consumerA, consumerHandler(queueA))
-          _      <- poller.registerConsumer(consumerB, consumerHandler(queueB))
+          _      <- poller.registerConsumer(consumerA, consumerHandler("consumerA", queueA))
+          _      <- poller.registerConsumer(consumerB, consumerHandler("consumerB", queueB))
           _      <- poller.poll(timeout)
           _      <- poller.poll(timeout)
           _      <- poller.poll(timeout)
