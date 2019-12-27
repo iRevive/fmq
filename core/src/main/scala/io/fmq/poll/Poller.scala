@@ -13,13 +13,13 @@ import io.fmq.{ConsumerSocket, ProducerSocket}
 import org.zeromq.ZContext
 import zmq.poll.{PollItem => ZPollItem}
 
-final class Poller[F[_]: Sync] private (itemsRef: Ref[F, Set[PollEntry[F]]], selector: Selector) {
+final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], selector: Selector) {
 
   def registerConsumer(socket: ConsumerSocket[F], handler: ConsumerHandler[F]): F[Unit] =
-    itemsRef.update(_ + PollEntry.Read(socket, handler))
+    itemsRef.update(_ :+ PollEntry.Read(socket, handler))
 
   def registerProducer(socket: ProducerSocket[F], handler: ProducerHandler[F]): F[Unit] =
-    itemsRef.update(_ + PollEntry.Write(socket, handler))
+    itemsRef.update(_ :+ PollEntry.Write(socket, handler))
 
   /**
     * In the case of [[PollTimeout.Infinity]] the thread will be '''blocked''' until every socket
@@ -59,7 +59,7 @@ object Poller {
   def create[F[_]: Sync](ctx: ZContext): Resource[F, Poller[F]] =
     for {
       selector <- Resource.fromAutoCloseable(Sync[F].delay(ctx.getContext.selector()))
-      ref      <- Resource.liftF(Ref.of[F, Set[PollEntry[F]]](Set.empty))
+      ref      <- Resource.liftF(Ref.of[F, List[PollEntry[F]]](List.empty))
     } yield new Poller[F](ref, selector)
 
 }
