@@ -65,6 +65,8 @@ import io.fmq.Context
 import io.fmq.domain.{Protocol, SubscribeTopic}
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
 
+import scala.concurrent.duration._
+
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
@@ -101,7 +103,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
             } yield ()
           
           // evaluates poll on a blocking context
-          val poll = blocker.blockOn(Stream.repeatEval(poller.poll(PollTimeout.Infinity)).compile.drain)
+          val poll = blocker.blockOn(Stream.repeatEval(poller.poll(PollTimeout.Fixed(15.millis))).compile.drain)
           
           for {
             queueA   <- Stream.eval(Queue.unbounded[F, String])

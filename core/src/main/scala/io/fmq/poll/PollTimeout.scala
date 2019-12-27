@@ -7,7 +7,7 @@ sealed abstract class PollTimeout(val value: Long)
 object PollTimeout {
 
   /**
-    * Wait infinity for the new message
+    * Wait until a new message for *every* socket is available
     */
   final case object Infinity extends PollTimeout(-1L)
 

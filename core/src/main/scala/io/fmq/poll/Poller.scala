@@ -21,6 +21,12 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, Set[PollEntry[F]]], sel
   def registerProducer(socket: ProducerSocket[F], handler: ProducerHandler[F]): F[Unit] =
     itemsRef.update(_ + PollEntry.Write(socket, handler))
 
+  /**
+    * In the case of [[PollTimeout.Infinity]] the thread will be '''blocked''' until every socket
+    * can either receive or send a message (based on the socket type).
+    *
+    * @return total number of available events
+    */
   def poll(timeout: PollTimeout): F[Int] =
     for {
       items   <- itemsRef.get
