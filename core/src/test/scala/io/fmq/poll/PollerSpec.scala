@@ -132,13 +132,17 @@ class PollerSpec extends IOSpec with SocketBehavior {
           _            <- poller.registerConsumer(consumerA, consumerHandler(queueA))
           _            <- poller.registerConsumer(consumerB, consumerHandler(queueB))
           totalEvents1 <- poller.poll(timeout)
-          _            <- sendA(producer)
-          _            <- sendB(producer)
+          _            <- IO.delay(println("after poll1"))
           totalEvents2 <- poller.poll(timeout)
+          _            <- IO.delay(println("after poll2"))
           totalEvents3 <- poller.poll(timeout)
+          _            <- IO.delay(println("after poll3"))
           a1           <- queueA.dequeue1
+          _            <- IO.delay(println("after a1"))
           a2           <- queueA.dequeue1
+          _            <- IO.delay(println("after a2"))
           b1           <- queueB.dequeue1
+          _            <- IO.delay(println("after b1"))
           b2           <- queueB.dequeue1
         } yield {
           totalEvents1 shouldBe 1
