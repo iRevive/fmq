@@ -30,10 +30,10 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
   def poll(timeout: PollTimeout): F[Int] =
     for {
       items   <- itemsRef.get
-      polling <- items.map(item => (item, toZmqPollItem(item))).toMap.pure[F]
-      events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.values.toArray, items.size, timeout.value))
+      polling <- items.map(item => (item, toZmqPollItem(item))).pure[F]
+      events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, items.size, timeout.value))
       _       <- Sync[F].delay(println(s"Polling result ${polling.mkString(", ")}. Total ${events.toString}"))
-      _       <- polling.toList.traverse((dispatchItem _).tupled)
+      _       <- polling.traverse((dispatchItem _).tupled)
     } yield events
 
   private def dispatchItem(entity: PollEntry[F], item: ZPollItem): F[Unit] = {
