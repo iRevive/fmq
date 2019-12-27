@@ -89,8 +89,8 @@ class PollerSpec extends IOSpec with SocketBehavior {
       create.use((program _).tupled)
     }
 
-    "read from multiple sockets" in withContext() { ctx: Context[IO] =>
-      val timeout = PollTimeout.Fixed(5.seconds)
+    "read from multiple sockets" in withContext(15.seconds) { ctx: Context[IO] =>
+      val timeout = PollTimeout.Fixed(200.millis)
 
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
