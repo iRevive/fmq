@@ -9,7 +9,6 @@ options:
         menu_section: guide
 
   - title: Sockets
-    url: sockets/
     menu_section: sockets
 
     nested_options:
@@ -22,7 +21,6 @@ options:
         menu_section: sockets
 
   - title: Examples
-    url: examples/
     menu_section: examples
 
     nested_options:
