@@ -69,7 +69,8 @@ lazy val docs = project
         Map("title" -> "License", "section" -> "license", "position" -> "101")
       )
     ),
-    libraryDependencies += Dependencies.fs2
+    micrositeExtraMdFilesOutput := (resourceManaged in Compile).value / "jekyll",
+    libraryDependencies         += Dependencies.fs2
   )
 
 lazy val commonSettings = Seq(
