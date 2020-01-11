@@ -59,12 +59,12 @@ lazy val docs = project
     micrositeGithubToken       := sys.env.get("GITHUB_TOKEN"),
     micrositeExtraMdFiles := Map(
       file("README.md") -> ExtraMdFileConfig(
-        "index.html",
+        "index.md",
         "home",
         Map("title" -> "Home", "section" -> "home", "position" -> "0")
       ),
       file("LICENSE") -> ExtraMdFileConfig(
-        "license.html",
+        "license.md",
         "page",
         Map("title" -> "License", "section" -> "license", "position" -> "101")
       )
