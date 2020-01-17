@@ -36,7 +36,7 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 
   private def createSocket(tpe: SocketType): Resource[F, ZMQ.Socket] =
-    Resource.make(blocker.delay(ctx.createSocket(tpe.zmqType)))(s => blocker.delay(ctx.destroySocket(s)))
+    Resource.liftF(blocker.delay(ctx.createSocket(tpe.zmqType)))
 
   private def subscribe(socket: ZMQ.Socket, topic: Array[Byte]): Resource[F, Unit] = {
     val acquire = blocker.delay(socket.subscribe(topic)).void
