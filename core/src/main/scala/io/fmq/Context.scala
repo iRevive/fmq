@@ -2,7 +2,7 @@ package io.fmq
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.domain.{SocketType, SubscribeTopic}
+import io.fmq.options.{SocketType, SubscribeTopic}
 import io.fmq.poll.Poller
 import io.fmq.socket._
 import org.zeromq.{ZContext, ZMQ}

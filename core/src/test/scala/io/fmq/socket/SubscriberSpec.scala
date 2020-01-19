@@ -5,7 +5,8 @@ import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
-import io.fmq.domain.{Protocol, SubscribeTopic}
+import io.fmq.address.{Address, Host, Uri}
+import io.fmq.options.SubscribeTopic
 import io.fmq.socket.SocketBehavior.SocketResource
 import org.scalatest.Assertion
 
@@ -20,24 +21,24 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
   "Subscriber" should {
 
     "filter multipart data" in withContext() { ctx: Context[IO] =>
-      val protocol = Protocol.tcp("localhost")
-      val topic    = SubscribeTopic.utf8String("B")
+      val uri   = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val topic = SubscribeTopic.utf8String("B")
 
-      def sendA(producer: ProducerSocket[IO]): IO[Unit] =
+      def sendA(producer: ProducerSocket.TCP[IO]): IO[Unit] =
         producer.sendStringMore("A") >> producer.sendString("We don't want to see this")
 
-      def sendB(producer: ProducerSocket[IO]): IO[Unit] =
+      def sendB(producer: ProducerSocket.TCP[IO]): IO[Unit] =
         producer.sendStringMore("B") >> producer.sendString("We would like to see this")
 
-      def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO])] =
+      def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO])] =
         for {
           pub        <- ctx.createPublisher
-          publisher  <- pub.bindToRandomPort(protocol)
+          publisher  <- pub.bindToRandomPort(uri)
           sub        <- ctx.createSubscriber(topic)
-          subscriber <- sub.connect(Protocol.tcp("localhost", publisher.port))
+          subscriber <- sub.connect(publisher.uri)
         } yield (publisher, subscriber)
 
-      def program(producer: ProducerSocket[IO], consumer: ConsumerSocket[IO]): IO[Assertion] =
+      def program(producer: ProducerSocket.TCP[IO], consumer: ConsumerSocket.TCP[IO]): IO[Assertion] =
         for {
           _        <- Timer[IO].sleep(200.millis)
           _        <- sendA(producer)
@@ -96,11 +97,13 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
   def withRandomPortSocket[A](topic: SubscribeTopic)(fa: SocketResource.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
+      val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+
       (for {
         pub      <- ctx.createPublisher
         sub      <- ctx.createSubscriber(topic)
-        producer <- pub.bindToRandomPort(Protocol.tcp("localhost"))
-        consumer <- sub.connect(Protocol.tcp("localhost", producer.port))
+        producer <- pub.bindToRandomPort(uri)
+        consumer <- sub.connect(producer.uri)
       } yield SocketResource.Pair(producer, consumer)).use(fa)
     }
 

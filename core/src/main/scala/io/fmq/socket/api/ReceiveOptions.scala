@@ -1,6 +1,6 @@
 package io.fmq.socket.api
 
-import io.fmq.domain.ReceiveTimeout
+import io.fmq.options.ReceiveTimeout
 
 object ReceiveOptions {
 

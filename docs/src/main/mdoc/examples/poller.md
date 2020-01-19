@@ -34,11 +34,11 @@ import cats.FlatMap
 import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
-import io.fmq.ProducerSocket
+import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
@@ -62,21 +62,22 @@ import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
-import io.fmq.domain.{Protocol, SubscribeTopic}
+import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.options.SubscribeTopic
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 
-  private val topicA   = "my-topic-a"
-  private val topicB   = "my-topic-b"
-  private val protocol = Protocol.tcp("localhost")
+  private val topicA = "my-topic-a"
+  private val topicB = "my-topic-b"
+  private val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
   private val appResource =
     for {
-      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(protocol))
-      addr   <- Resource.pure(Protocol.tcp("localhost", pub.port))
+      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(uri))
+      addr   <- Resource.pure(pub.uri)
       subA   <- context.createSubscriber(SubscribeTopic.utf8String(topicA)).flatMap(_.connect(addr))
       subB   <- context.createSubscriber(SubscribeTopic.utf8String(topicB)).flatMap(_.connect(addr))
       subAll <- context.createSubscriber(SubscribeTopic.All).flatMap(_.connect(addr))
@@ -90,7 +91,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
         case (publisher, subscriberA, subscriberB, subscriberAll, poller) =>
           val producer = new Producer[F](publisher, topicA, topicB)
 
-          def handler(queue: Queue[F, String]): ConsumerHandler[F] =
+          def handler(queue: Queue[F, String]): ConsumerHandler[F, Protocol.TCP, Address.Full] =
             Kleisli(socket => socket.recvString >>= queue.enqueue1)
           
           def configurePoller(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] =

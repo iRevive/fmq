@@ -1,13 +1,13 @@
 package io.fmq.socket
 
 import cats.effect.Sync
-import io.fmq.domain.Port
+import io.fmq.address.{Address, IsComplete, Protocol, Uri}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-final class ConsumerSocket[F[_]: Sync] private[fmq] (
+final class ConsumerSocket[F[_]: Sync, P <: Protocol, A <: Address: IsComplete[P, *]] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
-    val port: Port
+    val uri: Uri[P, A]
 ) extends SocketOptions[F]
     with CommonOptions.Get[F]
     with ReceiveOptions.Get[F] {
@@ -48,4 +48,9 @@ final class ConsumerSocket[F[_]: Sync] private[fmq] (
 
   def hasReceiveMore: F[Boolean] = F.delay(socket.hasReceiveMore)
 
+}
+
+object ConsumerSocket {
+  type TCP[F[_]]    = ConsumerSocket[F, Protocol.TCP, Address.Full]
+  type InProc[F[_]] = ConsumerSocket[F, Protocol.InProc, Address.HostOnly]
 }
