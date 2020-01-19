@@ -1,7 +1,6 @@
 package io.fmq
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
-import cats.syntax.functor._
 import io.fmq.poll.Poller
 import io.fmq.socket._
 import org.zeromq.{SocketType, ZContext, ZMQ}
@@ -11,7 +10,7 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
   def createSubscriber(topic: Subscriber.Topic): Resource[F, Subscriber[F]] =
     for {
       socket <- createSocket(SocketType.SUB)
-      _      <- subscribe(socket, topic.value)
+      _      <- Resource.liftF(Sync[F].delay(socket.subscribe(topic.value)))
     } yield new Subscriber(topic, socket, blocker)
 
   def createPublisher: Resource[F, Publisher[F]] =
@@ -36,13 +35,6 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
 
   private def createSocket(tpe: SocketType): Resource[F, ZMQ.Socket] =
     Resource.liftF(blocker.delay(ctx.createSocket(tpe)))
-
-  private def subscribe(socket: ZMQ.Socket, topic: Array[Byte]): Resource[F, Unit] = {
-    val acquire = blocker.delay(socket.subscribe(topic)).void
-    val release = blocker.delay(socket.unsubscribe(topic)).void
-
-    Resource.make(acquire)(_ => release)
-  }
 
 }
 
