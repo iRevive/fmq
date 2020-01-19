@@ -6,8 +6,7 @@ import cats.syntax.flatMap._
 import cats.syntax.apply._
 import fs2.concurrent.Queue
 import io.fmq.address.{Address, Host, Protocol, Uri}
-import io.fmq.options.SubscribeTopic
-import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior}
+import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior, Subscriber}
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
@@ -24,8 +23,8 @@ class PollerSpec extends IOSpec with SocketBehavior {
     "not call event handler if message is not available yet" in withContext() { ctx: Context[IO] =>
       val timeout = PollTimeout.Fixed(200.millis)
 
-      val topicA = SubscribeTopic.utf8String("Topic-A")
-      val topicB = SubscribeTopic.utf8String("Topic-B")
+      val topicA = Subscriber.Topic.utf8String("Topic-A")
+      val topicB = Subscriber.Topic.utf8String("Topic-B")
       val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
       def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO], ConsumerSocket.TCP[IO], Poller[IO])] =
@@ -86,8 +85,8 @@ class PollerSpec extends IOSpec with SocketBehavior {
     }
 
     "read from multiple sockets" in withContext(15.seconds) { ctx: Context[IO] =>
-      val topicA = SubscribeTopic.utf8String("Topic-A")
-      val topicB = SubscribeTopic.utf8String("Topic-B")
+      val topicA = Subscriber.Topic.utf8String("Topic-A")
+      val topicB = Subscriber.Topic.utf8String("Topic-B")
       val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
       def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO], ConsumerSocket.TCP[IO], Poller[IO])] =

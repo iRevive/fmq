@@ -15,7 +15,6 @@ The subscriber can be created within the `Context`.
 ```scala mdoc:silent
 import cats.effect.{Blocker, ContextShift, Resource, IO}
 import io.fmq.Context
-import io.fmq.options.SubscribeTopic
 import io.fmq.socket.Subscriber
 
 import scala.concurrent.ExecutionContext
@@ -26,14 +25,14 @@ val topicSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
     blocker    <- Blocker[IO]
     context    <- Context.create[IO](1, blocker)
-    subscriber <- context.createSubscriber(SubscribeTopic.utf8String("my-topic"))
+    subscriber <- context.createSubscriber(Subscriber.Topic.utf8String("my-topic"))
   } yield subscriber
 
 val allSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
     blocker    <- Blocker[IO]
     context    <- Context.create[IO](1, blocker)
-    subscriber <- context.createSubscriber(SubscribeTopic.All)
+    subscriber <- context.createSubscriber(Subscriber.Topic.All)
   } yield subscriber
 ```
 

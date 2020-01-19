@@ -2,14 +2,14 @@ package io.fmq
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.options.{SocketType, SubscribeTopic}
+import io.fmq.options.SocketType
 import io.fmq.poll.Poller
 import io.fmq.socket._
 import org.zeromq.{ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
 
-  def createSubscriber(topic: SubscribeTopic): Resource[F, Subscriber[F]] =
+  def createSubscriber(topic: Subscriber.Topic): Resource[F, Subscriber[F]] =
     for {
       socket <- createSocket(SocketType.Sub)
       _      <- subscribe(socket, topic.value)
