@@ -1,0 +1,41 @@
+name: Scala CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  docs:
+    name: Website
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v5
+      - run: sbt ++2.13.1 docs/mdoc
+
+  test:
+    name: ${{ matrix.command }} ${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['adopt@1.8', 'adopt@1.11']
+        command:
+          - "'++2.12.10 ci'"
+          - "'++2.13.1 ci'"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: olafurpg/setup-scala@v5
+        with:
+          java-version: ${{ matrix.java }}
+      - uses: sbt ${{ matrix.command }}
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./target/scala-2.13/scoverage-report/scoverage.xml
+          flags: unittests
+          yml: ./.codecov.yml
