@@ -33,20 +33,19 @@ The `Publisher[F]` is a valid instance of the socket but it's not connect to the
 Publisher can either connect to the specific port or allocate a random port.
 
 ```scala mdoc:silent
-import io.fmq.domain.{Protocol, Port}
-import io.fmq.socket.Publisher
-import io.fmq.ProducerSocket
+import io.fmq.address.{Address, Host, Port, Uri}
+import io.fmq.socket.{ProducerSocket, Publisher}
 
-val specificPort: Resource[IO, ProducerSocket[IO]] = 
+val specificPort: Resource[IO, ProducerSocket.TCP[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bind(Protocol.tcp("localhost", Port(31234)))
+    connected <- publisher.bind(Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(31234))))
   } yield connected
 
-val randomPort: Resource[IO, ProducerSocket[IO]] = 
+val randomPort: Resource[IO, ProducerSocket.TCP[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bindToRandomPort(Protocol.tcp("localhost"))
+    connected <- publisher.bindToRandomPort(Uri.tcp(Address.HostOnly(Host.Fixed("localhost"))))
   } yield connected
 ```
 
@@ -57,9 +56,8 @@ Since `publisher.bind` and `publisher.bindToRandomPort` return `Resource[F, Prod
 The settings can be changed until the socket is connected:  
 
 ```scala mdoc:silent
-import io.fmq.domain.{SendTimeout, Linger}
-import io.fmq.socket.Publisher
-import io.fmq.ProducerSocket
+import io.fmq.options.{SendTimeout, Linger}
+import io.fmq.socket.{ProducerSocket, Publisher}
 
 def configurePublisher(publisher: Publisher[IO]): IO[Unit] = 
   for {
@@ -74,11 +72,11 @@ Only connected publisher can send messages:
 
 ```scala mdoc:silent
 import cats.syntax.flatMap._
-import io.fmq.ProducerSocket
+import io.fmq.socket.ProducerSocket
 
-def sendSingleMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
+def sendSingleMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
   publisher.sendString("my-message")
 
-def sendBatchMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
+def sendBatchMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
   publisher.sendStringMore("filter") >> publisher.sendString("my-message") 
 ```

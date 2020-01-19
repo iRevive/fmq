@@ -1,6 +1,6 @@
 package io.fmq.socket.api
 
-import io.fmq.domain.{Identity, Linger}
+import io.fmq.options.{Identity, Linger}
 
 object CommonOptions {
 

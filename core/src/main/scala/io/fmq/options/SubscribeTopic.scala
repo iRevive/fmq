@@ -1,4 +1,4 @@
-package io.fmq.domain
+package io.fmq.options
 
 import java.nio.charset.StandardCharsets
 

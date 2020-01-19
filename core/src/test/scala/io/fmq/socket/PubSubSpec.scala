@@ -2,7 +2,8 @@ package io.fmq
 package socket
 
 import cats.effect.{IO, Resource, Sync}
-import io.fmq.domain.{Port, Protocol, SubscribeTopic}
+import io.fmq.address.{Address, Host, Port, Uri}
+import io.fmq.options._
 import io.fmq.socket.SocketBehavior.SocketResource
 
 class PubSubSpec extends IOSpec with SocketBehavior {
@@ -21,20 +22,20 @@ class PubSubSpec extends IOSpec with SocketBehavior {
         context.createSubscriber(SubscribeTopic.All)
 
       override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Port): Resource[F, SocketResource.Pair[F]] = {
-        val address = Protocol.tcp("localhost", port)
+        val uri = Uri.tcp(Address.Full(Host.Fixed("localhost"), port))
 
         for {
-          p <- producer.bind(address)
-          c <- consumer.connect(address)
+          p <- producer.bind(uri)
+          c <- consumer.connect(uri)
         } yield SocketResource.Pair(p, c)
       }
 
       override def bindToRandomPort(producer: Publisher[F], consumer: Subscriber[F]): Resource[F, SocketResource.Pair[F]] = {
-        val address = Protocol.tcp("localhost")
+        val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
         for {
-          p <- producer.bindToRandomPort(address)
-          c <- consumer.connect(Protocol.tcp("localhost", p.port))
+          p <- producer.bindToRandomPort(uri)
+          c <- consumer.connect(p.uri)
         } yield SocketResource.Pair(p, c)
       }
 

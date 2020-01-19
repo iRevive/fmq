@@ -2,7 +2,7 @@ package io.fmq.socket
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.domain.Protocol.tcp
+import io.fmq.address.{Address, IsComplete, Protocol, Uri}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
@@ -16,12 +16,12 @@ final class Pull[F[_]: Sync: ContextShift] private[fmq] (
 
   override protected def F: Sync[F] = implicitly[Sync[F]]
 
-  def bind(protocol: tcp.HostPort): Resource[F, ConsumerSocket[F]] =
-    Bind.bind[F](protocol, socket, blocker).as(new ConsumerSocket(socket, protocol.port))
+  def bind[P <: Protocol, A <: Address: IsComplete[P, *]](uri: Uri[P, A]): Resource[F, ConsumerSocket[F, P, A]] =
+    Bind.bind[F, P, A](uri, socket, blocker).as(new ConsumerSocket(socket, uri))
 
-  def bindToRandomPort(protocol: tcp.Host): Resource[F, ConsumerSocket[F]] =
+  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, ConsumerSocket[F, Protocol.TCP, Address.Full]] =
     for {
-      port <- Bind.bindToRandomPort[F](protocol, socket, blocker)
-    } yield new ConsumerSocket(socket, port)
+      uriFull <- Bind.bindToRandomPort[F](uri, socket, blocker)
+    } yield new ConsumerSocket(socket, uriFull)
 
 }

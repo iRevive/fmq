@@ -2,7 +2,7 @@ package io.fmq
 package socket
 
 import cats.effect.{IO, Resource, Sync}
-import io.fmq.domain.{Port, Protocol}
+import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.socket.SocketBehavior.SocketResource
 
 class PushPullSpec extends IOSpec with SocketBehavior {
@@ -21,20 +21,20 @@ class PushPullSpec extends IOSpec with SocketBehavior {
         context.createPull
 
       override def bind(push: Push[F], pull: Pull[F], port: Port): Resource[F, SocketResource.Pair[F]] = {
-        val address = Protocol.tcp("localhost", port)
+        val uri = Uri.tcp(Address.Full(Host.Fixed("localhost"), port))
 
         for {
-          consumer <- pull.bind(address)
-          producer <- push.connect(address)
+          consumer <- pull.bind(uri)
+          producer <- push.connect(uri)
         } yield SocketResource.Pair(producer, consumer)
       }
 
       override def bindToRandomPort(push: Push[F], pull: Pull[F]): Resource[F, SocketResource.Pair[F]] = {
-        val address = Protocol.tcp("localhost")
+        val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
         for {
-          consumer <- pull.bindToRandomPort(address)
-          producer <- push.connect(Protocol.tcp("localhost", consumer.port))
+          consumer <- pull.bindToRandomPort(uri)
+          producer <- push.connect(consumer.uri)
         } yield SocketResource.Pair(producer, consumer)
       }
 

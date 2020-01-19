@@ -8,7 +8,8 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import fs2.Stream
-import io.fmq.domain._
+import io.fmq.address.{Address, Host, Port, Uri}
+import io.fmq.options._
 import io.fmq.socket.SocketBehavior.{Consumer, Producer, SocketResource}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions}
 import org.scalatest.Assertion
@@ -61,8 +62,10 @@ trait SocketBehavior {
 
       resource.use {
         case SocketResource.Pair(producer, consumer) =>
-          producer.port shouldBe port
-          consumer.port shouldBe port
+          val expectedUri = Uri.tcp(Address.Full(Host.Fixed("localhost"), port))
+
+          producer.uri shouldBe expectedUri
+          consumer.uri shouldBe expectedUri
 
           val program =
             for {
@@ -171,7 +174,7 @@ trait SocketBehavior {
 
   }
 
-  protected def collectMessages[F[_]: Sync](consumer: ConsumerSocket[F], limit: Long): F[List[String]] =
+  protected def collectMessages[F[_]: Sync](consumer: ConsumerSocket.TCP[F], limit: Long): F[List[String]] =
     Stream.repeatEval(consumer.recvString).take(limit).compile.toList
 
 }
@@ -189,7 +192,7 @@ object SocketBehavior {
   }
 
   object SocketResource {
-    final case class Pair[F[_]](producer: ProducerSocket[F], consumer: ConsumerSocket[F])
+    final case class Pair[F[_]](producer: ProducerSocket.TCP[F], consumer: ConsumerSocket.TCP[F])
   }
 
 }

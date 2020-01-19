@@ -5,7 +5,8 @@ import cats.effect.{IO, Resource, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.apply._
 import fs2.concurrent.Queue
-import io.fmq.domain.{Protocol, SubscribeTopic}
+import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.options.SubscribeTopic
 import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior}
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
@@ -25,25 +26,26 @@ class PollerSpec extends IOSpec with SocketBehavior {
 
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
+      val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
-      def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
+      def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO], ConsumerSocket.TCP[IO], Poller[IO])] =
         for {
           pub       <- ctx.createPublisher
           subA      <- ctx.createSubscriber(topicA)
           subB      <- ctx.createSubscriber(topicB)
-          publisher <- pub.bindToRandomPort(Protocol.tcp("localhost"))
-          consumerA <- subA.connect(Protocol.tcp("localhost", publisher.port))
-          consumerB <- subB.connect(Protocol.tcp("localhost", publisher.port))
+          publisher <- pub.bindToRandomPort(uri)
+          consumerA <- subA.connect(publisher.uri)
+          consumerB <- subB.connect(publisher.uri)
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 
-      def handler(queue: Queue[IO, String]): ConsumerHandler[IO] =
+      def handler(queue: Queue[IO, String]): ConsumerHandler[IO, Protocol.TCP, Address.Full] =
         Kleisli(socket => socket.recvString >>= queue.enqueue1)
 
       def program(
-          producer: ProducerSocket[IO],
-          consumerA: ConsumerSocket[IO],
-          consumerB: ConsumerSocket[IO],
+          producer: ProducerSocket.TCP[IO],
+          consumerA: ConsumerSocket.TCP[IO],
+          consumerB: ConsumerSocket.TCP[IO],
           poller: Poller[IO]
       ): IO[Assertion] =
         for {
@@ -86,28 +88,29 @@ class PollerSpec extends IOSpec with SocketBehavior {
     "read from multiple sockets" in withContext(15.seconds) { ctx: Context[IO] =>
       val topicA = SubscribeTopic.utf8String("Topic-A")
       val topicB = SubscribeTopic.utf8String("Topic-B")
+      val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
-      def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
+      def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO], ConsumerSocket.TCP[IO], Poller[IO])] =
         for {
           pub       <- ctx.createPublisher
           subA      <- ctx.createSubscriber(topicA)
           subB      <- ctx.createSubscriber(topicB)
-          publisher <- pub.bindToRandomPort(Protocol.tcp("localhost"))
-          consumerA <- subA.connect(Protocol.tcp("localhost", publisher.port))
-          consumerB <- subB.connect(Protocol.tcp("localhost", publisher.port))
+          publisher <- pub.bindToRandomPort(uri)
+          consumerA <- subA.connect(publisher.uri)
+          consumerB <- subB.connect(publisher.uri)
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 
-      def consumerHandler(queue: Queue[IO, String]): ConsumerHandler[IO] =
+      def consumerHandler(queue: Queue[IO, String]): ConsumerHandler[IO, Protocol.TCP, Address.Full] =
         Kleisli(socket => socket.recvString >>= queue.enqueue1)
 
-      def producerHandler: ProducerHandler[IO] =
+      def producerHandler: ProducerHandler[IO, Protocol.TCP, Address.Full] =
         Kleisli(socket => socket.sendString("Topic-A") >> socket.sendString("Topic-B"))
 
       def program(
-          producer: ProducerSocket[IO],
-          consumerA: ConsumerSocket[IO],
-          consumerB: ConsumerSocket[IO],
+          producer: ProducerSocket.TCP[IO],
+          consumerA: ConsumerSocket.TCP[IO],
+          consumerB: ConsumerSocket.TCP[IO],
           poller: Poller[IO]
       ): IO[Assertion] = {
         val poll = poller.poll(PollTimeout.Infinity).foreverM

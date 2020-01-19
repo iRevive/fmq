@@ -34,9 +34,9 @@ import cats.effect.syntax.concurrent._
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
 import fs2.Stream
 import fs2.concurrent.Queue
-import io.fmq.ConsumerSocket
+import io.fmq.socket.ConsumerSocket
 
-def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, String] = {
+def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSocket.TCP[F]): Stream[F, String] = {
   def process(queue: Queue[F, String]) =
     blocker.blockOn(Stream.repeatEval(socket.recvString).through(queue.enqueue).compile.drain)
 

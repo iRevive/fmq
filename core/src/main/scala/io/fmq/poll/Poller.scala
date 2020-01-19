@@ -9,16 +9,17 @@ import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import io.fmq.{ConsumerSocket, ProducerSocket}
+import io.fmq.address.{Address, Protocol}
+import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import org.zeromq.ZContext
 import zmq.poll.{PollItem => ZPollItem}
 
 final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], selector: Selector) {
 
-  def registerConsumer(socket: ConsumerSocket[F], handler: ConsumerHandler[F]): F[Unit] =
+  def registerConsumer[P <: Protocol, A <: Address](socket: ConsumerSocket[F, P, A], handler: ConsumerHandler[F, P, A]): F[Unit] =
     itemsRef.update(_ :+ PollEntry.Read(socket, handler))
 
-  def registerProducer(socket: ProducerSocket[F], handler: ProducerHandler[F]): F[Unit] =
+  def registerProducer[P <: Protocol, A <: Address](socket: ProducerSocket[F, P, A], handler: ProducerHandler[F, P, A]): F[Unit] =
     itemsRef.update(_ :+ PollEntry.Write(socket, handler))
 
   /**

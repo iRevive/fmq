@@ -1,4 +1,4 @@
-package io.fmq.domain
+package io.fmq.options
 
 sealed abstract class SocketType(val zmqType: org.zeromq.SocketType)
 

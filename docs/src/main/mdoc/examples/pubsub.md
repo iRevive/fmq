@@ -15,11 +15,11 @@ import cats.FlatMap
 import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
-import io.fmq.ProducerSocket
+import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
@@ -40,9 +40,9 @@ import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
 import cats.effect.syntax.concurrent._
 import fs2.Stream
 import fs2.concurrent.Queue
-import io.fmq.ConsumerSocket
+import io.fmq.socket.ConsumerSocket
 
-class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket[F], blocker: Blocker) {
+class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], blocker: Blocker) {
 
   def consume: Stream[F, List[String]] = {
     def process(queue: Queue[F, List[String]]) =
@@ -70,20 +70,21 @@ And the demo program that evaluates producer and subscribers in parallel:
 import cats.effect.{Concurrent, ContextShift, Resource, Sync, Timer}
 import fs2.Stream
 import io.fmq.Context
-import io.fmq.domain.{Protocol, SubscribeTopic}
+import io.fmq.address.{Address, Host, Uri}
+import io.fmq.options.SubscribeTopic
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 
-  private val topicA   = "my-topic-a"
-  private val topicB   = "my-topic-b"
-  private val protocol = Protocol.tcp("localhost")
+  private val topicA = "my-topic-a"
+  private val topicB = "my-topic-b"
+  private val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
   private val appResource =
     for {
-      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(protocol))
-      addr   <- Resource.pure(Protocol.tcp("localhost", pub.port))
+      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(uri))
+      addr   <- Resource.pure(pub.uri)
       subA   <- context.createSubscriber(SubscribeTopic.utf8String(topicA)).flatMap(_.connect(addr))
       subB   <- context.createSubscriber(SubscribeTopic.utf8String(topicB)).flatMap(_.connect(addr))
       subAll <- context.createSubscriber(SubscribeTopic.All).flatMap(_.connect(addr))

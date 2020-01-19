@@ -8,32 +8,29 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
-import io.fmq.domain.{Port, Protocol}
+import io.fmq.address.{Address, Host, Port, Uri}
 
 object LocalThrScala extends IOApp {
 
   override def run(argv: List[String]): IO[ExitCode] = {
     val messageSize  = argv(1).toInt
     val messageCount = argv(2).toLong
-    val protocol     = Protocol.tcp("localhost", Port(5555))
+    val uri          = Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(5555)))
 
     Blocker[IO]
       .flatMap(blocker => Context.create[IO](1, blocker).tupleRight(blocker))
       .use {
         case (ctx, blocker) =>
-          val ioStream = ctx
-            .createPull
-            .flatMap(_.bind(protocol))
+          val ioStream = ctx.createPull
+            .flatMap(_.bind(uri))
             .use(socket => measureStream(socket, messageCount, messageSize))
 
-          val ioCycle = ctx
-            .createPull
-            .flatMap(_.bind(protocol))
+          val ioCycle = ctx.createPull
+            .flatMap(_.bind(uri))
             .use(socket => measureCycle(socket, messageCount, messageSize))
 
-          val ioBackground = ctx
-            .createPull
-            .flatMap(_.bind(protocol))
+          val ioBackground = ctx.createPull
+            .flatMap(_.bind(uri))
             .use(socket => measureBackground(socket, blocker, messageCount, messageSize))
 
           for {
@@ -48,7 +45,7 @@ object LocalThrScala extends IOApp {
 
   }
 
-  def measureStream[F[_]: Sync: Clock](pull: ConsumerSocket[F], messageCount: Long, messageSize: Int): F[Unit] = {
+  def measureStream[F[_]: Sync: Clock](pull: ConsumerSocket.TCP[F], messageCount: Long, messageSize: Int): F[Unit] = {
     val io = Stream
       .eval(pull.recv)
       .repeatN(messageCount)
@@ -61,7 +58,7 @@ object LocalThrScala extends IOApp {
     } yield ()
   }
 
-  def measureCycle[F[_]: Sync: Clock: Effect](pull: ConsumerSocket[F], messageCount: Long, messageSize: Int): IO[Unit] = {
+  def measureCycle[F[_]: Sync: Clock: Effect](pull: ConsumerSocket.TCP[F], messageCount: Long, messageSize: Int): IO[Unit] = {
     val io = IO.delay {
       for (_ <- 0 until messageCount.toInt - 1) {
         Effect[F].toIO(pull.recv).unsafeRunSync()
@@ -75,13 +72,16 @@ object LocalThrScala extends IOApp {
   }
 
   def measureBackground[F[_]: Concurrent: ContextShift: Clock](
-                                           pull: ConsumerSocket[F], blocker: Blocker, messageCount: Long, messageSize: Int
-                                         ): F[Unit] = {
+      pull: ConsumerSocket.TCP[F],
+      blocker: Blocker,
+      messageCount: Long,
+      messageSize: Int
+  ): F[Unit] = {
 
     def process(queue: Queue[F, Array[Byte]]) =
       blocker.blockOn(Stream.eval(pull.recv).repeatN(messageCount).through(queue.enqueue).compile.drain)
 
-      val io = for {
+    val io = for {
       queue  <- Stream.eval(Queue.unbounded[F, Array[Byte]])
       _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
       result <- queue.dequeue
