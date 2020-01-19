@@ -2,32 +2,31 @@ package io.fmq
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.options.SocketType
 import io.fmq.poll.Poller
 import io.fmq.socket._
-import org.zeromq.{ZContext, ZMQ}
+import org.zeromq.{SocketType, ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
 
   def createSubscriber(topic: Subscriber.Topic): Resource[F, Subscriber[F]] =
     for {
-      socket <- createSocket(SocketType.Sub)
+      socket <- createSocket(SocketType.SUB)
       _      <- subscribe(socket, topic.value)
     } yield new Subscriber(topic, socket, blocker)
 
   def createPublisher: Resource[F, Publisher[F]] =
     for {
-      socket <- createSocket(SocketType.Pub)
+      socket <- createSocket(SocketType.PUB)
     } yield new Publisher(socket, blocker)
 
   def createPull: Resource[F, Pull[F]] =
     for {
-      socket <- createSocket(SocketType.Pull)
+      socket <- createSocket(SocketType.PULL)
     } yield new Pull[F](socket, blocker)
 
   def createPush: Resource[F, Push[F]] =
     for {
-      socket <- createSocket(SocketType.Push)
+      socket <- createSocket(SocketType.PUSH)
     } yield new Push(socket, blocker)
 
   def createPoller: Resource[F, Poller[F]] =
@@ -36,7 +35,7 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 
   private def createSocket(tpe: SocketType): Resource[F, ZMQ.Socket] =
-    Resource.liftF(blocker.delay(ctx.createSocket(tpe.zmqType)))
+    Resource.liftF(blocker.delay(ctx.createSocket(tpe)))
 
   private def subscribe(socket: ZMQ.Socket, topic: Array[Byte]): Resource[F, Unit] = {
     val acquire = blocker.delay(socket.subscribe(topic)).void
