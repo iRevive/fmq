@@ -6,7 +6,6 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Host, Uri}
-import io.fmq.options.SubscribeTopic
 import io.fmq.socket.SocketBehavior.SocketResource
 import org.scalatest.Assertion
 
@@ -22,7 +21,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
     "filter multipart data" in withContext() { ctx: Context[IO] =>
       val uri   = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
-      val topic = SubscribeTopic.utf8String("B")
+      val topic = Subscriber.Topic.utf8String("B")
 
       def sendA(producer: ProducerSocket.TCP[IO]): IO[Unit] =
         producer.sendStringMore("A") >> producer.sendString("We don't want to see this")
@@ -57,7 +56,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       create.use((program _).tupled)
     }
 
-    "subscribe to specific topic" in withRandomPortSocket(SubscribeTopic.utf8String("my-topic")) { pair =>
+    "subscribe to specific topic" in withRandomPortSocket(Subscriber.Topic.utf8String("my-topic")) { pair =>
       val SocketResource.Pair(producer, consumer) = pair
 
       val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
@@ -69,7 +68,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       } yield result shouldBe List("my-topic-1", "my-topic2", "my-topic-3")
     }
 
-    "subscribe to specific topic (bytes)" in withRandomPortSocket(SubscribeTopic.Bytes(Array(3, 1))) { pair =>
+    "subscribe to specific topic (bytes)" in withRandomPortSocket(Subscriber.Topic.Bytes(Array(3, 1))) { pair =>
       val SocketResource.Pair(producer, consumer) = pair
 
       val messages = List[Array[Byte]](Array(1), Array(2, 1, 3), Array(3, 1, 2), Array(3, 2, 1))
@@ -81,7 +80,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       } yield result shouldBe Array[Byte](3, 1, 2)
     }
 
-    "subscribe to all topics" in withRandomPortSocket(SubscribeTopic.All) { pair =>
+    "subscribe to all topics" in withRandomPortSocket(Subscriber.Topic.All) { pair =>
       val SocketResource.Pair(producer, consumer) = pair
 
       val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
@@ -95,7 +94,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
   }
 
-  def withRandomPortSocket[A](topic: SubscribeTopic)(fa: SocketResource.Pair[IO] => IO[A]): A =
+  def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
       val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 

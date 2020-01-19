@@ -3,7 +3,6 @@ package socket
 
 import cats.effect.{IO, Resource, Sync}
 import io.fmq.address.{Address, Host, Port, Uri}
-import io.fmq.options._
 import io.fmq.socket.SocketBehavior.SocketResource
 
 class PubSubSpec extends IOSpec with SocketBehavior {
@@ -19,7 +18,7 @@ class PubSubSpec extends IOSpec with SocketBehavior {
         context.createPublisher
 
       override def createConsumer(context: Context[F]): Resource[F, Subscriber[F]] =
-        context.createSubscriber(SubscribeTopic.All)
+        context.createSubscriber(Subscriber.Topic.All)
 
       override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Port): Resource[F, SocketResource.Pair[F]] = {
         val uri = Uri.tcp(Address.Full(Host.Fixed("localhost"), port))

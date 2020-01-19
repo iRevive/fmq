@@ -63,8 +63,8 @@ import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
 import io.fmq.address.{Address, Host, Protocol, Uri}
-import io.fmq.options.SubscribeTopic
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
+import io.fmq.socket.Subscriber
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
@@ -78,9 +78,9 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
     for {
       pub    <- context.createPublisher.flatMap(_.bindToRandomPort(uri))
       addr   <- Resource.pure(pub.uri)
-      subA   <- context.createSubscriber(SubscribeTopic.utf8String(topicA)).flatMap(_.connect(addr))
-      subB   <- context.createSubscriber(SubscribeTopic.utf8String(topicB)).flatMap(_.connect(addr))
-      subAll <- context.createSubscriber(SubscribeTopic.All).flatMap(_.connect(addr))
+      subA   <- context.createSubscriber(Subscriber.Topic.utf8String(topicA)).flatMap(_.connect(addr))
+      subB   <- context.createSubscriber(Subscriber.Topic.utf8String(topicB)).flatMap(_.connect(addr))
+      subAll <- context.createSubscriber(Subscriber.Topic.All).flatMap(_.connect(addr))
       poller <- context.createPoller
     } yield (pub, subA, subB, subAll, poller)
 
