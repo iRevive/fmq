@@ -1,5 +1,5 @@
 # ƒMQ
-[![Build Status](https://travis-ci.org/iRevive/fmq.svg?branch=master)](https://travis-ci.org/iRevive/fmq?branch=master)
+[![Build Status](https://github.com/iRevive/fmq/workflows/CI/badge.svg)](https://github.com/iRevive/fmq/actions)
 [![codecov](https://codecov.io/gh/iRevive/fmq/branch/master/graph/badge.svg)](https://codecov.io/gh/iRevive/fmq)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/io.github.irevive/fmq-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.irevive/fmq-core_2.13)
 
