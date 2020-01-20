@@ -8,6 +8,7 @@ before_install:
 
 stages:
   - name: test
+    if: (tag IS present) AND NOT fork
   - name: release
     if: (tag IS present) AND NOT fork
   - name: docs-update
@@ -23,8 +24,6 @@ jobs:
       scala: *scala_version_213
       script:
        - sbt ++$TRAVIS_SCALA_VERSION ci
-      after_success:
-        - bash <(curl -s https://codecov.io/bash)
     - name: test 2.12
       scala: *scala_version_212
       script: sbt ++$TRAVIS_SCALA_VERSION ci
