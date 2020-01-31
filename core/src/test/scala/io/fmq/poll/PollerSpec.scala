@@ -114,7 +114,7 @@ class PollerSpec extends IOSpec with SocketBehavior {
       ): IO[Assertion] = {
         val poll = poller.poll(PollTimeout.Infinity).foreverM
 
-        Resource.make(poll.start)(_.cancel).use { _ =>
+        poll.background.use { _ =>
           for {
             _      <- Timer[IO].sleep(200.millis)
             queueA <- Queue.unbounded[IO, String]

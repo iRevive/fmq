@@ -17,7 +17,6 @@ object Dependencies {
     "org.typelevel" %% "cats-effect"      % Versions.catsEffect,
     "org.zeromq"    % "jeromq"            % Versions.zmq,
     "org.scalatest" %% "scalatest"        % Versions.scalatest % Test,
-    "org.typelevel" %% "cats-effect-laws" % Versions.catsEffect % Test,
     "co.fs2"        %% "fs2-io"           % Versions.fs2 % Test
   )
 

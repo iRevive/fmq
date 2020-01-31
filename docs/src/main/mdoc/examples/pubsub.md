@@ -50,7 +50,7 @@ class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], bl
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, List[String]])
-      _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+      _      <- Stream.resource(process(queue).background)
       result <- queue.dequeue
     } yield result
   }

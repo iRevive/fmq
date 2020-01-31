@@ -83,7 +83,7 @@ object LocalThrScala extends IOApp {
 
     val io = for {
       queue  <- Stream.eval(Queue.unbounded[F, Array[Byte]])
-      _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+      _      <- Stream.resource(process(queue).background)
       result <- queue.dequeue
     } yield result
 
