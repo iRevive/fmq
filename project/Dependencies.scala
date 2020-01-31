@@ -14,10 +14,10 @@ object Dependencies {
   val fs2 = "co.fs2" %% "fs2-io" % Versions.fs2
 
   val core: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "cats-effect"      % Versions.catsEffect,
-    "org.zeromq"    % "jeromq"            % Versions.zmq,
-    "org.scalatest" %% "scalatest"        % Versions.scalatest % Test,
-    "co.fs2"        %% "fs2-io"           % Versions.fs2 % Test
+    "org.typelevel" %% "cats-effect" % Versions.catsEffect,
+    "org.zeromq"    % "jeromq"       % Versions.zmq,
+    "org.scalatest" %% "scalatest"   % Versions.scalatest % Test,
+    "co.fs2"        %% "fs2-io"      % Versions.fs2 % Test
   )
 
 }
