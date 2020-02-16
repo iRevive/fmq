@@ -4,9 +4,7 @@ import io.fmq.options.ReceiveTimeout
 
 object ReceiveOptions {
 
-  private[socket] trait All[F[_]] extends Get[F] with Set[F] {
-    self: SocketOptions[F] =>
-  }
+  private[socket] trait All[F[_]] extends Get[F] with Set[F] { self: SocketOptions[F] => }
 
   private[socket] trait Get[F[_]] {
     self: SocketOptions[F] =>

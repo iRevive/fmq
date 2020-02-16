@@ -4,9 +4,7 @@ import io.fmq.options.{Identity, Linger}
 
 object CommonOptions {
 
-  private[socket] trait All[F[_]] extends Get[F] with Set[F] {
-    self: SocketOptions[F] =>
-  }
+  private[socket] trait All[F[_]] extends Get[F] with Set[F] { self: SocketOptions[F] => }
 
   private[socket] trait Get[F[_]] {
     self: SocketOptions[F] =>
