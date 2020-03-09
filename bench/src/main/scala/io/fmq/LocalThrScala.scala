@@ -3,12 +3,13 @@ package io.fmq
 import java.util.concurrent.TimeUnit
 
 import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Clock, Concurrent, ContextShift, Effect, ExitCode, IO, IOApp, Resource, Sync}
+import cats.effect.{Blocker, Clock, Concurrent, ContextShift, Effect, ExitCode, IO, IOApp, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.address.{Address, Host, Port, Uri}
+import io.fmq.socket.ConsumerSocket
 
 object LocalThrScala extends IOApp {
 
