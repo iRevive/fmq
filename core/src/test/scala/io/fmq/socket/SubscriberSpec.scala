@@ -5,7 +5,7 @@ import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Uri}
+import io.fmq.address.{Address, Host, Protocol, Uri}
 import io.fmq.socket.SocketBehavior.SocketResource
 import org.scalatest.Assertion
 
@@ -94,7 +94,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
   }
 
-  def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO] => IO[A]): A =
+  def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO, Protocol.TCP, Address.Full] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
       val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 

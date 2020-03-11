@@ -20,6 +20,7 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 ## Supported protocols
 
 * TCP
+* InProc
 
 ## Sockets matrix
 
