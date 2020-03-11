@@ -162,6 +162,40 @@ trait SocketBehavior {
       socketResource.createProducer(context).use(program) >> socketResource.createConsumer(context).use(program)
     }
 
+    "operate receive high water mark" in withContext() { context: Context[IO] =>
+      def program(socket: ReceiveOptions.All[IO]): IO[Assertion] = {
+        def changeWaterMark(hwm: HighWaterMark): IO[HighWaterMark] =
+          socket.setReceiveHighWaterMark(hwm) >> socket.receiveHighWaterMark
+
+        for {
+          hwm1 <- changeWaterMark(HighWaterMark.NoLimit)
+          hwm2 <- changeWaterMark(HighWaterMark.Limit(10))
+        } yield {
+          hwm1 shouldBe HighWaterMark.NoLimit
+          hwm2 shouldBe HighWaterMark.Limit(10)
+        }
+      }
+
+      socketResource.createConsumer(context).use(program)
+    }
+
+    "operate send high water mark" in withContext() { context: Context[IO] =>
+      def program(socket: SendOptions.All[IO]): IO[Assertion] = {
+        def changeWaterMark(hwm: HighWaterMark): IO[HighWaterMark] =
+          socket.setSendHighWaterMark(hwm) >> socket.sendHighWaterMark
+
+        for {
+          hwm1 <- changeWaterMark(HighWaterMark.NoLimit)
+          hwm2 <- changeWaterMark(HighWaterMark.Limit(10))
+        } yield {
+          hwm1 shouldBe HighWaterMark.NoLimit
+          hwm2 shouldBe HighWaterMark.Limit(10)
+        }
+      }
+
+      socketResource.createProducer(context).use(program)
+    }
+
     def withRandomPortPair[A](fa: SocketResource.Pair[IO, PR, ADDR] => IO[A]): A =
       withContext() { ctx: Context[IO] =>
         (for {
