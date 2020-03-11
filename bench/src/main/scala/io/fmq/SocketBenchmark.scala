@@ -24,7 +24,7 @@ class SocketBenchmark {
 
   private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
-  @Param(Array("128", "256", "512", "1024", "1048576"))
+  @Param(Array("128", "256", "512", "1024"))
   var messageSize: Int = _
 
   private val recording = new AtomicBoolean
