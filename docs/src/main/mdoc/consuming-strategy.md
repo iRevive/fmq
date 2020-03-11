@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  "Guide"
+title:  "Consuming strategy"
 number: 1
 ---
 
