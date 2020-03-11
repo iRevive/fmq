@@ -16,6 +16,7 @@ lazy val core = (project in file("core"))
   )
 
 lazy val bench = (project in file("bench"))
+  .enablePlugins(JmhPlugin)
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
