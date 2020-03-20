@@ -21,3 +21,5 @@ jobs:
       #    SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
       - name: Publish docs
         run: sbt ++2.13.1 docs/docusaurusPublishGhpages
+        env:
+          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
