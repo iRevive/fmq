@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Publisher · ƒMQ</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The publisher socket can only publish messages into the queue."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Publisher · ƒMQ"/><meta property="og:type" content="website"/><meta property="og:url" content="https://irevive.github.io/fmq/index.html"/><meta property="og:description" content="The publisher socket can only publish messages into the queue."/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/fmq/undefined"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/fmq/js/scrollSpy.js"></script><link rel="stylesheet" href="/fmq/css/main.css"/><script src="/fmq/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/fmq/"><h2 class="headerTitle">ƒMQ</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="https://github.com/iRevive/fmq" target="_blank">GitHub</a></li><li class=""><a href="https://www.javadoc.io/doc/io.github.irevive/fmq-core_2.13/latest/index.html" target="_blank">Documentation</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Sockets</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/index.html">Getting started</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/consuming-strategy.html">Consuming strategy</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Sockets</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/fmq/docs/sockets/publisher.html">Publisher</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/subscriber.html">Subscriber</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/poller.html">Poller</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/pubsub.html">PubSub</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Publisher</h1></header><article><div><span><p>The publisher socket can only publish messages into the queue.</p>
+<h2><a class="anchor" aria-hidden="true" id="allocation"></a><a href="#allocation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Allocation</h2>
+<p>The publisher can be created within the <code>Context</code>.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">ContextShift</span>, <span class="hljs-type">Resource</span>, <span class="hljs-type">IO</span>}
+<span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
+<span class="hljs-keyword">import</span> io.fmq.socket.<span class="hljs-type">Publisher</span>
+
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
+
+<span class="hljs-keyword">implicit</span> <span class="hljs-keyword">val</span> contextShift: <span class="hljs-type">ContextShift</span>[<span class="hljs-type">IO</span>] = <span class="hljs-type">IO</span>.contextShift(<span class="hljs-type">ExecutionContext</span>.global)
+
+<span class="hljs-keyword">val</span> publisherResource: <span class="hljs-type">Resource</span>[<span class="hljs-type">IO</span>, <span class="hljs-type">Publisher</span>[<span class="hljs-type">IO</span>]] =
+  <span class="hljs-keyword">for</span> {
+    blocker   &lt;- <span class="hljs-type">Blocker</span>[<span class="hljs-type">IO</span>]
+    context   &lt;- <span class="hljs-type">Context</span>.create[<span class="hljs-type">IO</span>](<span class="hljs-number">1</span>, blocker)
+    publisher &lt;- context.createPublisher
+  } <span class="hljs-keyword">yield</span> publisher
+</code></pre>
+<p>The <code>Publisher[F]</code> is a valid instance of the socket but it's not connect to the network yet.
+Publisher can either connect to the specific port or allocate a random port.</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> io.fmq.address.{<span class="hljs-type">Address</span>, <span class="hljs-type">Host</span>, <span class="hljs-type">Port</span>, <span class="hljs-type">Uri</span>}
+<span class="hljs-keyword">import</span> io.fmq.socket.{<span class="hljs-type">ProducerSocket</span>, <span class="hljs-type">Publisher</span>}
+
+<span class="hljs-keyword">val</span> specificPort: <span class="hljs-type">Resource</span>[<span class="hljs-type">IO</span>, <span class="hljs-type">ProducerSocket</span>.<span class="hljs-type">TCP</span>[<span class="hljs-type">IO</span>]] = 
+  <span class="hljs-keyword">for</span> {
+    publisher &lt;- publisherResource
+    connected &lt;- publisher.bind(<span class="hljs-type">Uri</span>.tcp(<span class="hljs-type">Address</span>.<span class="hljs-type">Full</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"localhost"</span>), <span class="hljs-type">Port</span>(<span class="hljs-number">31234</span>))))
+  } <span class="hljs-keyword">yield</span> connected
+
+<span class="hljs-keyword">val</span> randomPort: <span class="hljs-type">Resource</span>[<span class="hljs-type">IO</span>, <span class="hljs-type">ProducerSocket</span>.<span class="hljs-type">TCP</span>[<span class="hljs-type">IO</span>]] = 
+  <span class="hljs-keyword">for</span> {
+    publisher &lt;- publisherResource
+    connected &lt;- publisher.bindToRandomPort(<span class="hljs-type">Uri</span>.tcp(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"localhost"</span>))))
+  } <span class="hljs-keyword">yield</span> connected
+</code></pre>
+<p>Since <code>publisher.bind</code> and <code>publisher.bindToRandomPort</code> return <code>Resource[F, ProducerSocket[IO]]</code> the connection will be released automatically.</p>
+<h2><a class="anchor" aria-hidden="true" id="configuration"></a><a href="#configuration" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuration</h2>
+<p>The settings can be changed until the socket is connected:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> io.fmq.options.{<span class="hljs-type">SendTimeout</span>, <span class="hljs-type">Linger</span>}
+<span class="hljs-keyword">import</span> io.fmq.socket.{<span class="hljs-type">ProducerSocket</span>, <span class="hljs-type">Publisher</span>}
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">configurePublisher</span></span>(publisher: <span class="hljs-type">Publisher</span>[<span class="hljs-type">IO</span>]): <span class="hljs-type">IO</span>[<span class="hljs-type">Unit</span>] = 
+  <span class="hljs-keyword">for</span> {
+    _ &lt;- publisher.setSendTimeout(<span class="hljs-type">SendTimeout</span>.<span class="hljs-type">Immediately</span>)
+    _ &lt;- publisher.setLinger(<span class="hljs-type">Linger</span>.<span class="hljs-type">Immediately</span>)
+  } <span class="hljs-keyword">yield</span> ()
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="publish-messages"></a><a href="#publish-messages" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Publish messages</h2>
+<p>Only connected publisher can send messages:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.syntax.flatMap._
+<span class="hljs-keyword">import</span> io.fmq.socket.<span class="hljs-type">ProducerSocket</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">sendSingleMessage</span></span>(publisher: <span class="hljs-type">ProducerSocket</span>.<span class="hljs-type">TCP</span>[<span class="hljs-type">IO</span>]): <span class="hljs-type">IO</span>[<span class="hljs-type">Unit</span>] = 
+  publisher.sendString(<span class="hljs-string">"my-message"</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">sendBatchMessage</span></span>(publisher: <span class="hljs-type">ProducerSocket</span>.<span class="hljs-type">TCP</span>[<span class="hljs-type">IO</span>]): <span class="hljs-type">IO</span>[<span class="hljs-type">Unit</span>] = 
+  publisher.sendStringMore(<span class="hljs-string">"filter"</span>) &gt;&gt; publisher.sendString(<span class="hljs-string">"my-message"</span>) 
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/fmq/docs/consuming-strategy.html"><span class="arrow-prev">← </span><span>Consuming strategy</span></a><a class="docs-next button" href="/fmq/docs/sockets/subscriber.html"><span>Subscriber</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#allocation">Allocation</a></li><li><a href="#configuration">Configuration</a></li><li><a href="#publish-messages">Publish messages</a></li></ul></nav></div><footer class="nav-footer" id="footer" style="background-color:#20232a"><section class="sitemap"><div><h5>Docs</h5><a href="/fmq/docs/index.html">Getting started</a></div><div><h5>More</h5><a href="https://github.com/iRevive/fmq" target="_blank">Repository</a></div></section><section class="copyright">Copyright © 2020 irevive.github.io</section></footer></div></body></html>
