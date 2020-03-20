@@ -4,7 +4,6 @@ jdk: openjdk11
 
 before_install:
   - git fetch --tags
-  - export PATH=${PATH}:./vendor/bundle
 
 stages:
   - name: test
@@ -22,19 +21,10 @@ jobs:
     # stage="test" if no stage is specified
     - name: test 2.13
       scala: *scala_version_213
-      script:
-       - sbt ++$TRAVIS_SCALA_VERSION ci
+      script: sbt ++$TRAVIS_SCALA_VERSION ci
     - name: test 2.12
       scala: *scala_version_212
       script: sbt ++$TRAVIS_SCALA_VERSION ci
-    - name: site
-      scala: *scala_version_213
-      install:
-        - rvm use 2.6.0 --install --fuzzy
-        - gem update --system
-        - gem install sass
-        - gem install jekyll -v 4.0.0
-      script: sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
     # run ci-release only if previous stages passed
     - stage: release
       name: release
@@ -42,13 +32,8 @@ jobs:
     - stage: docs-update
       name: microsite
       scala: *scala_version_213
-      install:
-        - rvm use 2.6.0 --install --fuzzy
-        - gem update --system
-        - gem install sass
-        - gem install jekyll -v 4.0.0
       script:
-        sbt ++$TRAVIS_SCALA_VERSION docs/publishMicrosite
+        sbt ++$TRAVIS_SCALA_VERSION docs/docusaurusPublishGhpages
 
 cache:
   directories:

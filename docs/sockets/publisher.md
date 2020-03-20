@@ -1,10 +1,7 @@
 ---
-layout: docs
-title:  "Publisher"
-number: 2
+id: publisher
+title: Publisher
 ---
-
-# Publisher
 
 The publisher socket can only publish messages into the queue.
 

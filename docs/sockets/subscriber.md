@@ -1,10 +1,7 @@
 ---
-layout: docs
-title:  "Subscriber"
-number: 3
+id: subscriber
+title: Subscriber
 ---
-
-# Subscriber
 
 The subscriber socket can subscribe to a specific topic and can only receive messages.
 

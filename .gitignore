@@ -4,3 +4,7 @@
 logs/
 project/target/
 target/
+website/node_modules/
+website/build/
+website/i18n/
+website/yarn.lock

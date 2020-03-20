@@ -1,0 +1,17 @@
+{
+  "docs": {
+    "Getting started": [
+      "index",
+      "consuming-strategy"
+    ],
+    "Sockets": [
+      "sockets/publisher",
+      "sockets/subscriber"
+    ],
+    "Examples": [
+      "examples/index",
+      "examples/poller",
+      "examples/pubsub"
+    ]
+  }
+}

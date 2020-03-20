@@ -1,10 +1,7 @@
 ---
-layout: docs
-title:  "Consuming strategy"
-number: 1
+id: consuming-strategy
+title: Consuming strategy
 ---
-
-# Blocking receive
 
 You can use ƒMQ with any effect that has an instance of `cats.effect.Sync`: `cats.effect.IO`, `EitherT[IO, Error, *]` and so on.
 
