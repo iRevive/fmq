@@ -1,5 +1,3 @@
-import microsites._
-
 lazy val fmq = project
   .in(file("."))
   .settings(commonSettings)
