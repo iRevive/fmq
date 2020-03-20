@@ -16,6 +16,7 @@ const siteConfig = {
     url: 'https://irevive.github.io', // Your website URL
     baseUrl: '/fmq/',
     projectName: "fmq",
+    organizationName: "iRevive",
 
     // For no header links in the top nav bar -> headerLinks: [],
     headerLinks: [
