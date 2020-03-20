@@ -1,10 +1,7 @@
 ---
-layout: docs
-title:  "Poller"
-number: 17
+id: poller
+title: Poller
 ---
-
-# Poller
 
 The `Poller` provides a way to invoke a handler once a socket can either receive or send a message.  
 The `ConsumerHandler` is a simple `Kleisli`: `Kleisli[F, ConsumerSocket[F], Unit]`.   

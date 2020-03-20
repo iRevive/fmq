@@ -1,10 +1,7 @@
 ---
-layout: docs
-title:  "PubSub"
-number: 16
+id: pubsub
+title: PubSub
 ---
-
-# PubSub
 
 The example shows how to create one publisher and three subscribers with different subscription rules.
 
