@@ -3,7 +3,7 @@ package pubsub
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
@@ -16,12 +16,12 @@ final class Publisher[F[_]: ContextShift] private[fmq] (
     with CommonOptions.All[F]
     with SendOptions.All[F] {
 
-  def bind[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, ProducerSocket[F, P, A]] =
-    Bind.bind[F, P, A](uri, socket, blocker).as(ProducerSocket.create(socket, uri))
+  def bind(uri: Uri.Complete): Resource[F, ProducerSocket[F]] =
+    Bind.bind[F](uri, socket, blocker).as(ProducerSocket.create(socket, uri))
 
-  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, ProducerSocket.TCP[F]] =
+  def bindToRandomPort(uri: Uri.Incomplete.TCP): Resource[F, ProducerSocket[F]] =
     for {
-      uriFull <- Bind.bindToRandomPort[F](uri, socket, blocker)
-    } yield ProducerSocket.create(socket, uriFull)
+      completeUri <- Bind.bindToRandomPort[F](uri, socket, blocker)
+    } yield ProducerSocket.create(socket, completeUri)
 
 }

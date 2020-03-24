@@ -1,32 +1,27 @@
 package io.fmq.address
 
-final case class Uri[P <: Protocol, A <: Address] private (protocol: P, address: A) {
-  def materialize: String = s"${protocol.name}://${address.value}"
+sealed trait Uri {
+
+  def protocol: Protocol
+
+  def address: Address
+
+  final def materialize: String = s"${protocol.name}://${address.value}"
 }
 
 object Uri {
 
-  type TCP[A <: Address] = Uri[Protocol.TCP, A]
-  type InProc            = Uri[Protocol.InProc, Address.HostOnly]
+  sealed abstract class Incomplete(val protocol: Protocol) extends Uri
 
-  def tcp[A <: Address](address: A): Uri.TCP[A] = Uri(Protocol.TCP, address)
+  object Incomplete {
+    final case class TCP(address: Address.HostOnly) extends Incomplete(Protocol.TCP)
+  }
 
-  def inproc(address: Address.HostOnly): Uri.InProc = Uri(Protocol.InProc, address)
+  sealed abstract class Complete(val protocol: Protocol) extends Uri
 
-}
-
-/**
-  * The type marker for complete (full) URI.
-  *
-  * TCP URI must have address and port.
-  * InProc URI must have only host.
-  */
-sealed trait Complete[P <: Protocol, A <: Address]
-
-object Complete {
-
-  implicit object tcpComplete extends Complete[Protocol.TCP, Address.Full]
-
-  implicit object inProcComplete extends Complete[Protocol.InProc, Address.HostOnly]
+  object Complete {
+    final case class TCP(address: Address.Full)        extends Complete(Protocol.TCP)
+    final case class InProc(address: Address.HostOnly) extends Complete(Protocol.InProc)
+  }
 
 }

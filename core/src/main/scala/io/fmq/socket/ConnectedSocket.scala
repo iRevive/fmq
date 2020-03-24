@@ -1,9 +1,7 @@
 package io.fmq.socket
 
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 
-trait ConnectedSocket[P <: Protocol, A <: Address] {
-  def uri: Uri[P, A]
-
-  protected def complete: Complete[P, A]
+trait ConnectedSocket {
+  def uri: Uri.Complete
 }

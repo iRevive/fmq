@@ -7,7 +7,7 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import fs2.Stream
-import io.fmq.address.{Address, Port, Protocol, Uri}
+import io.fmq.address.{Port, Uri}
 import io.fmq.frame.Frame
 import io.fmq.options._
 import io.fmq.socket.SocketBehavior.{Consumer, Producer, SocketResource}
@@ -24,9 +24,7 @@ import scala.concurrent.duration._
 trait SocketBehavior {
   self: IOSpec =>
 
-  protected def socketSpec[PR <: Protocol, ADDR <: Address, P <: Producer[IO], C <: Consumer[IO]](
-      socketResource: SocketResource[IO, PR, ADDR, P, C]
-  ): Unit = {
+  protected def socketSpec[P <: Producer[IO], C <: Consumer[IO]](socketResource: SocketResource[IO, P, C]): Unit = {
 
     "send multipart data" in withRandomPortPair { pair =>
       val SocketResource.Pair(producer, consumer) = pair
@@ -188,7 +186,7 @@ trait SocketBehavior {
       socketResource.createProducer(context).use(program)
     }
 
-    def withRandomPortPair[A](fa: SocketResource.Pair[IO, PR, ADDR] => IO[A]): A =
+    def withRandomPortPair[A](fa: SocketResource.Pair[IO] => IO[A]): A =
       withContext() { ctx: Context[IO] =>
         (for {
           producer <- socketResource.createProducer(ctx)
@@ -199,8 +197,8 @@ trait SocketBehavior {
 
   }
 
-  protected def collectMessages[F[_]: Sync, P <: Protocol, A <: Address](
-      consumer: ConsumerSocket[F, P, A],
+  protected def collectMessages[F[_]: Sync](
+      consumer: ConsumerSocket[F],
       limit: Long
   ): F[List[String]] =
     Stream.repeatEval(consumer.receive[String]).take(limit).compile.toList
@@ -212,24 +210,24 @@ object SocketBehavior {
   type Producer[F[_]] = SendOptions.All[F] with CommonOptions.All[F]
   type Consumer[F[_]] = ReceiveOptions.All[F] with CommonOptions.All[F]
 
-  trait SocketResource[F[_], PR <: Protocol, A <: Address, P <: Producer[F], C <: Consumer[F]] {
+  trait SocketResource[F[_], P <: Producer[F], C <: Consumer[F]] {
 
-    type Pair = SocketResource.Pair[F, PR, A]
+    type Pair = SocketResource.Pair[F]
 
     def createProducer(context: Context[F]): Resource[F, P]
     def createConsumer(context: Context[F]): Resource[F, C]
     def bind(producer: P, consumer: C, port: Port): Resource[F, Pair]
     def bindToRandom(producer: P, consumer: C): Resource[F, Pair]
 
-    def expectedRandomUri(port: Port): Uri[PR, A]
+    def expectedRandomUri(port: Port): Uri.Complete
 
   }
 
   object SocketResource {
 
-    final case class Pair[F[_], P <: Protocol, A <: Address](
-        producer: ProducerSocket[F, P, A],
-        consumer: ConsumerSocket[F, P, A]
+    final case class Pair[F[_]](
+        producer: ProducerSocket[F],
+        consumer: ConsumerSocket[F]
     )
 
   }

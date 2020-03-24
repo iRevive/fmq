@@ -4,30 +4,26 @@ import cats.data.NonEmptyList
 import cats.effect.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 import io.fmq.frame.{Frame, FrameDecoder}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
-    extends ConnectedSocket[P, A]
-    with SocketOptions[F]
-    with CommonOptions.Get[F]
-    with ReceiveOptions.Get[F] {
+trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with CommonOptions.Get[F] with ReceiveOptions.Get[F] {
 
   /**
     * Returns `Frame.Multipart` if message is multipart. Otherwise returns `Frame.Single`.
     */
-  def receiveFrame[B: FrameDecoder]: F[Frame[B]] = {
+  def receiveFrame[A: FrameDecoder]: F[Frame[A]] = {
 
     @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
-    def loop(out: List[B]): F[List[B]] =
-      hasReceiveMore.ifM(receive[B].flatMap(message => loop(out :+ message)), F.pure(out))
+    def loop(out: List[A]): F[List[A]] =
+      hasReceiveMore.ifM(receive[A].flatMap(message => loop(out :+ message)), F.pure(out))
 
     for {
-      first <- receive[B]
+      first <- receive[A]
       rest  <- loop(Nil)
-    } yield NonEmptyList.fromList(rest).fold[Frame[B]](Frame.Single(first))(Frame.Multipart(first, _))
+    } yield NonEmptyList.fromList(rest).fold[Frame[A]](Frame.Single(first))(Frame.Multipart(first, _))
   }
 
   /**
@@ -54,26 +50,22 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     * }
     * }}}
     */
-  def receive[B: FrameDecoder]: F[B] =
-    F.delay(FrameDecoder[B].decode(socket.recv()))
+  def receive[A: FrameDecoder]: F[A] =
+    F.delay(FrameDecoder[A].decode(socket.recv()))
 
-  def receiveNoWait[B: FrameDecoder]: F[Option[B]] =
-    F.delay(Option(socket.recv(ZMQ.DONTWAIT)).map(FrameDecoder[B].decode))
+  def receiveNoWait[A: FrameDecoder]: F[Option[A]] =
+    F.delay(Option(socket.recv(ZMQ.DONTWAIT)).map(FrameDecoder[A].decode))
 
   def hasReceiveMore: F[Boolean] =
     F.delay(socket.hasReceiveMore)
 
 }
 
-object ConsumerSocket extends SocketTypeAlias[ConsumerSocket] {
+object ConsumerSocket {
 
-  def create[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]](s: ZMQ.Socket, u: Uri[P, A]): ConsumerSocket[F, P, A] =
-    new ConnectedSocket[P, A] with ConsumerSocket[F, P, A] {
-      override def uri: Uri[P, A] = u
-
-      // $COVERAGE-OFF$
-      override protected def complete: Complete[P, A] = implicitly[Complete[P, A]]
-      // $COVERAGE-ON$
+  def create[F[_]: Sync](s: ZMQ.Socket, u: Uri.Complete): ConsumerSocket[F] =
+    new ConsumerSocket[F] {
+      override def uri: Uri.Complete = u
 
       override protected def F: Sync[F] = implicitly[Sync[F]]
 

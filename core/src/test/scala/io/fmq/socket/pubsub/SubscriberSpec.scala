@@ -6,7 +6,7 @@ import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.address.{Address, Host, Uri}
 import io.fmq.socket.SocketBehavior.SocketResource
 import org.scalatest.Assertion
 
@@ -21,16 +21,16 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
   "Subscriber" should {
 
     "filter multipart data" in withContext() { ctx: Context[IO] =>
-      val uri   = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val uri   = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
       val topic = Subscriber.Topic.utf8String("B")
 
-      def sendA(producer: ProducerSocket.TCP[IO]): IO[Unit] =
+      def sendA(producer: ProducerSocket[IO]): IO[Unit] =
         producer.sendMore("A") >> producer.send("We don't want to see this")
 
-      def sendB(producer: ProducerSocket.TCP[IO]): IO[Unit] =
+      def sendB(producer: ProducerSocket[IO]): IO[Unit] =
         producer.sendMore("B") >> producer.send("We would like to see this")
 
-      def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO])] =
+      def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO])] =
         for {
           pub        <- ctx.createPublisher
           publisher  <- pub.bindToRandomPort(uri)
@@ -38,7 +38,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
           subscriber <- sub.connect(publisher.uri)
         } yield (publisher, subscriber)
 
-      def program(producer: ProducerSocket.TCP[IO], consumer: ConsumerSocket.TCP[IO]): IO[Assertion] =
+      def program(producer: ProducerSocket[IO], consumer: ConsumerSocket[IO]): IO[Assertion] =
         for {
           _        <- Timer[IO].sleep(200.millis)
           _        <- sendA(producer)
@@ -95,9 +95,9 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
   }
 
-  def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO, Protocol.TCP, Address.Full] => IO[A]): A =
+  def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
         pub      <- ctx.createPublisher

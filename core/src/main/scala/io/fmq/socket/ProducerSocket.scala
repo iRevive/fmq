@@ -5,16 +5,12 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 import io.fmq.frame.{Frame, FrameEncoder}
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-trait ProducerSocket[F[_], P <: Protocol, A <: Address]
-    extends ConnectedSocket[P, A]
-    with SocketOptions[F]
-    with CommonOptions.Get[F]
-    with SendOptions.Get[F] {
+trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with CommonOptions.Get[F] with SendOptions.Get[F] {
 
   def sendFrame[B: FrameEncoder](frame: Frame[B]): F[Unit] =
     frame match {
@@ -39,15 +35,11 @@ trait ProducerSocket[F[_], P <: Protocol, A <: Address]
 
 }
 
-object ProducerSocket extends SocketTypeAlias[ProducerSocket] {
+object ProducerSocket {
 
-  def create[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]](s: ZMQ.Socket, u: Uri[P, A]): ProducerSocket[F, P, A] =
-    new ConnectedSocket[P, A] with ProducerSocket[F, P, A] {
-      override def uri: Uri[P, A] = u
-
-      // $COVERAGE-OFF$
-      override protected def complete: Complete[P, A] = implicitly[Complete[P, A]]
-      // $COVERAGE-ON$
+  def create[F[_]: Sync](s: ZMQ.Socket, u: Uri.Complete): ProducerSocket[F] =
+    new ProducerSocket[F] {
+      override def uri: Uri.Complete = u
 
       override protected def F: Sync[F] = implicitly[Sync[F]]
 

@@ -3,7 +3,7 @@ package pipeline
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
@@ -16,7 +16,7 @@ final class Push[F[_]: ContextShift] private[fmq] (
     with CommonOptions.All[F]
     with SendOptions.All[F] {
 
-  def connect[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, ProducerSocket[F, P, A]] =
-    Bind.connect[F, P, A](uri, socket, blocker).as(ProducerSocket.create[F, P, A](socket, uri))
+  def connect(uri: Uri.Complete): Resource[F, ProducerSocket[F]] =
+    Bind.connect[F](uri, socket, blocker).as(ProducerSocket.create[F](socket, uri))
 
 }

@@ -34,7 +34,7 @@ class SocketBenchmark {
 
   @Setup(Level.Iteration)
   def setup(): Unit = {
-    val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+    val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
     val ((pull, push), _) =
       (for {

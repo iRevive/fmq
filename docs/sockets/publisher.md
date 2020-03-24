@@ -34,16 +34,16 @@ import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.socket.ProducerSocket
 import io.fmq.socket.pubsub.Publisher
 
-val specificPort: Resource[IO, ProducerSocket.TCP[IO]] = 
+val specificPort: Resource[IO, ProducerSocket[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bind(Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(31234))))
+    connected <- publisher.bind(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
   } yield connected
 
-val randomPort: Resource[IO, ProducerSocket.TCP[IO]] = 
+val randomPort: Resource[IO, ProducerSocket[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bindToRandomPort(Uri.tcp(Address.HostOnly(Host.Fixed("localhost"))))
+    connected <- publisher.bindToRandomPort(Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost"))))
   } yield connected
 ```
 
@@ -74,12 +74,12 @@ import cats.syntax.flatMap._
 import io.fmq.frame.Frame
 import io.fmq.socket.ProducerSocket
 
-def sendSingleMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
+def sendSingleMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
   publisher.send("my-message")
 
-def sendMultipartMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
+def sendMultipartMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
   publisher.sendMultipart(Frame.Multipart("filter", "my-message")) 
 
-def sendMultipartManually(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
+def sendMultipartManually(publisher: ProducerSocket[IO]): IO[Unit] = 
   publisher.sendMore("filter") >> publisher.send("my-message") 
 ```

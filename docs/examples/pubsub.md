@@ -17,7 +17,7 @@ import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
@@ -41,7 +41,7 @@ import fs2.concurrent.Queue
 import io.fmq.frame.Frame
 import io.fmq.socket.ConsumerSocket
 
-class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], blocker: Blocker) {
+class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket[F], blocker: Blocker) {
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
@@ -72,7 +72,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
-  private val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+  private val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
   private val appResource =
     for {

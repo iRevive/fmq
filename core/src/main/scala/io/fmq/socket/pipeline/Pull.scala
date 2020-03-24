@@ -3,7 +3,7 @@ package pipeline
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.address.{Address, Complete, Protocol, Uri}
+import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
@@ -16,12 +16,12 @@ final class Pull[F[_]: ContextShift] private[fmq] (
     with CommonOptions.All[F]
     with ReceiveOptions.All[F] {
 
-  def bind[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, ConsumerSocket[F, P, A]] =
-    Bind.bind[F, P, A](uri, socket, blocker).as(ConsumerSocket.create(socket, uri))
+  def bind(uri: Uri.Complete): Resource[F, ConsumerSocket[F]] =
+    Bind.bind[F](uri, socket, blocker).as(ConsumerSocket.create(socket, uri))
 
-  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, ConsumerSocket.TCP[F]] =
+  def bindToRandomPort(uri: Uri.Incomplete.TCP): Resource[F, ConsumerSocket[F]] =
     for {
-      uriFull <- Bind.bindToRandomPort[F](uri, socket, blocker)
-    } yield ConsumerSocket.create(socket, uriFull)
+      completeUri <- Bind.bindToRandomPort[F](uri, socket, blocker)
+    } yield ConsumerSocket.create(socket, completeUri)
 
 }
