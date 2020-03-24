@@ -8,7 +8,7 @@ The `ConsumerHandler` is a simple `Kleisli`: `Kleisli[F, ConsumerSocket[F], Unit
 The best way to use the poller is enqueue messages into the queue: 
 ```scala
 def handler(queue: Queue[F, String]): ConsumerHandler[F] =
-  Kleisli(socket => socket.recvString >>= queue.enqueue1)
+  Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
 ```
 
 Then the `poller.poll` operation can be evaluated on the blocking context:
@@ -41,10 +41,10 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: S
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendStringMore(topicA) >> publisher.sendString("We don't want to see this")
+    publisher.sendMore(topicA) >> publisher.send("We don't want to see this")
 
   private def sendB: F[Unit] =
-    publisher.sendStringMore(topicB) >> publisher.sendString("We would like to see this")
+    publisher.sendMore(topicB) >> publisher.send("We would like to see this")
 
 }
 ```
@@ -89,7 +89,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
           val producer = new Producer[F](publisher, topicA, topicB)
 
           def handler(queue: Queue[F, String]): ConsumerHandler[F, Protocol.TCP, Address.Full] =
-            Kleisli(socket => socket.recvString >>= queue.enqueue1)
+            Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
           
           def configurePoller(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] =
             for {

@@ -25,10 +25,10 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val topic = Subscriber.Topic.utf8String("B")
 
       def sendA(producer: ProducerSocket.TCP[IO]): IO[Unit] =
-        producer.sendStringMore("A") >> producer.sendString("We don't want to see this")
+        producer.sendMore("A") >> producer.send("We don't want to see this")
 
       def sendB(producer: ProducerSocket.TCP[IO]): IO[Unit] =
-        producer.sendStringMore("B") >> producer.sendString("We would like to see this")
+        producer.sendMore("B") >> producer.send("We would like to see this")
 
       def create: Resource[IO, (ProducerSocket.TCP[IO], ConsumerSocket.TCP[IO])] =
         for {
@@ -43,9 +43,9 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
           _        <- Timer[IO].sleep(200.millis)
           _        <- sendA(producer)
           _        <- sendB(producer)
-          msg1     <- consumer.recvString
+          msg1     <- consumer.receive[String]
           hasMore1 <- consumer.hasReceiveMore
-          msg2     <- consumer.recvString
+          msg2     <- consumer.receive[String]
           hasMore2 <- consumer.hasReceiveMore
         } yield {
           msg1 shouldBe "B"
@@ -64,7 +64,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- messages.traverse(producer.sendString)
+        _      <- messages.traverse(producer.send[String])
         result <- collectMessages(consumer, 3L)
       } yield result shouldBe List("my-topic-1", "my-topic2", "my-topic-3")
     }
@@ -76,8 +76,8 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- messages.traverse(producer.send)
-        result <- consumer.recv
+        _      <- messages.traverse(producer.send[Array[Byte]])
+        result <- consumer.receive[Array[Byte]]
       } yield result shouldBe Array[Byte](3, 1, 2)
     }
 
@@ -88,7 +88,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- messages.traverse(producer.sendString)
+        _      <- messages.traverse(producer.send[String])
         result <- collectMessages(consumer, messages.length.toLong)
       } yield result shouldBe messages
     }

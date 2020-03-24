@@ -22,10 +22,10 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: S
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendStringMore(topicA) >> publisher.sendString("We don't want to see this")
+    publisher.sendMore(topicA) >> publisher.send("We don't want to see this")
 
   private def sendB: F[Unit] =
-    publisher.sendStringMore(topicB) >> publisher.sendString("We would like to see this")
+    publisher.sendMore(topicB) >> publisher.send("We would like to see this")
 
 }
 ```
@@ -43,7 +43,7 @@ class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], bl
 
   def consume: Stream[F, List[String]] = {
     def process(queue: Queue[F, List[String]]) =
-      blocker.blockOn(Stream.repeatEval(readBatch.compile.toList).through(queue.enqueue).compile.drain)
+      blocker.blockOn(Stream.repeatEval(readMultipart.compile.toList).through(queue.enqueue).compile.drain)
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, List[String]])
@@ -52,10 +52,10 @@ class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], bl
     } yield result
   }
 
-  private def readBatch: Stream[F, String] =
+  private def readMultipart: Stream[F, String] =
     for {
-      s <- Stream.eval(socket.recvString)
-      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
+      s <- Stream.eval(socket.receive[String])
+      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readMultipart, Stream.emit(s))
     } yield r
 
 }

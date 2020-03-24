@@ -21,12 +21,12 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _        <- Timer[IO].sleep(200.millis)
         _        <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
         _        <- Timer[IO].sleep(200.millis)
-        subMsg   <- pub.recv
-        _        <- pub.sendStringMore("A")
-        _        <- pub.sendString("Hello")
-        msg1     <- sub.recvString
+        subMsg   <- pub.receive[Array[Byte]]
+        _        <- pub.sendMore("A")
+        _        <- pub.send("Hello")
+        msg1     <- sub.receive[String]
         hasMore1 <- sub.hasReceiveMore
-        msg2     <- sub.recvString
+        msg2     <- sub.receive[String]
         hasMore2 <- sub.hasReceiveMore
       } yield {
         subMsg shouldBe Array[Byte](XSubscriberSocket.Subscribe, 'A')
@@ -42,10 +42,10 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 
       for {
         _    <- Timer[IO].sleep(200.millis)
-        _    <- sub.sendString("Message from subscriber")
-        msg1 <- pub.recvString
+        _    <- sub.send("Message from subscriber")
+        msg1 <- pub.receive[String]
         _    <- sub.send(Array.emptyByteArray)
-        msg2 <- pub.recv
+        msg2 <- pub.receive[Array[Byte]]
       } yield {
         msg1 shouldBe "Message from subscriber"
         msg2 shouldBe empty
@@ -59,8 +59,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _   <- Timer[IO].sleep(200.millis)
         _   <- sub.sendSubscribe(Subscriber.Topic.All)
         _   <- Timer[IO].sleep(200.millis)
-        _   <- pub.sendString("Hello")
-        msg <- sub.recvString
+        _   <- pub.send("Hello")
+        msg <- sub.receive[String]
       } yield msg shouldBe "Hello"
     }
 
@@ -69,8 +69,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 
       for {
         _      <- Timer[IO].sleep(200.millis)
-        _      <- pub.sendString("Hello")
-        result <- sub.recvNoWait
+        _      <- pub.send("Hello")
+        result <- sub.receiveNoWait[String]
       } yield result shouldBe empty
     }
 
@@ -84,12 +84,12 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _        <- Timer[IO].sleep(200.millis)
         _        <- topics.traverse(topic => sub.sendSubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- Timer[IO].sleep(200.millis)
-        _        <- messages.traverse(pub.sendString)
+        _        <- messages.traverse(pub.send[String])
         received <- collectMessages(sub, 5)
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- Timer[IO].sleep(200.millis)
-        _        <- messages.traverse(pub.sendString)
-        result   <- sub.recvStringNoWait
+        _        <- messages.traverse(pub.send[String])
+        result   <- sub.receiveNoWait[String]
       } yield {
         received shouldBe messages
         result shouldBe empty
@@ -110,9 +110,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
           _    <- topics1.traverse(topic => sub1.sendSubscribe(Subscriber.Topic.utf8String(topic)))
           _    <- topics2.traverse(topic => sub2.sendSubscribe(Subscriber.Topic.utf8String(topic)))
           _    <- Timer[IO].sleep(200.millis)
-          _    <- pub.sendString("AB-1")
-          msg1 <- sub1.recvString
-          msg2 <- sub2.recvString
+          _    <- pub.send("AB-1")
+          msg1 <- sub1.receive[String]
+          msg2 <- sub2.receive[String]
         } yield {
           msg1 shouldBe "AB-1"
           msg2 shouldBe "AB-1"
