@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 class XPubXSubSpec extends IOSpec with SocketBehavior {
 
-  "XPubXSub" should {
+  "XPubXSub" ignore {
 
     "topic pub sub" in withSockets { pair =>
       val XPubXSubSpec.Pair(pub, sub) = pair
