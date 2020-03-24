@@ -20,6 +20,8 @@ libraryDependencies += "io.github.irevive" %% "fmq-core" % "@VERSION@"
 |--------|-------------|-------------|---------------------|
 | Pub    | true        | false       | Bind                |
 | Sub    | false       | true        | Connect             |
+| XPub   | true        | true        | Bind                |
+| XSub   | true        | true        | Connect             |
 | Push   | true        | false       | Connect             |
 | Pull   | false       | true        | Bind                |
 

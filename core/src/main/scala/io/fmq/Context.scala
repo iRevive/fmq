@@ -18,6 +18,16 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
       socket <- createSocket(SocketType.PUB)
     } yield new Publisher(socket, blocker)
 
+  def createXSubscriber: Resource[F, XSubscriber[F]] =
+    for {
+      socket <- createSocket(SocketType.XSUB)
+    } yield new XSubscriber(socket, blocker)
+
+  def createXPublisher: Resource[F, XPublisher[F]] =
+    for {
+      socket <- createSocket(SocketType.XPUB)
+    } yield new XPublisher(socket, blocker)
+
   def createPull: Resource[F, Pull[F]] =
     for {
       socket <- createSocket(SocketType.PULL)

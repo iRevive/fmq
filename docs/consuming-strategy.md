@@ -28,7 +28,7 @@ The great disadvantage of this solution is evaluation of the lightweight operati
 
 ```scala mdoc
 import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import cats.effect.{Blocker, Concurrent, ContextShift}
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.socket.ConsumerSocket
@@ -39,7 +39,7 @@ def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSo
 
   for {
     queue  <- Stream.eval(Queue.unbounded[F, String])
-    _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+    _      <- Stream.resource(process(queue).background)
     result <- queue.dequeue
   } yield result
 }

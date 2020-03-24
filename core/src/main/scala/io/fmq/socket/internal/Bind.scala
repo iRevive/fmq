@@ -2,12 +2,12 @@ package io.fmq.socket.internal
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.address.{Address, Port, Protocol, Uri}
+import io.fmq.address.{Address, Complete, Port, Protocol, Uri}
 import org.zeromq.ZMQ
 
 private[socket] object Bind {
 
-  def connect[F[_]: Sync: ContextShift, P <: Protocol, A <: Address](
+  def connect[F[_]: Sync: ContextShift, P <: Protocol, A <: Address: Complete[P, *]](
       uri: Uri[P, A],
       socket: ZMQ.Socket,
       blocker: Blocker
@@ -21,7 +21,7 @@ private[socket] object Bind {
     Resource.make(acquire)(release).void
   }
 
-  def bind[F[_]: Sync: ContextShift, P <: Protocol, A <: Address](
+  def bind[F[_]: Sync: ContextShift, P <: Protocol, A <: Address: Complete[P, *]](
       uri: Uri[P, A],
       socket: ZMQ.Socket,
       blocker: Blocker
