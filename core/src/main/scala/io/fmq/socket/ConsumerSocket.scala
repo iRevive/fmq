@@ -36,7 +36,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
     * import fs2.Stream
     * import fs2.concurrent.Queue
-    * import io.fmq.ConsumerSocket
+    * import io.fmq.socket.ConsumerSocket
     *
     * def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
     *   def process(queue: Queue[F, Array[Byte]]) =
@@ -48,6 +48,11 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     *     result <- queue.dequeue
     *   } yield result
     * }
+    * }}}
+    *
+    * Or use `io.fmq.BackgroundConsumer` from `fmq-extras` project:
+    * {{{
+    * BackgroundConsumer.consume[F, Array[Byte]](blocker, socket, 128)
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =

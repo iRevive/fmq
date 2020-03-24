@@ -8,6 +8,11 @@
       "sockets/publisher",
       "sockets/subscriber"
     ],
+    "Extras": [
+      "extras/overview",
+      "extras/background-consumer",
+      "extras/request-reply"
+    ],
     "Examples": [
       "examples/index",
       "examples/poller",
