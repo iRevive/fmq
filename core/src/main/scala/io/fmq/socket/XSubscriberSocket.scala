@@ -13,10 +13,10 @@ class XSubscriberSocket[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]]
     with ConsumerSocket[F, P, A] {
 
   def sendSubscribe(topic: Subscriber.Topic): F[Unit] =
-    send(topic.value.prepended(XSubscriberSocket.Subscribe))
+    send(XSubscriberSocket.Subscribe +: topic.value)
 
   def sendUnsubscribe(topic: Subscriber.Topic): F[Unit] =
-    send(topic.value.prepended(XSubscriberSocket.Unsubscribe))
+    send(XSubscriberSocket.Unsubscribe +: topic.value)
 
 }
 
