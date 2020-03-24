@@ -29,7 +29,7 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     *
     *   for {
     *     queue  <- Stream.eval(Queue.unbounded[F, Array[Byte]])
-    *     _      <- Stream.resource(Resource.make(process(queue).start)(_.cancel))
+    *     _      <- Stream.resource(process(queue).background)
     *     result <- queue.dequeue
     *   } yield result
     * }
@@ -37,11 +37,15 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     */
   def recv: F[Array[Byte]] = F.delay(socket.recv())
 
+  def recvNoWait: F[Array[Byte]] = F.delay(socket.recv(org.zeromq.ZMQ.DONTWAIT))
+
   /**
     * The method blocks the thread until a new message is available.
     * @see [[recv]]
     */
   def recvString: F[String] = F.delay(socket.recvStr())
+
+  def recvStringNoWait: F[String] = F.delay(socket.recvStr(org.zeromq.ZMQ.DONTWAIT))
 
   def hasReceiveMore: F[Boolean] = F.delay(socket.hasReceiveMore)
 
