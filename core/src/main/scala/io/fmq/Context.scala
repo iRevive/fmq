@@ -2,7 +2,8 @@ package io.fmq
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import io.fmq.poll.Poller
-import io.fmq.socket._
+import io.fmq.socket.pipeline.{Pull, Push}
+import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {

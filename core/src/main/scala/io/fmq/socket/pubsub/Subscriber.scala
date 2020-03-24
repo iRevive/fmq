@@ -1,4 +1,5 @@
 package io.fmq.socket
+package pubsub
 
 import java.nio.charset.StandardCharsets
 

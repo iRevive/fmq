@@ -12,7 +12,7 @@ The subscriber can be created within the `Context`.
 ```scala mdoc:silent
 import cats.effect.{Blocker, ContextShift, Resource, IO}
 import io.fmq.Context
-import io.fmq.socket.Subscriber
+import io.fmq.socket.pubsub.Subscriber
 
 import scala.concurrent.ExecutionContext
 
@@ -55,7 +55,7 @@ The settings can be changed until the socket is connected:
 
 ```scala mdoc:silent
 import io.fmq.options.{ReceiveTimeout, Linger}
-import io.fmq.socket.Subscriber
+import io.fmq.socket.pubsub.Subscriber
 
 def configureSubscriber(subscriber: Subscriber[IO]): IO[Unit] = 
   for {

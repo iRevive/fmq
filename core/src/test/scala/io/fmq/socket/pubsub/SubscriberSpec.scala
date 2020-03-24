@@ -1,5 +1,6 @@
 package io.fmq
 package socket
+package pubsub
 
 import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._

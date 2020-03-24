@@ -1,4 +1,5 @@
 package io.fmq.socket
+package pubsub
 
 import cats.effect.Sync
 import io.fmq.address.{Address, Complete, Protocol, Uri}

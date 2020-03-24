@@ -1,4 +1,5 @@
 package io.fmq.socket
+package pipeline
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._

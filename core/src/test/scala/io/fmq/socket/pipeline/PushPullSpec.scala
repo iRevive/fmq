@@ -1,8 +1,9 @@
 package io.fmq
 package socket
+package pipeline
 
 import cats.effect.{IO, Resource, Sync}
-import io.fmq.address.{Address, Host, Port, Protocol, Uri}
+import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
 
 import scala.util.Random

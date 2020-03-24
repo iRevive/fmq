@@ -68,7 +68,7 @@ import cats.effect.{Concurrent, ContextShift, Resource, Sync, Timer}
 import fs2.Stream
 import io.fmq.Context
 import io.fmq.address.{Address, Host, Uri}
-import io.fmq.socket.Subscriber
+import io.fmq.socket.pubsub.Subscriber
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
