@@ -34,9 +34,9 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
 
       for {
         _        <- Timer[IO].sleep(200.millis)
-        _        <- req.sendMultipart(Frame.Multipart("Hello", "World"))
+        _        <- req.sendFrame(Frame.Multipart("Hello", "World"))
         request  <- rep.receiveFrame[String]
-        _        <- rep.sendMultipart(Frame.Multipart("Hello", "Back"))
+        _        <- rep.sendFrame(Frame.Multipart("Hello", "Back"))
         response <- req.receiveFrame[String]
       } yield {
         request shouldBe Frame.Multipart("Hello", "World")

@@ -3,7 +3,7 @@ lazy val fmq = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
-  .aggregate(core, bench, examples)
+  .aggregate(core)
 
 lazy val core = project
   .in(file("core"))
