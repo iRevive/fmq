@@ -61,7 +61,7 @@ import fs2.concurrent.Queue
 import io.fmq.Context
 import io.fmq.address.{Address, Host, Protocol, Uri}
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
-import io.fmq.socket.Subscriber
+import io.fmq.socket.pubsub.Subscriber
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 

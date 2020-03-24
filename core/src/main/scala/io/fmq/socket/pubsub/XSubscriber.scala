@@ -1,4 +1,4 @@
-package io.fmq.socket
+package io.fmq.socket.pubsub
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._

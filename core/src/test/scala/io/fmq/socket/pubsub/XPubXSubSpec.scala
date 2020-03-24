@@ -1,11 +1,11 @@
-package io.fmq.socket.pubsub
+package io.fmq
+package socket
+package pubsub
 
 import cats.effect.{IO, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Host, Port, Protocol, Uri}
-import io.fmq.socket.{SocketBehavior, Subscriber, XPublisherSocket, XSubscriberSocket}
-import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._

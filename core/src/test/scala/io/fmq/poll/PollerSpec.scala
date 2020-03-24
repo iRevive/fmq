@@ -6,7 +6,8 @@ import cats.syntax.flatMap._
 import cats.syntax.apply._
 import fs2.concurrent.Queue
 import io.fmq.address.{Address, Host, Protocol, Uri}
-import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior, Subscriber}
+import io.fmq.socket.pubsub.Subscriber
+import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior}
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 

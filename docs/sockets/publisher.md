@@ -12,7 +12,7 @@ The publisher can be created within the `Context`.
 ```scala mdoc:silent
 import cats.effect.{Blocker, ContextShift, Resource, IO}
 import io.fmq.Context
-import io.fmq.socket.Publisher
+import io.fmq.socket.pubsub.Publisher
 
 import scala.concurrent.ExecutionContext
 
@@ -31,7 +31,8 @@ Publisher can either connect to the specific port or allocate a random port.
 
 ```scala mdoc:silent
 import io.fmq.address.{Address, Host, Port, Uri}
-import io.fmq.socket.{ProducerSocket, Publisher}
+import io.fmq.socket.ProducerSocket
+import io.fmq.socket.pubsub.Publisher
 
 val specificPort: Resource[IO, ProducerSocket.TCP[IO]] = 
   for {
@@ -54,7 +55,8 @@ The settings can be changed until the socket is connected:
 
 ```scala mdoc:silent
 import io.fmq.options.{SendTimeout, Linger}
-import io.fmq.socket.{ProducerSocket, Publisher}
+import io.fmq.socket.ProducerSocket
+import io.fmq.socket.pubsub.Publisher
 
 def configurePublisher(publisher: Publisher[IO]): IO[Unit] = 
   for {
