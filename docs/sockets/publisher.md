@@ -71,11 +71,15 @@ Only connected publisher can send messages:
 
 ```scala mdoc:silent
 import cats.syntax.flatMap._
+import io.fmq.frame.Frame
 import io.fmq.socket.ProducerSocket
 
 def sendSingleMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
   publisher.send("my-message")
 
 def sendMultipartMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
+  publisher.sendMultipart(Frame.Multipart("filter", "my-message")) 
+
+def sendMultipartManually(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
   publisher.sendMore("filter") >> publisher.send("my-message") 
 ```

@@ -77,12 +77,12 @@ def consumeSingleMessage(socket: ConsumerSocket.TCP[IO]): IO[String] =
   socket.receive[String]
 
 def consumeMultipartMessage(socket: ConsumerSocket.TCP[IO]): IO[List[String]] = {
-  def readMultipart: Stream[IO, String] =
+  def receiveMultipart: Stream[IO, String] =
     for {
       s <- Stream.eval(socket.receive[String])
-      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readMultipart, Stream.emit(s))
+      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ receiveMultipart, Stream.emit(s))
     } yield r
 
-  readMultipart.compile.toList
+  receiveMultipart.compile.toList
 }
 ```

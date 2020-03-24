@@ -1,11 +1,14 @@
 package io.fmq
+
 package socket
+
 package pubsub
 
 import cats.effect.{IO, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Host, Port, Protocol, Uri}
+import io.fmq.frame.Frame
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._
@@ -18,22 +21,15 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val XPubXSubSpec.Pair(pub, sub) = pair
 
       for {
-        _        <- Timer[IO].sleep(200.millis)
-        _        <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
-        _        <- Timer[IO].sleep(200.millis)
-        subMsg   <- pub.receive[Array[Byte]]
-        _        <- pub.sendMore("A")
-        _        <- pub.send("Hello")
-        msg1     <- sub.receive[String]
-        hasMore1 <- sub.hasReceiveMore
-        msg2     <- sub.receive[String]
-        hasMore2 <- sub.hasReceiveMore
+        _      <- Timer[IO].sleep(200.millis)
+        _      <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
+        _      <- Timer[IO].sleep(200.millis)
+        subMsg <- pub.receive[Array[Byte]]
+        _      <- pub.sendMultipart(Frame.Multipart("A", "Hello"))
+        msg    <- sub.receiveMultipart[String]
       } yield {
         subMsg shouldBe Array[Byte](XSubscriberSocket.Subscribe, 'A')
-        msg1 shouldBe "A"
-        hasMore1 shouldBe true
-        msg2 shouldBe "Hello"
-        hasMore2 shouldBe false
+        msg shouldBe Frame.Multipart("A", "Hello")
       }
     }
 
