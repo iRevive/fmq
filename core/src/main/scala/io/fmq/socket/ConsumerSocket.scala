@@ -50,9 +50,9 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * }
     * }}}
     *
-    * Or use `io.fmq.BackgroundConsumer` from `fmq-extras` project:
+    * Or use `io.fmq.pattern.BackgroundConsumer` from `fmq-extras` project:
     * {{{
-    * BackgroundConsumer.consume[F, Array[Byte]](blocker, socket, 128)
+    * val data: Stream[F, Frame[Array[Byte]] = BackgroundConsumer.consume[F, Array[Byte]](blocker, socket, 128)
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =
