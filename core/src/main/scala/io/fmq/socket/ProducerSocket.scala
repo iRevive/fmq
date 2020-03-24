@@ -1,8 +1,12 @@
 package io.fmq.socket
 
 import cats.effect.Sync
+import cats.instances.list._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import cats.syntax.traverse._
 import io.fmq.address.{Address, Complete, Protocol, Uri}
-import io.fmq.frame.FrameEncoder
+import io.fmq.frame.{Frame, FrameEncoder}
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
 import org.zeromq.ZMQ
 
@@ -12,11 +16,20 @@ trait ProducerSocket[F[_], P <: Protocol, A <: Address]
     with CommonOptions.Get[F]
     with SendOptions.Get[F] {
 
+  def sendMultipart[B: FrameEncoder](frame: Frame.Multipart[B]): F[Unit] = {
+    val parts = frame.parts
+
+    for {
+      _ <- parts.init.traverse(sendMore[B])
+      _ <- send(parts.last)
+    } yield ()
+  }
+
   def send[B: FrameEncoder](value: B): F[Unit] =
-    F.void(F.delay(socket.send(FrameEncoder[B].encode(value))))
+    F.delay(socket.send(FrameEncoder[B].encode(value))).void
 
   def sendMore[B: FrameEncoder](value: B): F[Unit] =
-    F.void(F.delay(socket.sendMore(FrameEncoder[B].encode(value))))
+    F.delay(socket.sendMore(FrameEncoder[B].encode(value))).void
 
 }
 

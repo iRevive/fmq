@@ -31,6 +31,7 @@ import cats.FlatMap
 import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
+import io.fmq.frame.Frame
 import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
@@ -41,10 +42,10 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: S
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendMore(topicA) >> publisher.send("We don't want to see this")
+    publisher.sendMultipart(Frame.Multipart(topicA, "We don't want to see this"))
 
   private def sendB: F[Unit] =
-    publisher.sendMore(topicB) >> publisher.send("We would like to see this")
+    publisher.sendMultipart(Frame.Multipart(topicB, "We would like to see this"))
 
 }
 ```

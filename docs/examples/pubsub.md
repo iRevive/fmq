@@ -12,6 +12,7 @@ import cats.FlatMap
 import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
+import io.fmq.frame.Frame
 import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
@@ -22,10 +23,10 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: S
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendMore(topicA) >> publisher.send("We don't want to see this")
+    publisher.sendMultipart(Frame.Multipart(topicA, "We don't want to see this"))
 
   private def sendB: F[Unit] =
-    publisher.sendMore(topicB) >> publisher.send("We would like to see this")
+    publisher.sendMultipart(Frame.Multipart(topicB, "We would like to see this"))
 
 }
 ```
@@ -33,30 +34,25 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: S
 Then let's implement a consumer logic: 
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import cats.effect.{Blocker, Concurrent, ContextShift}
 import cats.effect.syntax.concurrent._
 import fs2.Stream
 import fs2.concurrent.Queue
+import io.fmq.frame.Frame
 import io.fmq.socket.ConsumerSocket
 
 class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], blocker: Blocker) {
 
-  def consume: Stream[F, List[String]] = {
-    def process(queue: Queue[F, List[String]]) =
-      blocker.blockOn(Stream.repeatEval(readMultipart.compile.toList).through(queue.enqueue).compile.drain)
+  def consume: Stream[F, Frame[String]] = {
+    def process(queue: Queue[F, Frame[String]]) =
+      blocker.blockOn(Stream.repeatEval(socket.receiveMultipart[String]).through(queue.enqueue).compile.drain)
 
     for {
-      queue  <- Stream.eval(Queue.unbounded[F, List[String]])
+      queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])
       _      <- Stream.resource(process(queue).background)
       result <- queue.dequeue
     } yield result
   }
-
-  private def readMultipart: Stream[F, String] =
-    for {
-      s <- Stream.eval(socket.receive[String])
-      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readMultipart, Stream.emit(s))
-    } yield r
 
 }
 ```
@@ -99,9 +95,9 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
           Stream(
             producer.generate,
-            consumerA.consume.evalMap(batch => log(s"ConsumerA. Received $batch")),
-            consumerB.consume.evalMap(batch => log(s"ConsumerB. Received $batch")),
-            consumerAll.consume.evalMap(batch => log(s"ConsumerAll. Received $batch"))
+            consumerA.consume.evalMap(frame => log(s"ConsumerA. Received $frame")),
+            consumerB.consume.evalMap(frame => log(s"ConsumerB. Received $frame")),
+            consumerAll.consume.evalMap(frame => log(s"ConsumerAll. Received $frame"))
           ).parJoin(4)
       }
 
@@ -128,8 +124,8 @@ object PubSub extends IOApp {
 
 The output will be:
 ```text
-ConsumerA. Received List(my-topic-a, We don't want to see this)
-ConsumerAll. Received List(my-topic-a, We don't want to see this)
-ConsumerB. Received List(my-topic-b, We would like to see this)
-ConsumerAll. Received List(my-topic-b, We would like to see this)
+ConsumerB. Received Multipart(my-topic-b, NonEmptyList(We would like to see this))
+ConsumerAll. Received Multipart(my-topic-a, NonEmptyList(We don't want to see this))
+ConsumerA. Received Multipart(my-topic-a, NonEmptyList(We don't want to see this))
+ConsumerAll. Received Multipart(my-topic-b, NonEmptyList(We would like to see this))
 ```

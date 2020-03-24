@@ -1,8 +1,11 @@
 package io.fmq.socket
 
+import cats.data.NonEmptyList
 import cats.effect.Sync
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import io.fmq.address.{Address, Complete, Protocol, Uri}
-import io.fmq.frame.FrameDecoder
+import io.fmq.frame.{Frame, FrameDecoder}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
 
@@ -11,6 +14,21 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     with SocketOptions[F]
     with CommonOptions.Get[F]
     with ReceiveOptions.Get[F] {
+
+  /**
+    * Returns `Frame.Multipart` if socket has `ZMQ_RCVMORE` option. Otherwise returns `Frame.Single`.
+    */
+  def receiveMultipart[B: FrameDecoder]: F[Frame[B]] = {
+
+    @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
+    def loop(out: List[B]): F[List[B]] =
+      hasReceiveMore.ifM(receive[B].flatMap(message => loop(out :+ message)), F.pure(out))
+
+    for {
+      first <- receive[B]
+      rest  <- loop(Nil)
+    } yield NonEmptyList.fromList(rest).fold[Frame[B]](Frame.Single(first))(Frame.Multipart(first, _))
+  }
 
   /**
     * The operation blocks a thread until a new message is available.
