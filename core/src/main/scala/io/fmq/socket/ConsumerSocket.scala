@@ -5,7 +5,7 @@ import io.fmq.address.{Address, Complete, Protocol, Uri}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
 
-private[fmq] trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
+trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     extends ConnectedSocket[P, A]
     with SocketOptions[F]
     with CommonOptions.Get[F]
