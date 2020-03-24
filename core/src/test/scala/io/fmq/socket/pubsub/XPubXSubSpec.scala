@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 class XPubXSubSpec extends IOSpec with SocketBehavior {
 
-  "XPubXSub" ignore {
+  "XPubXSub" should {
 
     "topic pub sub" in withSockets { pair =>
       val XPubXSubSpec.Pair(pub, sub) = pair
@@ -92,7 +92,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       }
     }
 
-    "multiple subscribers" in withContext() { ctx: Context[IO] =>
+    "multiple subscribers" ignore withContext() { ctx: Context[IO] =>
       val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
       val topics1 = List("A", "AB", "B", "C")
