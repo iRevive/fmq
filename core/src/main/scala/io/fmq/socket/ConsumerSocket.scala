@@ -37,7 +37,7 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     */
   def recv: F[Array[Byte]] = F.delay(socket.recv())
 
-  def recvNoWait: F[Array[Byte]] = F.delay(socket.recv(org.zeromq.ZMQ.DONTWAIT))
+  def recvNoWait: F[Option[Array[Byte]]] = F.delay(Option(socket.recv(ZMQ.DONTWAIT)))
 
   /**
     * The method blocks the thread until a new message is available.
@@ -45,7 +45,7 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     */
   def recvString: F[String] = F.delay(socket.recvStr())
 
-  def recvStringNoWait: F[String] = F.delay(socket.recvStr(org.zeromq.ZMQ.DONTWAIT))
+  def recvStringNoWait: F[Option[String]] = F.delay(Option(socket.recvStr(ZMQ.DONTWAIT)))
 
   def hasReceiveMore: F[Boolean] = F.delay(socket.hasReceiveMore)
 

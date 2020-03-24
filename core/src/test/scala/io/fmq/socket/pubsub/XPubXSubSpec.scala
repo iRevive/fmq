@@ -2,7 +2,6 @@ package io.fmq.socket.pubsub
 
 import cats.effect.{IO, Timer}
 import cats.instances.list._
-import cats.syntax.either._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Host, Protocol, Uri}
 import io.fmq.socket.{SocketBehavior, Subscriber, XPublisherSocket, XSubscriberSocket}
@@ -69,8 +68,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       for {
         _      <- Timer[IO].sleep(200.millis)
         _      <- pub.sendString("Hello")
-        result <- sub.recv.timeout(100.millis).attempt
-      } yield result.leftMap(_.getMessage) shouldBe Left("100 milliseconds")
+        result <- sub.recvNoWait
+      } yield result shouldBe empty
     }
 
     "multiple subscriptions" in withSockets { pair =>
@@ -86,10 +85,10 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         received <- collectMessages(sub, 5)
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- messages.traverse(pub.sendString)
-        result   <- collectMessages(sub, 5).timeout(100.millis).attempt
+        result   <- sub.recvNoWait
       } yield {
         received shouldBe messages
-        result.leftMap(_.getMessage) shouldBe Left("100 milliseconds")
+        result shouldBe empty
       }
     }
 
