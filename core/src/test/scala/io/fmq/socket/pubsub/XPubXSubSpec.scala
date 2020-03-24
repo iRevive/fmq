@@ -20,6 +20,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       for {
         _        <- Timer[IO].sleep(200.millis)
         _        <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
+        _        <- Timer[IO].sleep(200.millis)
         subMsg   <- pub.recv
         _        <- pub.sendStringMore("A")
         _        <- pub.sendString("Hello")
@@ -57,6 +58,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       for {
         _   <- Timer[IO].sleep(200.millis)
         _   <- sub.sendSubscribe(Subscriber.Topic.All)
+        _   <- Timer[IO].sleep(200.millis)
         _   <- pub.sendString("Hello")
         msg <- sub.recvString
       } yield msg shouldBe "Hello"
@@ -81,9 +83,11 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       for {
         _        <- Timer[IO].sleep(200.millis)
         _        <- topics.traverse(topic => sub.sendSubscribe(Subscriber.Topic.utf8String(topic)))
+        _        <- Timer[IO].sleep(200.millis)
         _        <- messages.traverse(pub.sendString)
         received <- collectMessages(sub, 5)
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
+        _        <- Timer[IO].sleep(200.millis)
         _        <- messages.traverse(pub.sendString)
         result   <- sub.recvNoWait
       } yield {
@@ -92,7 +96,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       }
     }
 
-    "multiple subscribers" ignore withContext() { ctx: Context[IO] =>
+    "multiple subscribers" in withContext() { ctx: Context[IO] =>
       val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
 
       val topics1 = List("A", "AB", "B", "C")
@@ -105,6 +109,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
           _    <- Timer[IO].sleep(200.millis)
           _    <- topics1.traverse(topic => sub1.sendSubscribe(Subscriber.Topic.utf8String(topic)))
           _    <- topics2.traverse(topic => sub2.sendSubscribe(Subscriber.Topic.utf8String(topic)))
+          _    <- Timer[IO].sleep(200.millis)
           _    <- pub.sendString("AB-1")
           msg1 <- sub1.recvString
           msg2 <- sub2.recvString
