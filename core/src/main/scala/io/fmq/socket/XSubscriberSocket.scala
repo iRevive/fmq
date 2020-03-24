@@ -4,7 +4,7 @@ import cats.effect.Sync
 import io.fmq.address.{Address, Complete, Protocol, Uri}
 import org.zeromq.ZMQ
 
-class XSubscriberSocket[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]] private[fmq] (
+class XSubscriberSocket[F[_]: Sync, P <: Protocol, A <: Address] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     val uri: Uri[P, A]
 )(implicit protected val F: Sync[F], protected val complete: Complete[P, A])
