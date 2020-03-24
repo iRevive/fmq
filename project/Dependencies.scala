@@ -20,4 +20,9 @@ object Dependencies {
     "co.fs2"        %% "fs2-io"      % Versions.fs2 % Test
   )
 
+  val extras: Seq[ModuleID] = Seq(
+    "co.fs2"        %% "fs2-io"    % Versions.fs2,
+    "org.scalatest" %% "scalatest" % Versions.scalatest % Test
+  )
+
 }
