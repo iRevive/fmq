@@ -28,6 +28,8 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 |--------|-------------|-------------|---------------------|
 | Pub    | true        | false       | Bind                |
 | Sub    | false       | true        | Connect             |
+| XPub   | true        | true        | Bind                |
+| XSub   | true        | true        | Connect             |
 | Push   | true        | false       | Connect             |
 | Pull   | false       | true        | Bind                |
 
