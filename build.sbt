@@ -3,9 +3,10 @@ lazy val fmq = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
-  .aggregate(core)
+  .aggregate(core, bench, examples)
 
-lazy val core = (project in file("core"))
+lazy val core = project
+  .in(file("core"))
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(
@@ -13,13 +14,25 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= Dependencies.core
   )
 
-lazy val bench = (project in file("bench"))
+lazy val bench = project
+  .in(file("bench"))
   .enablePlugins(JmhPlugin)
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
   .settings(
     name                := "fmq-bench",
+    libraryDependencies += Dependencies.fs2
+  )
+  .dependsOn(core)
+
+lazy val examples = project
+  .in(file("examples"))
+  .settings(commonSettings)
+  .settings(commandSettings)
+  .settings(noPublishSettings)
+  .settings(
+    name                := "fmq-examples",
     libraryDependencies += Dependencies.fs2
   )
   .dependsOn(core)
