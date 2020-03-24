@@ -30,7 +30,9 @@ object ProducerSocket {
     new ConnectedSocket[P, A] with ProducerSocket[F, P, A] {
       override def uri: Uri[P, A] = u
 
+      // $COVERAGE-OFF$
       override protected def complete: Complete[P, A] = implicitly[Complete[P, A]]
+      // $COVERAGE-ON$
 
       override protected def F: Sync[F] = implicitly[Sync[F]]
 

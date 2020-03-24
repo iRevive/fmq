@@ -3,7 +3,7 @@ package io.fmq.socket.pubsub
 import cats.effect.{IO, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.address.{Address, Host, Port, Protocol, Uri}
 import io.fmq.socket.{SocketBehavior, Subscriber, XPublisherSocket, XSubscriberSocket}
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
@@ -89,7 +89,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- Timer[IO].sleep(200.millis)
         _        <- messages.traverse(pub.sendString)
-        result   <- sub.recvNoWait
+        result   <- sub.recvStringNoWait
       } yield {
         received shouldBe messages
         result shouldBe empty
@@ -97,7 +97,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
     }
 
     "multiple subscribers" in withContext() { ctx: Context[IO] =>
-      val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(53123)))
 
       val topics1 = List("A", "AB", "B", "C")
       val topics2 = List("A", "AB", "C")
@@ -123,9 +123,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         pub       <- ctx.createXPublisher
         sub1      <- ctx.createXSubscriber
         sub2      <- ctx.createXSubscriber
-        producer  <- pub.bindToRandomPort(uri)
-        consumer1 <- sub1.connect(producer.uri)
-        consumer2 <- sub2.connect(producer.uri)
+        producer  <- pub.bind(uri)
+        consumer1 <- sub1.connect(uri)
+        consumer2 <- sub2.connect(uri)
       } yield (producer, consumer1, consumer2)).use(program)
     }
 
