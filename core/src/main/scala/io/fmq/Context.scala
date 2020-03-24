@@ -10,7 +10,7 @@ import org.zeromq.{SocketType, ZContext, ZMQ}
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
 
   def createSubscriber(topic: Subscriber.Topic): F[Subscriber[F]] =
-    createSocket(SocketType.PUB) { socket =>
+    createSocket(SocketType.SUB) { socket =>
       val _ = socket.subscribe(topic.value)
       new Subscriber[F](topic, socket, blocker)
     }
