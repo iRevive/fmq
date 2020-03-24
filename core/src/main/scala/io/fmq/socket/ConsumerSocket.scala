@@ -16,9 +16,9 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
     with ReceiveOptions.Get[F] {
 
   /**
-    * Returns `Frame.Multipart` if socket has `ZMQ_RCVMORE` option. Otherwise returns `Frame.Single`.
+    * Returns `Frame.Multipart` if message is multipart. Otherwise returns `Frame.Single`.
     */
-  def receiveMultipart[B: FrameDecoder]: F[Frame[B]] = {
+  def receiveFrame[B: FrameDecoder]: F[Frame[B]] = {
 
     @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
     def loop(out: List[B]): F[List[B]] =
@@ -65,10 +65,7 @@ trait ConsumerSocket[F[_], P <: Protocol, A <: Address]
 
 }
 
-object ConsumerSocket {
-
-  type TCP[F[_]]    = ConsumerSocket[F, Protocol.TCP, Address.Full]
-  type InProc[F[_]] = ConsumerSocket[F, Protocol.InProc, Address.HostOnly]
+object ConsumerSocket extends SocketTypeAlias[ConsumerSocket] {
 
   def create[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]](s: ZMQ.Socket, u: Uri[P, A]): ConsumerSocket[F, P, A] =
     new ConnectedSocket[P, A] with ConsumerSocket[F, P, A] {

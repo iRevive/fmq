@@ -18,7 +18,7 @@ final class XPublisher[F[_]: ContextShift] private[fmq] (
   def bind[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, XPublisherSocket[F, P, A]] =
     Bind.bind[F, P, A](uri, socket, blocker).as(new XPublisherSocket(socket, uri))
 
-  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, XPublisherSocket[F, Protocol.TCP, Address.Full]] =
+  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, XPublisherSocket.TCP[F]] =
     for {
       uriFull <- Bind.bindToRandomPort[F](uri, socket, blocker)
     } yield new XPublisherSocket(socket, uriFull)

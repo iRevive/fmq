@@ -1,5 +1,4 @@
 package io.fmq
-
 package socket
 
 import cats.effect.syntax.effect._
@@ -35,7 +34,7 @@ trait SocketBehavior {
       val program =
         for {
           _   <- producer.sendMultipart(Frame.Multipart("A", "We would like to see this"))
-          msg <- consumer.receiveMultipart[String]
+          msg <- consumer.receiveFrame[String]
         } yield msg shouldBe Frame.Multipart("A", "We would like to see this")
 
       Timer[IO].sleep(200.millis) >> program.toIO
