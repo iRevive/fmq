@@ -21,6 +21,7 @@ object Frame {
     @SuppressWarnings(Array("org.wartremover.warts.Overloading"))
     def apply[A](header: A, next: A, rest: A*): Multipart[A] =
       Multipart(header, NonEmptyList(next, rest.toList))
+
   }
 
 }

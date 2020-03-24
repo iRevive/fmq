@@ -1,4 +1,5 @@
 package io.fmq
+
 package socket
 
 import cats.effect.syntax.effect._
@@ -8,6 +9,7 @@ import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import fs2.Stream
 import io.fmq.address.{Address, Port, Protocol, Uri}
+import io.fmq.frame.Frame
 import io.fmq.options._
 import io.fmq.socket.SocketBehavior.{Consumer, Producer, SocketResource}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions}
@@ -32,18 +34,9 @@ trait SocketBehavior {
 
       val program =
         for {
-          _        <- producer.sendMore("A")
-          _        <- producer.send("We would like to see this")
-          msg1     <- consumer.receive[String]
-          hasMore1 <- consumer.hasReceiveMore
-          msg2     <- consumer.receive[String]
-          hasMore2 <- consumer.hasReceiveMore
-        } yield {
-          msg1 shouldBe "A"
-          hasMore1 shouldBe true
-          msg2 shouldBe "We would like to see this"
-          hasMore2 shouldBe false
-        }
+          _   <- producer.sendMultipart(Frame.Multipart("A", "We would like to see this"))
+          msg <- consumer.receiveMultipart[String]
+        } yield msg shouldBe Frame.Multipart("A", "We would like to see this")
 
       Timer[IO].sleep(200.millis) >> program.toIO
     }
