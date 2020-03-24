@@ -44,8 +44,8 @@ trait SocketBehavior {
 
       val resource =
         for {
-          producer <- socketResource.createProducer(ctx)
-          consumer <- socketResource.createConsumer(ctx)
+          producer <- Resource.liftF(socketResource.createProducer(ctx))
+          consumer <- Resource.liftF(socketResource.createConsumer(ctx))
           pair     <- socketResource.bind(producer, consumer, port)
         } yield pair
 
@@ -96,7 +96,7 @@ trait SocketBehavior {
         }
       }
 
-      socketResource.createProducer(context).use(program)
+      socketResource.createProducer(context) >>= program
     }
 
     "operate receiveTimeout" in withContext() { context: Context[IO] =>
@@ -115,7 +115,7 @@ trait SocketBehavior {
         }
       }
 
-      socketResource.createConsumer(context).use(program)
+      socketResource.createConsumer(context) >>= program
     }
 
     "operate linger" in withContext() { context: Context[IO] =>
@@ -134,7 +134,7 @@ trait SocketBehavior {
         }
       }
 
-      socketResource.createProducer(context).use(program) >> socketResource.createConsumer(context).use(program)
+      (socketResource.createProducer(context) >>= program) >> (socketResource.createConsumer(context) >>= program)
     }
 
     "operate identity" in withContext() { context: Context[IO] =>
@@ -149,7 +149,7 @@ trait SocketBehavior {
           }
         }
 
-      socketResource.createProducer(context).use(program) >> socketResource.createConsumer(context).use(program)
+      (socketResource.createProducer(context) >>= program) >> (socketResource.createConsumer(context) >>= program)
     }
 
     "operate receive high water mark" in withContext() { context: Context[IO] =>
@@ -166,7 +166,7 @@ trait SocketBehavior {
         }
       }
 
-      socketResource.createConsumer(context).use(program)
+      socketResource.createConsumer(context) >>= program
     }
 
     "operate send high water mark" in withContext() { context: Context[IO] =>
@@ -183,14 +183,14 @@ trait SocketBehavior {
         }
       }
 
-      socketResource.createProducer(context).use(program)
+      socketResource.createProducer(context) >>= program
     }
 
     def withRandomPortPair[A](fa: SocketResource.Pair[IO] => IO[A]): A =
       withContext() { ctx: Context[IO] =>
         (for {
-          producer <- socketResource.createProducer(ctx)
-          consumer <- socketResource.createConsumer(ctx)
+          producer <- Resource.liftF(socketResource.createProducer(ctx))
+          consumer <- Resource.liftF(socketResource.createConsumer(ctx))
           pair     <- socketResource.bindToRandom(producer, consumer)
         } yield pair).use(fa)
       }
@@ -214,8 +214,8 @@ object SocketBehavior {
 
     type Pair = SocketResource.Pair[F]
 
-    def createProducer(context: Context[F]): Resource[F, P]
-    def createConsumer(context: Context[F]): Resource[F, C]
+    def createProducer(context: Context[F]): F[P]
+    def createConsumer(context: Context[F]): F[C]
     def bind(producer: P, consumer: C, port: Port): Resource[F, Pair]
     def bindToRandom(producer: P, consumer: C): Resource[F, Pair]
 

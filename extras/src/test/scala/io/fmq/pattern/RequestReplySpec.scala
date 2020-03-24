@@ -1,6 +1,6 @@
 package io.fmq.pattern
 
-import cats.effect.{Blocker, IO}
+import cats.effect.{Blocker, IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.frame.Frame
@@ -47,8 +47,8 @@ class RequestReplySpec extends IOSpec {
       val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(53123)))
 
       (for {
-        req     <- ctx.createRequest
-        rep     <- ctx.createReply
+        req     <- Resource.liftF(ctx.createRequest)
+        rep     <- Resource.liftF(ctx.createReply)
         reply   <- rep.bind(uri)
         request <- req.connect(reply.uri)
       } yield Pair(request, reply)).use(fa)

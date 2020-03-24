@@ -9,54 +9,40 @@ import org.zeromq.{SocketType, ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
 
-  def createSubscriber(topic: Subscriber.Topic): Resource[F, Subscriber[F]] =
-    for {
-      socket <- createSocket(SocketType.SUB)
-      _      <- Resource.liftF(Sync[F].delay(socket.subscribe(topic.value)))
-    } yield new Subscriber(topic, socket, blocker)
+  def createSubscriber(topic: Subscriber.Topic): F[Subscriber[F]] =
+    createSocket(SocketType.SUB) { socket =>
+      val _ = socket.subscribe(topic.value)
+      new Subscriber[F](topic, socket, blocker)
+    }
 
-  def createPublisher: Resource[F, Publisher[F]] =
-    for {
-      socket <- createSocket(SocketType.PUB)
-    } yield new Publisher(socket, blocker)
+  def createPublisher: F[Publisher[F]] =
+    createSocket(SocketType.PUB)(socket => new Publisher[F](socket, blocker))
 
-  def createXSubscriber: Resource[F, XSubscriber[F]] =
-    for {
-      socket <- createSocket(SocketType.XSUB)
-    } yield new XSubscriber(socket, blocker)
+  def createXSubscriber: F[XSubscriber[F]] =
+    createSocket(SocketType.XSUB)(socket => new XSubscriber(socket, blocker))
 
-  def createXPublisher: Resource[F, XPublisher[F]] =
-    for {
-      socket <- createSocket(SocketType.XPUB)
-    } yield new XPublisher(socket, blocker)
+  def createXPublisher: F[XPublisher[F]] =
+    createSocket(SocketType.XPUB)(socket => new XPublisher(socket, blocker))
 
-  def createPull: Resource[F, Pull[F]] =
-    for {
-      socket <- createSocket(SocketType.PULL)
-    } yield new Pull[F](socket, blocker)
+  def createPull: F[Pull[F]] =
+    createSocket(SocketType.PULL)(socket => new Pull(socket, blocker))
 
-  def createPush: Resource[F, Push[F]] =
-    for {
-      socket <- createSocket(SocketType.PUSH)
-    } yield new Push(socket, blocker)
+  def createPush: F[Push[F]] =
+    createSocket(SocketType.PUSH)(socket => new Push(socket, blocker))
 
-  def createRequest: Resource[F, Request[F]] =
-    for {
-      socket <- createSocket(SocketType.REQ)
-    } yield new Request(socket, blocker)
+  def createRequest: F[Request[F]] =
+    createSocket(SocketType.REQ)(socket => new Request(socket, blocker))
 
-  def createReply: Resource[F, Reply[F]] =
-    for {
-      socket <- createSocket(SocketType.REP)
-    } yield new Reply(socket, blocker)
+  def createReply: F[Reply[F]] =
+    createSocket(SocketType.REP)(socket => new Reply(socket, blocker))
 
   def createPoller: Resource[F, Poller[F]] =
     Poller.create[F](ctx)
 
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 
-  private def createSocket(tpe: SocketType): Resource[F, ZMQ.Socket] =
-    Resource.liftF(blocker.delay(ctx.createSocket(tpe)))
+  private def createSocket[A](tpe: SocketType)(fa: ZMQ.Socket => A): F[A] =
+    Sync[F].delay(fa(ctx.createSocket(tpe)))
 
 }
 

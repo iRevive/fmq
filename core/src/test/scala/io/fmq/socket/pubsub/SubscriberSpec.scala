@@ -32,9 +32,9 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO])] =
         for {
-          pub        <- ctx.createPublisher
+          pub        <- Resource.liftF(ctx.createPublisher)
           publisher  <- pub.bindToRandomPort(uri)
-          sub        <- ctx.createSubscriber(topic)
+          sub        <- Resource.liftF(ctx.createSubscriber(topic))
           subscriber <- sub.connect(publisher.uri)
         } yield (publisher, subscriber)
 
@@ -100,8 +100,8 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        pub      <- ctx.createPublisher
-        sub      <- ctx.createSubscriber(topic)
+        pub      <- Resource.liftF(ctx.createPublisher)
+        sub      <- Resource.liftF(ctx.createSubscriber(topic))
         producer <- pub.bindToRandomPort(uri)
         consumer <- sub.connect(producer.uri)
       } yield SocketResource.Pair(producer, consumer)).use(fa)

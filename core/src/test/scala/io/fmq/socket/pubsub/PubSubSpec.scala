@@ -76,10 +76,10 @@ class PubSubSpec extends IOSpec with SocketBehavior {
 
   abstract class PubSubResource[F[_]] extends SocketResource[F, Publisher[F], Subscriber[F]] {
 
-    override def createProducer(context: Context[F]): Resource[F, Publisher[F]] =
+    override def createProducer(context: Context[F]): F[Publisher[F]] =
       context.createPublisher
 
-    override def createConsumer(context: Context[F]): Resource[F, Subscriber[F]] =
+    override def createConsumer(context: Context[F]): F[Subscriber[F]] =
       context.createSubscriber(Subscriber.Topic.All)
 
   }

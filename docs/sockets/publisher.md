@@ -22,7 +22,7 @@ val publisherResource: Resource[IO, Publisher[IO]] =
   for {
     blocker   <- Blocker[IO]
     context   <- Context.create[IO](1, blocker)
-    publisher <- context.createPublisher
+    publisher <- Resource.liftF(context.createPublisher)
   } yield publisher
 ```
 

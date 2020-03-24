@@ -12,26 +12,26 @@ import org.zeromq.ZMQ
 
 trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with CommonOptions.Get[F] with SendOptions.Get[F] {
 
-  def sendFrame[B: FrameEncoder](frame: Frame[B]): F[Unit] =
+  def sendFrame[A: FrameEncoder](frame: Frame[A]): F[Unit] =
     frame match {
       case Frame.Single(value)   => send(value)
-      case m: Frame.Multipart[B] => sendMultipart(m)
+      case m: Frame.Multipart[A] => sendMultipart(m)
     }
 
-  def sendMultipart[B: FrameEncoder](frame: Frame.Multipart[B]): F[Unit] = {
+  def sendMultipart[a: FrameEncoder](frame: Frame.Multipart[a]): F[Unit] = {
     val parts = frame.parts
 
     for {
-      _ <- parts.init.traverse(sendMore[B])
+      _ <- parts.init.traverse(sendMore[a])
       _ <- send(parts.last)
     } yield ()
   }
 
-  def send[B: FrameEncoder](value: B): F[Unit] =
-    F.delay(socket.send(FrameEncoder[B].encode(value))).void
+  def send[A: FrameEncoder](value: A): F[Unit] =
+    F.delay(socket.send(FrameEncoder[A].encode(value))).void
 
-  def sendMore[B: FrameEncoder](value: B): F[Unit] =
-    F.delay(socket.sendMore(FrameEncoder[B].encode(value))).void
+  def sendMore[A: FrameEncoder](value: A): F[Unit] =
+    F.delay(socket.sendMore(FrameEncoder[A].encode(value))).void
 
 }
 

@@ -22,14 +22,14 @@ val topicSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
     blocker    <- Blocker[IO]
     context    <- Context.create[IO](1, blocker)
-    subscriber <- context.createSubscriber(Subscriber.Topic.utf8String("my-topic"))
+    subscriber <- Resource.liftF(context.createSubscriber(Subscriber.Topic.utf8String("my-topic")))
   } yield subscriber
 
 val allSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
     blocker    <- Blocker[IO]
     context    <- Context.create[IO](1, blocker)
-    subscriber <- context.createSubscriber(Subscriber.Topic.All)
+    subscriber <- Resource.liftF(context.createSubscriber(Subscriber.Topic.All))
   } yield subscriber
 ```
 

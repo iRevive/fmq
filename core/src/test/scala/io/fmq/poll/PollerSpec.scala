@@ -30,9 +30,9 @@ class PollerSpec extends IOSpec with SocketBehavior {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
-          pub       <- ctx.createPublisher
-          subA      <- ctx.createSubscriber(topicA)
-          subB      <- ctx.createSubscriber(topicB)
+          pub       <- Resource.liftF(ctx.createPublisher)
+          subA      <- Resource.liftF(ctx.createSubscriber(topicA))
+          subB      <- Resource.liftF(ctx.createSubscriber(topicB))
           publisher <- pub.bindToRandomPort(uri)
           consumerA <- subA.connect(publisher.uri)
           consumerB <- subB.connect(publisher.uri)
@@ -92,9 +92,9 @@ class PollerSpec extends IOSpec with SocketBehavior {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
-          pub       <- ctx.createPublisher
-          subA      <- ctx.createSubscriber(topicA)
-          subB      <- ctx.createSubscriber(topicB)
+          pub       <- Resource.liftF(ctx.createPublisher)
+          subA      <- Resource.liftF(ctx.createSubscriber(topicA))
+          subB      <- Resource.liftF(ctx.createSubscriber(topicB))
           publisher <- pub.bindToRandomPort(uri)
           consumerA <- subA.connect(publisher.uri)
           consumerB <- subB.connect(publisher.uri)

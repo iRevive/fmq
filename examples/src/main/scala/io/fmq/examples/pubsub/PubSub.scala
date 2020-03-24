@@ -35,11 +35,11 @@ class PubSubDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 
   private val appResource =
     for {
-      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(uri))
+      pub    <- Resource.suspend(context.createPublisher.map(_.bindToRandomPort(uri)))
       addr   <- Resource.pure(pub.uri)
-      subA   <- context.createSubscriber(Subscriber.Topic.utf8String(topicA)).flatMap(_.connect(addr))
-      subB   <- context.createSubscriber(Subscriber.Topic.utf8String(topicB)).flatMap(_.connect(addr))
-      subAll <- context.createSubscriber(Subscriber.Topic.All).flatMap(_.connect(addr))
+      subA   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicA)).map(_.connect(addr)))
+      subB   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicB)).map(_.connect(addr)))
+      subAll <- Resource.suspend(context.createSubscriber(Subscriber.Topic.All).map(_.connect(addr)))
     } yield (pub, subA, subB, subAll)
 
   val program: Stream[F, Unit] =

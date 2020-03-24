@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package reqrep
 
-import cats.effect.{IO, Timer}
+import cats.effect.{IO, Resource, Timer}
 import cats.syntax.either._
 import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
@@ -88,8 +88,8 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        req     <- ctx.createRequest
-        rep     <- ctx.createReply
+        req     <- Resource.liftF(ctx.createRequest)
+        rep     <- Resource.liftF(ctx.createReply)
         reply   <- rep.bindToRandomPort(uri)
         request <- req.connect(reply.uri)
       } yield Pair(request, reply)).use(fa)
