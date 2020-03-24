@@ -7,7 +7,7 @@ import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
 
-final class Pull[F[_]: Sync: ContextShift] private[fmq] (
+final class XSubscriber[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     blocker: Blocker
 ) extends SocketOptions[F]
@@ -16,12 +16,7 @@ final class Pull[F[_]: Sync: ContextShift] private[fmq] (
 
   override protected def F: Sync[F] = implicitly[Sync[F]]
 
-  def bind[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, ConsumerSocket[F, P, A]] =
-    Bind.bind[F, P, A](uri, socket, blocker).as(ConsumerSocket.create(socket, uri))
-
-  def bindToRandomPort(uri: Uri.TCP[Address.HostOnly]): Resource[F, ConsumerSocket[F, Protocol.TCP, Address.Full]] =
-    for {
-      uriFull <- Bind.bindToRandomPort[F](uri, socket, blocker)
-    } yield ConsumerSocket.create(socket, uriFull)
+  def connect[P <: Protocol, A <: Address: Complete[P, *]](uri: Uri[P, A]): Resource[F, XSubscriberSocket[F, P, A]] =
+    Bind.connect[F, P, A](uri, socket, blocker).as(new XSubscriberSocket[F, P, A](socket, uri))
 
 }
