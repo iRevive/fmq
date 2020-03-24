@@ -56,7 +56,7 @@ class SocketBenchmark {
     }
 
     publisher = push.send(msg.data()).foreverM.start.unsafeRunSync()
-    consumer = pull.recv.map(_ => inc()).foreverM.start.unsafeRunSync()
+    consumer = pull.receive[Array[Byte]].map(_ => inc()).foreverM.start.unsafeRunSync()
   }
 
   @TearDown(Level.Iteration)

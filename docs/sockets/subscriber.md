@@ -74,15 +74,15 @@ import fs2.Stream
 import io.fmq.socket.ConsumerSocket
 
 def consumeSingleMessage(socket: ConsumerSocket.TCP[IO]): IO[String] = 
-  socket.recvString
+  socket.receive[String]
 
-def consumeBatchMessage(socket: ConsumerSocket.TCP[IO]): IO[List[String]] = {
-  def readBatch: Stream[IO, String] =
+def consumeMultipartMessage(socket: ConsumerSocket.TCP[IO]): IO[List[String]] = {
+  def readMultipart: Stream[IO, String] =
     for {
-      s <- Stream.eval(socket.recvString)
-      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readBatch, Stream.emit(s))
+      s <- Stream.eval(socket.receive[String])
+      r <- Stream.eval(socket.hasReceiveMore).ifM(Stream.emit(s) ++ readMultipart, Stream.emit(s))
     } yield r
 
-  readBatch.compile.toList
+  readMultipart.compile.toList
 }
 ```

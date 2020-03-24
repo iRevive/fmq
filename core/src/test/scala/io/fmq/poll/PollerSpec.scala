@@ -40,7 +40,7 @@ class PollerSpec extends IOSpec with SocketBehavior {
         } yield (publisher, consumerA, consumerB, poller)
 
       def handler(queue: Queue[IO, String]): ConsumerHandler[IO, Protocol.TCP, Address.Full] =
-        Kleisli(socket => socket.recvString >>= queue.enqueue1)
+        Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
 
       def program(
           producer: ProducerSocket.TCP[IO],
@@ -56,15 +56,15 @@ class PollerSpec extends IOSpec with SocketBehavior {
           _                  <- poller.registerConsumer(consumerB, handler(queueB))
           _                  <- poller.poll(timeout)
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- producer.sendString("Topic-A")
+          _                  <- producer.send("Topic-A")
           _                  <- poller.poll(timeout)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- producer.sendString("Topic-B")
+          _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
           _                  <- poller.poll(timeout)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-          _                  <- producer.sendString("Topic-A")
-          _                  <- producer.sendString("Topic-B")
+          _                  <- producer.send("Topic-A")
+          _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
           _                  <- poller.poll(timeout)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
@@ -102,10 +102,10 @@ class PollerSpec extends IOSpec with SocketBehavior {
         } yield (publisher, consumerA, consumerB, poller)
 
       def consumerHandler(queue: Queue[IO, String]): ConsumerHandler[IO, Protocol.TCP, Address.Full] =
-        Kleisli(socket => socket.recvString >>= queue.enqueue1)
+        Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
 
       def producerHandler: ProducerHandler[IO, Protocol.TCP, Address.Full] =
-        Kleisli(socket => socket.sendString("Topic-A") >> socket.sendString("Topic-B"))
+        Kleisli(socket => socket.send("Topic-A") >> socket.send("Topic-B"))
 
       def program(
           producer: ProducerSocket.TCP[IO],

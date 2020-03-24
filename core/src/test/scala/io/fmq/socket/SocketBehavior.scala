@@ -32,11 +32,11 @@ trait SocketBehavior {
 
       val program =
         for {
-          _        <- producer.sendStringMore("A")
-          _        <- producer.sendString("We would like to see this")
-          msg1     <- consumer.recvString
+          _        <- producer.sendMore("A")
+          _        <- producer.send("We would like to see this")
+          msg1     <- consumer.receive[String]
           hasMore1 <- consumer.hasReceiveMore
-          msg2     <- consumer.recvString
+          msg2     <- consumer.receive[String]
           hasMore2 <- consumer.hasReceiveMore
         } yield {
           msg1 shouldBe "A"
@@ -68,7 +68,7 @@ trait SocketBehavior {
 
           val program =
             for {
-              _      <- messages.traverse(producer.sendString)
+              _      <- messages.traverse(producer.send[String])
               result <- collectMessages(consumer, messages.length.toLong)
             } yield result shouldBe messages
 
@@ -83,7 +83,7 @@ trait SocketBehavior {
 
       val program =
         for {
-          _      <- messages.traverse(producer.sendString)
+          _      <- messages.traverse(producer.send[String])
           result <- collectMessages(consumer, messages.length.toLong)
         } yield result shouldBe messages
 
@@ -211,7 +211,7 @@ trait SocketBehavior {
       consumer: ConsumerSocket[F, P, A],
       limit: Long
   ): F[List[String]] =
-    Stream.repeatEval(consumer.recvString).take(limit).compile.toList
+    Stream.repeatEval(consumer.receive[String]).take(limit).compile.toList
 
 }
 

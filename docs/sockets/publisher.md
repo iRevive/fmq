@@ -74,8 +74,8 @@ import cats.syntax.flatMap._
 import io.fmq.socket.ProducerSocket
 
 def sendSingleMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
-  publisher.sendString("my-message")
+  publisher.send("my-message")
 
-def sendBatchMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
-  publisher.sendStringMore("filter") >> publisher.sendString("my-message") 
+def sendMultipartMessage(publisher: ProducerSocket.TCP[IO]): IO[Unit] = 
+  publisher.sendMore("filter") >> publisher.send("my-message") 
 ```
