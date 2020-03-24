@@ -3,7 +3,7 @@ lazy val fmq = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
-  .aggregate(core)
+  .aggregate(core, extras)
 
 lazy val core = project
   .in(file("core"))
@@ -13,6 +13,16 @@ lazy val core = project
     name                := "fmq-core",
     libraryDependencies ++= Dependencies.core
   )
+
+lazy val extras = project
+  .in(file("extras"))
+  .settings(commonSettings)
+  .settings(commandSettings)
+  .settings(
+    name                := "fmq-extras",
+    libraryDependencies ++= Dependencies.extras
+  )
+  .dependsOn(core)
 
 lazy val bench = project
   .in(file("bench"))
@@ -35,7 +45,7 @@ lazy val examples = project
     name                := "fmq-examples",
     libraryDependencies += Dependencies.fs2
   )
-  .dependsOn(core)
+  .dependsOn(core, extras)
 
 lazy val docs = project
   .in(file("fmq-docs"))
