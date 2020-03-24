@@ -36,7 +36,7 @@ import io.fmq.socket.ProducerSocket
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket.TCP[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
@@ -60,7 +60,7 @@ import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
-import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.address.{Address, Host, Uri}
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
 import io.fmq.socket.pubsub.Subscriber
 
@@ -70,7 +70,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
-  private val uri    = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+  private val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
   private val appResource =
     for {
@@ -89,7 +89,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
         case (publisher, subscriberA, subscriberB, subscriberAll, poller) =>
           val producer = new Producer[F](publisher, topicA, topicB)
 
-          def handler(queue: Queue[F, String]): ConsumerHandler[F, Protocol.TCP, Address.Full] =
+          def handler(queue: Queue[F, String]): ConsumerHandler[F] =
             Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
           
           def configurePoller(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] =

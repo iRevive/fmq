@@ -4,12 +4,16 @@ package reqrep
 
 import cats.effect.{IO, Timer}
 import cats.syntax.either._
-import io.fmq.address.{Address, Host, Protocol, Uri}
+import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.ReqRepSpec.Pair
 
 import scala.concurrent.duration._
 
+/**
+  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
+  */
 class ReqRepSpec extends IOSpec with SocketBehavior {
 
   "ReqRep" should {
@@ -79,9 +83,9 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
 
   }
 
-  private def withSockets[A](fa: Pair[IO, Protocol.TCP, Address.Full] => IO[A]): A =
+  private def withSockets[A](fa: Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
         req     <- ctx.createRequest
@@ -95,9 +99,9 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
 
 object ReqRepSpec {
 
-  final case class Pair[F[_], P <: Protocol, A <: Address](
-      request: RequestSocket[F, P, A],
-      reply: ReplySocket[F, P, A]
+  final case class Pair[F[_]](
+      request: RequestSocket[F],
+      reply: ReplySocket[F]
   )
 
 }

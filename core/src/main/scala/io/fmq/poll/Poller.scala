@@ -16,10 +16,10 @@ import zmq.poll.{PollItem => ZPollItem}
 
 final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], selector: Selector) {
 
-  def registerConsumer[P <: Protocol, A <: Address](socket: ConsumerSocket[F, P, A], handler: ConsumerHandler[F, P, A]): F[Unit] =
+  def registerConsumer[P <: Protocol, A <: Address](socket: ConsumerSocket[F], handler: ConsumerHandler[F]): F[Unit] =
     itemsRef.update(_ :+ PollEntry.Read(socket, handler))
 
-  def registerProducer[P <: Protocol, A <: Address](socket: ProducerSocket[F, P, A], handler: ProducerHandler[F, P, A]): F[Unit] =
+  def registerProducer[P <: Protocol, A <: Address](socket: ProducerSocket[F], handler: ProducerHandler[F]): F[Unit] =
     itemsRef.update(_ :+ PollEntry.Write(socket, handler))
 
   /**

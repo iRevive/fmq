@@ -40,10 +40,10 @@ Subscriber can connect to the specific port and host.
 import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.socket.ConsumerSocket
 
-val connected: Resource[IO, ConsumerSocket.TCP[IO]] = 
+val connected: Resource[IO, ConsumerSocket[IO]] = 
   for {
     subscriber <- topicSubscriberResource
-    connected  <- subscriber.connect(Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(31234))))
+    connected  <- subscriber.connect(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
   } yield connected
 ```
 
@@ -73,10 +73,10 @@ import cats.syntax.flatMap._
 import fs2.Stream
 import io.fmq.socket.ConsumerSocket
 
-def consumeSingleMessage(socket: ConsumerSocket.TCP[IO]): IO[String] = 
+def consumeSingleMessage(socket: ConsumerSocket[IO]): IO[String] = 
   socket.receive[String]
 
-def consumeMultipartMessage(socket: ConsumerSocket.TCP[IO]): IO[List[String]] = {
+def consumeMultipartMessage(socket: ConsumerSocket[IO]): IO[List[String]] = {
   def receiveMultipart: Stream[IO, String] =
     for {
       s <- Stream.eval(socket.receive[String])

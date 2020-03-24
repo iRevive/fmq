@@ -5,12 +5,16 @@ package pubsub
 import cats.effect.{IO, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Port, Protocol, Uri}
+import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.frame.Frame
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._
 
+/**
+  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
+  */
 class XPubXSubSpec extends IOSpec with SocketBehavior {
 
   "XPubXSub" should {
@@ -91,12 +95,12 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
     }
 
     "multiple subscribers" in withContext() { ctx: Context[IO] =>
-      val uri = Uri.tcp(Address.Full(Host.Fixed("localhost"), Port(53123)))
+      val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(53123)))
 
       val topics1 = List("A", "AB", "B", "C")
       val topics2 = List("A", "AB", "C")
 
-      def program(input: (XPublisherSocket.TCP[IO], XSubscriberSocket.TCP[IO], XSubscriberSocket.TCP[IO])): IO[Assertion] = {
+      def program(input: (XPublisherSocket[IO], XSubscriberSocket[IO], XSubscriberSocket[IO])): IO[Assertion] = {
         val (pub, sub1, sub2) = input
 
         for {
@@ -125,9 +129,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 
   }
 
-  private def withSockets[A](fa: XPubXSubSpec.Pair[IO, Protocol.TCP, Address.Full] => IO[A]): A =
+  private def withSockets[A](fa: XPubXSubSpec.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.tcp(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
         pub      <- ctx.createXPublisher
@@ -141,9 +145,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 
 object XPubXSubSpec {
 
-  final case class Pair[F[_], P <: Protocol, A <: Address](
-      publisher: XPublisherSocket[F, P, A],
-      subscriber: XSubscriberSocket[F, P, A]
+  final case class Pair[F[_]](
+      publisher: XPublisherSocket[F],
+      subscriber: XSubscriberSocket[F]
   )
 
 }
