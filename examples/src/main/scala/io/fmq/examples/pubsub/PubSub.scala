@@ -89,4 +89,3 @@ class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], bl
   }
 
 }
-
