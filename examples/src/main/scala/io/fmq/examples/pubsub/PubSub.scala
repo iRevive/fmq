@@ -79,7 +79,7 @@ class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket.TCP[F], bl
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
-      blocker.blockOn(Stream.repeatEval(socket.receiveMultipart[String]).through(queue.enqueue).compile.drain)
+      blocker.blockOn(Stream.repeatEval(socket.receiveFrame[String]).through(queue.enqueue).compile.drain)
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])

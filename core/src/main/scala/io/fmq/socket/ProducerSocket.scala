@@ -16,6 +16,12 @@ trait ProducerSocket[F[_], P <: Protocol, A <: Address]
     with CommonOptions.Get[F]
     with SendOptions.Get[F] {
 
+  def sendFrame[B: FrameEncoder](frame: Frame[B]): F[Unit] =
+    frame match {
+      case Frame.Single(value)   => send(value)
+      case m: Frame.Multipart[B] => sendMultipart(m)
+    }
+
   def sendMultipart[B: FrameEncoder](frame: Frame.Multipart[B]): F[Unit] = {
     val parts = frame.parts
 
@@ -33,10 +39,7 @@ trait ProducerSocket[F[_], P <: Protocol, A <: Address]
 
 }
 
-object ProducerSocket {
-
-  type TCP[F[_]]    = ProducerSocket[F, Protocol.TCP, Address.Full]
-  type InProc[F[_]] = ProducerSocket[F, Protocol.InProc, Address.HostOnly]
+object ProducerSocket extends SocketTypeAlias[ProducerSocket] {
 
   def create[F[_]: Sync, P <: Protocol, A <: Address: Complete[P, *]](s: ZMQ.Socket, u: Uri[P, A]): ProducerSocket[F, P, A] =
     new ConnectedSocket[P, A] with ProducerSocket[F, P, A] {

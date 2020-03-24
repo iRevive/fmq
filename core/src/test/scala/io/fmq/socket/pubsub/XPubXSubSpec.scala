@@ -1,7 +1,5 @@
 package io.fmq
-
 package socket
-
 package pubsub
 
 import cats.effect.{IO, Timer}
@@ -26,7 +24,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _      <- Timer[IO].sleep(200.millis)
         subMsg <- pub.receive[Array[Byte]]
         _      <- pub.sendMultipart(Frame.Multipart("A", "Hello"))
-        msg    <- sub.receiveMultipart[String]
+        msg    <- sub.receiveFrame[String]
       } yield {
         subMsg shouldBe Array[Byte](XSubscriberSocket.Subscribe, 'A')
         msg shouldBe Frame.Multipart("A", "Hello")

@@ -4,6 +4,7 @@ import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import io.fmq.poll.Poller
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
+import io.fmq.socket.reqrep.{Reply, Request}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
@@ -38,6 +39,16 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
     for {
       socket <- createSocket(SocketType.PUSH)
     } yield new Push(socket, blocker)
+
+  def createRequest: Resource[F, Request[F]] =
+    for {
+      socket <- createSocket(SocketType.REQ)
+    } yield new Request(socket, blocker)
+
+  def createReply: Resource[F, Reply[F]] =
+    for {
+      socket <- createSocket(SocketType.REP)
+    } yield new Reply(socket, blocker)
 
   def createPoller: Resource[F, Poller[F]] =
     Poller.create[F](ctx)

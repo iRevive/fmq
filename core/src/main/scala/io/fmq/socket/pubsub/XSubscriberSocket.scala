@@ -21,10 +21,7 @@ class XSubscriberSocket[F[_]: Sync, P <: Protocol, A <: Address] private[fmq] (
 
 }
 
-object XSubscriberSocket {
-
-  type TCP[F[_]]    = XSubscriberSocket[F, Protocol.TCP, Address.Full]
-  type InProc[F[_]] = XSubscriberSocket[F, Protocol.InProc, Address.HostOnly]
+object XSubscriberSocket extends SocketTypeAlias[XSubscriberSocket] {
 
   val Subscribe: Byte   = 0x01
   val Unsubscribe: Byte = 0x00
