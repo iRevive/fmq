@@ -1,7 +1,7 @@
 package io.fmq.examples.reqrep
 
 import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Sync, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
@@ -29,8 +29,8 @@ class ReqRepDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 
   private val appResource =
     for {
-      reply      <- context.createReply.flatMap(_.bindToRandomPort(uri))
-      request    <- context.createRequest.flatMap(_.connect(reply.uri))
+      reply      <- Resource.suspend(context.createReply.map(_.bindToRandomPort(uri)))
+      request    <- Resource.suspend(context.createRequest.map(_.connect(reply.uri)))
       dispatcher <- RequestReply.create[F](blocker, request, 100)
     } yield (reply, dispatcher)
 

@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package pubsub
 
-import cats.effect.{IO, Timer}
+import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Host, Port, Uri}
@@ -118,9 +118,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       }
 
       (for {
-        pub       <- ctx.createXPublisher
-        sub1      <- ctx.createXSubscriber
-        sub2      <- ctx.createXSubscriber
+        pub       <- Resource.liftF(ctx.createXPublisher)
+        sub1      <- Resource.liftF(ctx.createXSubscriber)
+        sub2      <- Resource.liftF(ctx.createXSubscriber)
         producer  <- pub.bind(uri)
         consumer1 <- sub1.connect(uri)
         consumer2 <- sub2.connect(uri)
@@ -134,8 +134,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        pub      <- ctx.createXPublisher
-        sub      <- ctx.createXSubscriber
+        pub      <- Resource.liftF(ctx.createXPublisher)
+        sub      <- Resource.liftF(ctx.createXSubscriber)
         producer <- pub.bindToRandomPort(uri)
         consumer <- sub.connect(producer.uri)
       } yield XPubXSubSpec.Pair(producer, consumer)).use(fa)

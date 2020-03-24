@@ -76,10 +76,10 @@ class PushPullSpec extends IOSpec with SocketBehavior {
 
   abstract class PushPullResource[F[_]] extends SocketResource[F, Push[F], Pull[F]] {
 
-    override def createProducer(context: Context[F]): Resource[F, Push[F]] =
+    override def createProducer(context: Context[F]): F[Push[F]] =
       context.createPush
 
-    override def createConsumer(context: Context[F]): Resource[F, Pull[F]] =
+    override def createConsumer(context: Context[F]): F[Pull[F]] =
       context.createPull
 
   }

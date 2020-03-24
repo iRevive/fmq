@@ -42,10 +42,10 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: Strin
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
-    publisher.sendMultipart(Frame.Multipart(topicA, "We don't want to see this"))
+    publisher.sendFrame(Frame.Multipart(topicA, "We don't want to see this"))
 
   private def sendB: F[Unit] =
-    publisher.sendMultipart(Frame.Multipart(topicB, "We would like to see this"))
+    publisher.sendFrame(Frame.Multipart(topicB, "We would like to see this"))
 
 }
 ```
@@ -74,11 +74,11 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
   private val appResource =
     for {
-      pub    <- context.createPublisher.flatMap(_.bindToRandomPort(uri))
+      pub    <- Resource.suspend(context.createPublisher.map(_.bindToRandomPort(uri)))
       addr   <- Resource.pure(pub.uri)
-      subA   <- context.createSubscriber(Subscriber.Topic.utf8String(topicA)).flatMap(_.connect(addr))
-      subB   <- context.createSubscriber(Subscriber.Topic.utf8String(topicB)).flatMap(_.connect(addr))
-      subAll <- context.createSubscriber(Subscriber.Topic.All).flatMap(_.connect(addr))
+      subA   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicA)).map(_.connect(addr)))
+      subB   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicB)).map(_.connect(addr)))
+      subAll <- Resource.suspend(context.createSubscriber(Subscriber.Topic.All).map(_.connect(addr)))
       poller <- context.createPoller
     } yield (pub, subA, subB, subAll, poller)
 

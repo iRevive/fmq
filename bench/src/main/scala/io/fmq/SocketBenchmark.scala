@@ -3,7 +3,7 @@ package io.fmq
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 
-import cats.effect.{Blocker, ContextShift, Fiber, IO}
+import cats.effect.{Blocker, ContextShift, Fiber, IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.SocketBenchmark.MessagesCounter
 import io.fmq.address.{Address, Host, Uri}
@@ -40,8 +40,8 @@ class SocketBenchmark {
       (for {
         blocker  <- Blocker[IO]
         context  <- Context.create[IO](1, blocker)
-        pull     <- context.createPull
-        push     <- context.createPush
+        pull     <- Resource.liftF(context.createPull)
+        push     <- Resource.liftF(context.createPush)
         consumer <- pull.bindToRandomPort(uri)
         producer <- push.connect(consumer.uri)
       } yield (consumer, producer)).allocated.unsafeRunSync()
