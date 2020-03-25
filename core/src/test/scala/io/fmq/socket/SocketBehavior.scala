@@ -13,7 +13,6 @@ import io.fmq.options._
 import io.fmq.socket.SocketBehavior.{Consumer, Producer, SocketResource}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions}
 import org.scalatest.Assertion
-import org.scalatest.Inside._
 
 import scala.concurrent.duration._
 
@@ -133,21 +132,6 @@ trait SocketBehavior {
           linger3 shouldBe Linger.Fixed(5.seconds)
         }
       }
-
-      (socketResource.createProducer(context) >>= program) >> (socketResource.createConsumer(context) >>= program)
-    }
-
-    "operate identity" in withContext() { context: Context[IO] =>
-      val identity = Identity(Array(1, 2, 3))
-
-      def program(socket: CommonOptions.All[IO]): IO[Assertion] =
-        for {
-          identity1 <- socket.setIdentity(identity) >> socket.identity
-        } yield {
-          inside(identity1) {
-            case Identity(value) => value should not be empty
-          }
-        }
 
       (socketResource.createProducer(context) >>= program) >> (socketResource.createConsumer(context) >>= program)
     }

@@ -13,6 +13,7 @@ final class Reply[F[_]: Sync: ContextShift] private[fmq] (
     with SocketOptions[F]
     with CommonOptions.All[F]
     with SendOptions.All[F]
+    with RequestReplyOptions.All[F]
 
 object Reply {
 
@@ -20,11 +21,13 @@ object Reply {
       protected[fmq] val socket: ZMQ.Socket,
       val uri: Uri.Complete
   ) extends ProducerConsumerSocket[F]
+      with RequestReplyOptions.All[F]
 
   implicit val replySocketFactory: SocketFactory[Reply.Socket] = new SocketFactory[Reply.Socket] {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Reply.Socket[F] =
       new Reply.Socket[F](socket, uri)
+
   }
 
 }

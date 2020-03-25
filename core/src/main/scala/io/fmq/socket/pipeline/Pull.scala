@@ -25,6 +25,7 @@ object Pull {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Pull.Socket[F] =
       new Pull.Socket[F](socket, uri)
+
   }
 
 }

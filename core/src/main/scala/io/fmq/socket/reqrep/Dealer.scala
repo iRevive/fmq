@@ -14,6 +14,7 @@ final class Dealer[F[_]: Sync: ContextShift] private[fmq] (
     with CommonOptions.All[F]
     with SendOptions.All[F]
     with ReceiveOptions.All[F]
+    with RequestReplyOptions.All[F]
 
 object Dealer {
 
@@ -21,11 +22,13 @@ object Dealer {
       protected[fmq] val socket: ZMQ.Socket,
       val uri: Uri.Complete
   ) extends ProducerConsumerSocket[F]
+      with RequestReplyOptions.All[F]
 
   implicit val dealerSocketFactory: SocketFactory[Dealer.Socket] = new SocketFactory[Dealer.Socket] {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Dealer.Socket[F] =
       new Dealer.Socket[F](socket, uri)
+
   }
 
 }

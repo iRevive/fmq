@@ -34,6 +34,8 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 | Push   | true        | false       | Connect             |
 | Rep    | true        | true        | Bind                |
 | Req    | true        | true        | Connect             |
+| Router | true        | true        | Bind                |
+| Dealer | true        | true        | Connect             |
 
 ## Benchmarks
 
