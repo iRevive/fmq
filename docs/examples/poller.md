@@ -32,11 +32,11 @@ import cats.effect.Timer
 import cats.syntax.flatMap._
 import fs2.Stream
 import io.fmq.frame.Frame
-import io.fmq.socket.ProducerSocket
+import io.fmq.socket.pubsub.Publisher
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
+class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Socket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
     Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
@@ -121,7 +121,6 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 ```
 
 At the edge of out program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
-Define the entry point:
 
 ```scala mdoc:silent
 import cats.effect.{Blocker, ExitCode, IO, IOApp}

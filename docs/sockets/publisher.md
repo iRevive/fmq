@@ -31,16 +31,15 @@ Publisher can either connect to the specific port or allocate a random port.
 
 ```scala mdoc:silent
 import io.fmq.address.{Address, Host, Port, Uri}
-import io.fmq.socket.ProducerSocket
 import io.fmq.socket.pubsub.Publisher
 
-val specificPort: Resource[IO, ProducerSocket[IO]] = 
+val specificPort: Resource[IO, Publisher.Socket[IO]] = 
   for {
     publisher <- publisherResource
     connected <- publisher.bind(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
   } yield connected
 
-val randomPort: Resource[IO, ProducerSocket[IO]] = 
+val randomPort: Resource[IO, Publisher.Socket[IO]] = 
   for {
     publisher <- publisherResource
     connected <- publisher.bindToRandomPort(Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost"))))
@@ -55,7 +54,6 @@ The settings can be changed until the socket is connected:
 
 ```scala mdoc:silent
 import io.fmq.options.{SendTimeout, Linger}
-import io.fmq.socket.ProducerSocket
 import io.fmq.socket.pubsub.Publisher
 
 def configurePublisher(publisher: Publisher[IO]): IO[Unit] = 
@@ -72,14 +70,13 @@ Only connected publisher can send messages:
 ```scala mdoc:silent
 import cats.syntax.flatMap._
 import io.fmq.frame.Frame
-import io.fmq.socket.ProducerSocket
 
-def sendSingleMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
+def sendSingleMessage(publisher: Publisher.Socket[IO]): IO[Unit] = 
   publisher.send("my-message")
 
-def sendMultipartMessage(publisher: ProducerSocket[IO]): IO[Unit] = 
+def sendMultipartMessage(publisher: Publisher.Socket[IO]): IO[Unit] = 
   publisher.sendMultipart(Frame.Multipart("filter", "my-message")) 
 
-def sendMultipartManually(publisher: ProducerSocket[IO]): IO[Unit] = 
+def sendMultipartManually(publisher: Publisher.Socket[IO]): IO[Unit] = 
   publisher.sendMore("filter") >> publisher.send("my-message") 
 ```

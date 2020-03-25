@@ -38,9 +38,8 @@ Subscriber can connect to the specific port and host.
 
 ```scala mdoc:silent
 import io.fmq.address.{Address, Host, Port, Uri}
-import io.fmq.socket.ConsumerSocket
 
-val connected: Resource[IO, ConsumerSocket[IO]] = 
+val connected: Resource[IO, Subscriber.Socket[IO]] = 
   for {
     subscriber <- topicSubscriberResource
     connected  <- subscriber.connect(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
@@ -71,12 +70,14 @@ Only connected subscriber can consume messages:
 ```scala mdoc:silent
 import cats.syntax.flatMap._
 import fs2.Stream
-import io.fmq.socket.ConsumerSocket
 
-def consumeSingleMessage(socket: ConsumerSocket[IO]): IO[String] = 
+def consumeSingleMessage(socket: Subscriber.Socket[IO]): IO[String] = 
   socket.receive[String]
 
-def consumeMultipartMessage(socket: ConsumerSocket[IO]): IO[List[String]] = {
+def consumeMultipartMessage(socket: Subscriber.Socket[IO]): IO[List[String]] = 
+  socket.receiveFrame[String].map(_.parts.toList)
+
+def consumeMultipartMessageManually(socket: Subscriber.Socket[IO]): IO[List[String]] = {
   def receiveMultipart: Stream[IO, String] =
     for {
       s <- Stream.eval(socket.receive[String])
