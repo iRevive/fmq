@@ -4,7 +4,6 @@ import cats.data.NonEmptyList
 import cats.effect.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import io.fmq.address.Uri
 import io.fmq.frame.{Frame, FrameDecoder}
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import org.zeromq.ZMQ
@@ -68,11 +67,6 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
 
 object ConsumerSocket {
 
-  abstract class Connected[F[_]](
-      protected[fmq] val socket: ZMQ.Socket,
-      val uri: Uri.Complete
-  )(implicit protected val F: Sync[F])
-      extends ConnectedSocket
-      with ConsumerSocket[F]
+  abstract class Connected[F[_]](implicit protected val F: Sync[F]) extends ConnectedSocket with ConsumerSocket[F]
 
 }

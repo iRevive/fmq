@@ -5,10 +5,8 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import io.fmq.address.Uri
 import io.fmq.frame.{Frame, FrameEncoder}
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
-import org.zeromq.ZMQ
 
 trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with CommonOptions.Get[F] with SendOptions.Get[F] {
 
@@ -37,11 +35,6 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
 
 object ProducerSocket {
 
-  abstract class Connected[F[_]](
-      protected[fmq] val socket: ZMQ.Socket,
-      val uri: Uri.Complete
-  )(implicit protected val F: Sync[F])
-      extends ConnectedSocket
-      with ProducerSocket[F]
+  abstract class Connected[F[_]](implicit protected val F: Sync[F]) extends ConnectedSocket with ProducerSocket[F]
 
 }

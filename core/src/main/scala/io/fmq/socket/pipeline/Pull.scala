@@ -1,36 +1,30 @@
 package io.fmq.socket.pipeline
 
-import cats.effect.{Blocker, ContextShift, Resource, Sync}
-import cats.syntax.functor._
+import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.ConsumerSocket
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
-import io.fmq.socket.internal.Bind
+import io.fmq.socket.{Bind, ConsumerSocket, SocketFactory}
 import org.zeromq.ZMQ
 
-final class Pull[F[_]: ContextShift] private[fmq] (
+final class Pull[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
-    blocker: Blocker
-)(implicit protected val F: Sync[F])
-    extends SocketOptions[F]
+    protected val blocker: Blocker
+) extends Bind[F, Pull.Socket]
+    with SocketOptions[F]
     with CommonOptions.All[F]
-    with ReceiveOptions.All[F] {
-
-  def bind(uri: Uri.Complete): Resource[F, Pull.Socket[F]] =
-    Bind.bind[F](uri, socket, blocker).as(new Pull.Socket(socket, uri))
-
-  def bindToRandomPort(uri: Uri.Incomplete.TCP): Resource[F, Pull.Socket[F]] =
-    for {
-      completeUri <- Bind.bindToRandomPort[F](uri, socket, blocker)
-    } yield new Pull.Socket(socket, completeUri)
-
-}
+    with ReceiveOptions.All[F]
 
 object Pull {
 
   final class Socket[F[_]: Sync] private[Pull] (
-      socket: ZMQ.Socket,
-      uri: Uri.Complete
-  ) extends ConsumerSocket.Connected[F](socket, uri)
+      protected[fmq] val socket: ZMQ.Socket,
+      val uri: Uri.Complete
+  ) extends ConsumerSocket.Connected[F]
+
+  implicit val pullSocketFactory: SocketFactory[Pull.Socket] = new SocketFactory[Pull.Socket] {
+
+    override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Pull.Socket[F] =
+      new Pull.Socket[F](socket, uri)
+  }
 
 }

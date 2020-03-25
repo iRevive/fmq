@@ -4,7 +4,7 @@ import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import io.fmq.poll.Poller
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
-import io.fmq.socket.reqrep.{Reply, Request}
+import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
 final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
@@ -35,6 +35,12 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
 
   def createReply: F[Reply[F]] =
     createSocket(SocketType.REP)(socket => new Reply(socket, blocker))
+
+  def createRouter: F[Router[F]] =
+    createSocket(SocketType.ROUTER)(socket => new Router(socket, blocker))
+
+  def createDealer: F[Dealer[F]] =
+    createSocket(SocketType.DEALER)(socket => new Dealer(socket, blocker))
 
   def createPoller: Resource[F, Poller[F]] =
     Poller.create[F](ctx)

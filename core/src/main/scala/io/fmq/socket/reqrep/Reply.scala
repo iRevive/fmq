@@ -1,36 +1,30 @@
 package io.fmq.socket.reqrep
 
-import cats.effect.{Blocker, ContextShift, Resource, Sync}
-import cats.syntax.functor._
+import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.ProducerConsumerSocket
 import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
-import io.fmq.socket.internal.Bind
+import io.fmq.socket.{Bind, ProducerConsumerSocket, SocketFactory}
 import org.zeromq.ZMQ
 
-final class Reply[F[_]: ContextShift] private[fmq] (
+final class Reply[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
-    blocker: Blocker
-)(implicit protected val F: Sync[F])
-    extends SocketOptions[F]
+    protected val blocker: Blocker
+) extends Bind[F, Reply.Socket]
+    with SocketOptions[F]
     with CommonOptions.All[F]
-    with SendOptions.All[F] {
-
-  def bind(uri: Uri.Complete): Resource[F, Reply.Socket[F]] =
-    Bind.bind[F](uri, socket, blocker).as(new Reply.Socket(socket, uri))
-
-  def bindToRandomPort(uri: Uri.Incomplete.TCP): Resource[F, Reply.Socket[F]] =
-    for {
-      completeUri <- Bind.bindToRandomPort[F](uri, socket, blocker)
-    } yield new Reply.Socket(socket, completeUri)
-
-}
+    with SendOptions.All[F]
 
 object Reply {
 
   final class Socket[F[_]: Sync] private[Reply] (
-      socket: ZMQ.Socket,
-      uri: Uri.Complete
-  ) extends ProducerConsumerSocket[F](socket, uri)
+      protected[fmq] val socket: ZMQ.Socket,
+      val uri: Uri.Complete
+  ) extends ProducerConsumerSocket[F]
+
+  implicit val replySocketFactory: SocketFactory[Reply.Socket] = new SocketFactory[Reply.Socket] {
+
+    override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Reply.Socket[F] =
+      new Reply.Socket[F](socket, uri)
+  }
 
 }
