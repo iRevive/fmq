@@ -7,10 +7,10 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.concurrent.Queue
 import io.fmq.frame.{Frame, FrameDecoder, FrameEncoder}
-import io.fmq.socket.reqrep.RequestSocket
+import io.fmq.socket.reqrep.Request
 
 class RequestReply[F[_]: Concurrent] private (
-    socket: RequestSocket[F],
+    socket: Request.Socket[F],
     requestQueue: Queue[F, F[Unit]]
 ) {
 
@@ -36,7 +36,7 @@ object RequestReply {
 
   def create[F[_]: Concurrent: ContextShift](
       blocker: Blocker,
-      socket: RequestSocket[F],
+      socket: Request.Socket[F],
       queueSize: Int
   ): Resource[F, RequestReply[F]] =
     for {

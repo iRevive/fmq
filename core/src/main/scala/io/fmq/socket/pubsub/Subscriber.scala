@@ -1,11 +1,11 @@
-package io.fmq.socket
-package pubsub
+package io.fmq.socket.pubsub
 
 import java.nio.charset.StandardCharsets
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
 import io.fmq.address.Uri
+import io.fmq.socket.ConsumerSocket
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
 import io.fmq.socket.internal.Bind
 import org.zeromq.ZMQ
@@ -19,8 +19,8 @@ final class Subscriber[F[_]: ContextShift] private[fmq] (
     with CommonOptions.All[F]
     with ReceiveOptions.All[F] {
 
-  def connect(uri: Uri.Complete): Resource[F, ConsumerSocket[F]] =
-    Bind.connect[F](uri, socket, blocker).as(ConsumerSocket.create[F](socket, uri))
+  def connect(uri: Uri.Complete): Resource[F, Subscriber.Socket[F]] =
+    Bind.connect[F](uri, socket, blocker).as(new Subscriber.Socket[F](socket, uri))
 
 }
 
@@ -42,5 +42,10 @@ object Subscriber {
     def utf8String(value: String): Topic.Bytes = Bytes(value.getBytes(StandardCharsets.UTF_8))
 
   }
+
+  final class Socket[F[_]: Sync] private[Subscriber] (
+      socket: ZMQ.Socket,
+      uri: Uri.Complete
+  ) extends ConsumerSocket.Connected[F](socket, uri)
 
 }

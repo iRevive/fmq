@@ -18,11 +18,11 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
       case m: Frame.Multipart[A] => sendMultipart(m)
     }
 
-  def sendMultipart[a: FrameEncoder](frame: Frame.Multipart[a]): F[Unit] = {
+  def sendMultipart[A: FrameEncoder](frame: Frame.Multipart[A]): F[Unit] = {
     val parts = frame.parts
 
     for {
-      _ <- parts.init.traverse(sendMore[a])
+      _ <- parts.init.traverse(sendMore[A])
       _ <- send(parts.last)
     } yield ()
   }
@@ -37,13 +37,11 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
 
 object ProducerSocket {
 
-  def create[F[_]: Sync](s: ZMQ.Socket, u: Uri.Complete): ProducerSocket[F] =
-    new ProducerSocket[F] {
-      override def uri: Uri.Complete = u
-
-      override protected def F: Sync[F] = implicitly[Sync[F]]
-
-      override private[fmq] def socket: ZMQ.Socket = s
-    }
+  abstract class Connected[F[_]](
+      protected[fmq] val socket: ZMQ.Socket,
+      val uri: Uri.Complete
+  )(implicit protected val F: Sync[F])
+      extends ConnectedSocket
+      with ProducerSocket[F]
 
 }

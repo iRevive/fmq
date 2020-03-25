@@ -68,13 +68,11 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
 
 object ConsumerSocket {
 
-  def create[F[_]: Sync](s: ZMQ.Socket, u: Uri.Complete): ConsumerSocket[F] =
-    new ConsumerSocket[F] {
-      override def uri: Uri.Complete = u
-
-      override protected def F: Sync[F] = implicitly[Sync[F]]
-
-      override private[fmq] def socket: ZMQ.Socket = s
-    }
+  abstract class Connected[F[_]](
+      protected[fmq] val socket: ZMQ.Socket,
+      val uri: Uri.Complete
+  )(implicit protected val F: Sync[F])
+      extends ConnectedSocket
+      with ConsumerSocket[F]
 
 }

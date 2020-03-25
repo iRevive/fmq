@@ -30,7 +30,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _      <- pub.sendMultipart(Frame.Multipart("A", "Hello"))
         msg    <- sub.receiveFrame[String]
       } yield {
-        subMsg shouldBe Array[Byte](XSubscriberSocket.Subscribe, 'A')
+        subMsg shouldBe Array[Byte](XSubscriber.Subscribe, 'A')
         msg shouldBe Frame.Multipart("A", "Hello")
       }
     }
@@ -100,7 +100,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val topics1 = List("A", "AB", "B", "C")
       val topics2 = List("A", "AB", "C")
 
-      def program(input: (XPublisherSocket[IO], XSubscriberSocket[IO], XSubscriberSocket[IO])): IO[Assertion] = {
+      def program(input: (XPublisher.Socket[IO], XSubscriber.Socket[IO], XSubscriber.Socket[IO])): IO[Assertion] = {
         val (pub, sub1, sub2) = input
 
         for {
@@ -146,8 +146,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 object XPubXSubSpec {
 
   final case class Pair[F[_]](
-      publisher: XPublisherSocket[F],
-      subscriber: XSubscriberSocket[F]
+      publisher: XPublisher.Socket[F],
+      subscriber: XSubscriber.Socket[F]
   )
 
 }

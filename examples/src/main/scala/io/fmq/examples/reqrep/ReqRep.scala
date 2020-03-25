@@ -10,7 +10,7 @@ import io.fmq.Context
 import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.pattern.RequestReply
-import io.fmq.socket.reqrep.ReplySocket
+import io.fmq.socket.reqrep.Reply
 
 import scala.concurrent.duration._
 
@@ -48,7 +48,7 @@ class ReqRepDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class Server[F[_]: Concurrent: ContextShift](socket: ReplySocket[F], blocker: Blocker) {
+class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: Blocker) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =

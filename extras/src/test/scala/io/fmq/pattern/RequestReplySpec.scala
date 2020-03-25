@@ -4,7 +4,7 @@ import cats.effect.{Blocker, IO, Resource, Timer}
 import cats.syntax.flatMap._
 import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.frame.Frame
-import io.fmq.socket.reqrep.{ReplySocket, RequestSocket}
+import io.fmq.socket.reqrep.{Reply, Request}
 import io.fmq.pattern.RequestReplySpec.Pair
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
@@ -62,8 +62,8 @@ class RequestReplySpec extends IOSpec {
 object RequestReplySpec {
 
   final case class Pair[F[_]](
-      request: RequestSocket[F],
-      reply: ReplySocket[F]
+      request: Request.Socket[F],
+      reply: Reply.Socket[F]
   )
 
 }

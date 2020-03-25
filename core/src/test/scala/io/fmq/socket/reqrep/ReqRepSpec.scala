@@ -100,8 +100,8 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
 object ReqRepSpec {
 
   final case class Pair[F[_]](
-      request: RequestSocket[F],
-      reply: ReplySocket[F]
+      request: Request.Socket[F],
+      reply: Reply.Socket[F]
   )
 
 }
