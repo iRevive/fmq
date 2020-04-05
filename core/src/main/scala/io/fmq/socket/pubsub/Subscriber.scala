@@ -4,15 +4,15 @@ import java.nio.charset.StandardCharsets
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketOptions}
-import io.fmq.socket.{Connect, ConsumerSocket, SocketFactory}
+import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketFactory, SocketOptions}
+import io.fmq.socket.{Connectivity, ConsumerSocket}
 import org.zeromq.ZMQ
 
 final class Subscriber[F[_]: Sync: ContextShift] private[fmq] (
     val topic: Subscriber.Topic,
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connect[F, Subscriber.Socket]
+) extends Connectivity.Connect[F, Subscriber.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with ReceiveOptions.All[F]
@@ -45,6 +45,7 @@ object Subscriber {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Subscriber.Socket[F] =
       new Subscriber.Socket[F](socket, uri)
+
   }
 
 }

@@ -7,7 +7,8 @@ import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
-final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: Blocker) {
+@SuppressWarnings(Array("org.wartremover.warts.Overloading"))
+final class Context[F[_]: Sync: ContextShift] private (private[fmq] val ctx: ZContext, blocker: Blocker) {
 
   def createSubscriber(topic: Subscriber.Topic): F[Subscriber[F]] =
     createSocket(SocketType.SUB) { socket =>
@@ -43,7 +44,10 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
     createSocket(SocketType.DEALER)(socket => new Dealer(socket, blocker))
 
   def createPoller: Resource[F, Poller[F]] =
-    Poller.create[F](ctx)
+    for {
+      selector <- Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay(ctx.getContext.selector()))
+      poller   <- Poller.fromSelector[F](selector)
+    } yield poller
 
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 
@@ -54,11 +58,9 @@ final class Context[F[_]: Sync: ContextShift] private (ctx: ZContext, blocker: B
 
 object Context {
 
-  def apply[F[_]](implicit ev: Context[F]): Context[F] = ev
-
   def create[F[_]: Sync: ContextShift](ioThreads: Int, blocker: Blocker): Resource[F, Context[F]] =
     for {
-      ctx <- Resource.make(blocker.delay(new ZContext(ioThreads)))(ctx => blocker.delay(ctx.close()))
+      ctx <- Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay(new ZContext(ioThreads)))
     } yield new Context[F](ctx, blocker)
 
 }

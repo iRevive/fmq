@@ -35,7 +35,7 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 | Rep    | true        | true        | Bind                |
 | Req    | true        | true        | Connect             |
 | Router | true        | true        | Bind                |
-| Dealer | true        | true        | Connect             |
+| Dealer | true        | true        | Bind / Connect      |
 
 ## Benchmarks
 

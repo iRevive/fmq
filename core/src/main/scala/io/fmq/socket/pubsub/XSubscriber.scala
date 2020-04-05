@@ -2,14 +2,14 @@ package io.fmq.socket.pubsub
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions, SocketOptions}
-import io.fmq.socket.{Connect, ProducerConsumerSocket, SocketFactory}
+import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions, SocketFactory, SocketOptions}
+import io.fmq.socket.{BidirectionalSocket, Connectivity}
 import org.zeromq.ZMQ
 
 final class XSubscriber[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connect[F, XSubscriber.Socket]
+) extends Connectivity.Connect[F, XSubscriber.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with SendOptions.All[F]
@@ -23,7 +23,7 @@ object XSubscriber {
   final class Socket[F[_]: Sync] private[XSubscriber] (
       protected[fmq] val socket: ZMQ.Socket,
       val uri: Uri.Complete
-  ) extends ProducerConsumerSocket[F] {
+  ) extends BidirectionalSocket[F] {
 
     def sendSubscribe(topic: Subscriber.Topic): F[Unit] =
       send(XSubscriber.Subscribe +: topic.value)
@@ -37,6 +37,7 @@ object XSubscriber {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): XSubscriber.Socket[F] =
       new XSubscriber.Socket[F](socket, uri)
+
   }
 
 }

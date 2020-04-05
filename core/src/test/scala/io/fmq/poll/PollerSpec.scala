@@ -7,9 +7,11 @@ import cats.syntax.apply._
 import fs2.concurrent.Queue
 import io.fmq.address.{Address, Host, Uri}
 import io.fmq.socket.pubsub.Subscriber
-import io.fmq.socket.{ConsumerSocket, ProducerSocket, SocketBehavior}
+import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
+import zmq.ZMQ
+import zmq.poll.PollItem
 
 import scala.concurrent.duration._
 
@@ -17,13 +19,55 @@ import scala.concurrent.duration._
   * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-class PollerSpec extends IOSpec with SocketBehavior {
+class PollerSpec extends IOSpec {
 
   "Poller[IO]" should {
 
-    "not call event handler if message is not available yet" in withContext() { ctx: Context[IO] =>
-      val timeout = PollTimeout.Fixed(200.millis)
+    "zmq.ZMQ.poll behavior" in withContext() { ctx: Context[IO] =>
+      val topicA = Subscriber.Topic.utf8String("Topic-A")
+      val topicB = Subscriber.Topic.utf8String("Topic-B")
+      val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
+      def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
+        for {
+          publisher       <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+          consumerA      <- Resource.suspend(ctx.createSubscriber(topicA).map(_.connect(publisher.uri)))
+          consumerB      <- Resource.suspend(ctx.createSubscriber(topicB).map(_.connect(publisher.uri)))
+          poller    <- ctx.createPoller
+        } yield (publisher, consumerA, consumerB, poller)
+
+      def program(
+          producer: ProducerSocket[IO],
+          consumerA: ConsumerSocket[IO],
+          consumerB: ConsumerSocket[IO],
+          poller: Poller[IO]
+      ): IO[Assertion] = {
+        def items = Array(
+          new PollItem(consumerA.socket.base(), ZMQ.ZMQ_POLLIN),
+          new PollItem(consumerB.socket.base(), ZMQ.ZMQ_POLLIN)
+        )
+
+        for {
+          _       <- Timer[IO].sleep(200.millis)
+          _       <- producer.send("Topic-A")
+          events2 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          _       <- producer.send("Topic-B")
+          events3 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          _       <- producer.send("Topic-A")
+          _       <- producer.send("Topic-B")
+          events4 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+        } yield {
+          //events1 shouldBe 0
+          events2 shouldBe 1
+          events3 shouldBe 2
+          events4 shouldBe 2
+        }
+      }
+
+      create.use((program _).tupled)
+    }
+
+    "not call event handler if message is not available yet" in withContext() { ctx: Context[IO] =>
       val topicA = Subscriber.Topic.utf8String("Topic-A")
       val topicB = Subscriber.Topic.utf8String("Topic-B")
       val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
@@ -54,19 +98,19 @@ class PollerSpec extends IOSpec with SocketBehavior {
           queueB             <- Queue.unbounded[IO, String]
           _                  <- poller.registerConsumer(consumerA, handler(queueA))
           _                  <- poller.registerConsumer(consumerB, handler(queueB))
-          _                  <- poller.poll(timeout)
+          _                  <- poller.poll(PollTimeout.Fixed(200.millis))
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-A")
-          _                  <- poller.poll(timeout)
+          _                  <- poller.poll(PollTimeout.Infinity)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
-          _                  <- poller.poll(timeout)
+          _                  <- poller.poll(PollTimeout.Infinity)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-A")
           _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
-          _                  <- poller.poll(timeout)
+          _                  <- poller.poll(PollTimeout.Infinity)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
           queueA1 shouldBe empty

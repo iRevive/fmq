@@ -2,14 +2,14 @@ package io.fmq.socket.pipeline
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
-import io.fmq.socket.{Connect, ProducerSocket, SocketFactory}
+import io.fmq.socket.api.{CommonOptions, SendOptions, SocketFactory, SocketOptions}
+import io.fmq.socket.{Connectivity, ProducerSocket}
 import org.zeromq.ZMQ
 
 final class Push[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connect[F, Push.Socket]
+) extends Connectivity.Connect[F, Push.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with SendOptions.All[F]

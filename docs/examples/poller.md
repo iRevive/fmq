@@ -5,6 +5,7 @@ title: Poller
 
 The `Poller` provides a way to invoke a handler once a socket can either receive or send a message.  
 The `ConsumerHandler` is a simple `Kleisli`: `Kleisli[F, ConsumerSocket[F], Unit]`.   
+
 The best way to use the poller is enqueue messages into the queue: 
 ```scala
 def handler(queue: Queue[F, String]): ConsumerHandler[F] =
@@ -17,8 +18,6 @@ blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM)
 ```
 
 Thus all consuming operations is being executed on the one blocking thread, while the processing can be performed on the general context.  
-
-
 
 ## Example
 

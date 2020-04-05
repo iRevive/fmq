@@ -11,10 +11,9 @@ import cats.syntax.functor._
 import cats.syntax.traverse._
 import io.fmq.address.{Address, Protocol}
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
-import org.zeromq.ZContext
 import zmq.poll.{PollItem => ZPollItem}
 
-final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], selector: Selector) {
+final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], private[fmq] val selector: Selector) {
 
   def registerConsumer[P <: Protocol, A <: Address](socket: ConsumerSocket[F], handler: ConsumerHandler[F]): F[Unit] =
     itemsRef.update(_ :+ PollEntry.Read(socket, handler))
@@ -23,7 +22,7 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
     itemsRef.update(_ :+ PollEntry.Write(socket, handler))
 
   /**
-    * In the case of [[PollTimeout.Infinity]] the thread will be '''blocked''' until every socket
+    * In the case of [[PollTimeout.Infinity]] the thread will be '''blocked''' until at least one socket
     * can either receive or send a message (based on the socket type).
     *
     * @return total number of available events
@@ -32,7 +31,7 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
     for {
       items   <- itemsRef.get
       polling <- items.map(item => (item, toZmqPollItem(item))).pure[F]
-      events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, items.size, timeout.value))
+      events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, timeout.value))
       _       <- polling.traverse((dispatchItem _).tupled)
     } yield events
 
@@ -47,8 +46,8 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
     }
   }
 
-  private def toZmqPollItem(pollItem1: PollEntry[F]): ZPollItem =
-    pollItem1 match {
+  private def toZmqPollItem(pollItem: PollEntry[F]): ZPollItem =
+    pollItem match {
       case PollEntry.Read(socket, _)  => new ZPollItem(socket.socket.base, zmq.ZMQ.ZMQ_POLLIN)
       case PollEntry.Write(socket, _) => new ZPollItem(socket.socket.base, zmq.ZMQ.ZMQ_POLLOUT)
     }
@@ -57,10 +56,9 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], se
 
 object Poller {
 
-  def create[F[_]: Sync](ctx: ZContext): Resource[F, Poller[F]] =
+  def fromSelector[F[_]: Sync](selector: Selector): Resource[F, Poller[F]] =
     for {
-      selector <- Resource.fromAutoCloseable(Sync[F].delay(ctx.getContext.selector()))
-      ref      <- Resource.liftF(Ref.of[F, List[PollEntry[F]]](List.empty))
-    } yield new Poller[F](ref, selector)
+      items <- Resource.liftF(Ref.of[F, List[PollEntry[F]]](List.empty))
+    } yield new Poller[F](items, selector)
 
 }

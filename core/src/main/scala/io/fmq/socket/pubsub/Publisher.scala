@@ -2,14 +2,14 @@ package io.fmq.socket.pubsub
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import io.fmq.address.Uri
-import io.fmq.socket.api.{CommonOptions, SendOptions, SocketOptions}
-import io.fmq.socket.{Bind, ProducerSocket, SocketFactory}
+import io.fmq.socket.api.{CommonOptions, SendOptions, SocketFactory, SocketOptions}
+import io.fmq.socket.{Connectivity, ProducerSocket}
 import org.zeromq.ZMQ
 
 final class Publisher[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Bind[F, Publisher.Socket]
+) extends Connectivity.Bind[F, Publisher.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with SendOptions.All[F]
@@ -25,6 +25,7 @@ object Publisher {
 
     override def create[F[_]: Sync](socket: ZMQ.Socket, uri: Uri.Complete): Publisher.Socket[F] =
       new Publisher.Socket[F](socket, uri)
+
   }
 
 }
