@@ -88,10 +88,8 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        req     <- Resource.liftF(ctx.createRequest)
-        rep     <- Resource.liftF(ctx.createReply)
-        reply   <- rep.bindToRandomPort(uri)
-        request <- req.connect(reply.uri)
+        reply   <- Resource.suspend(ctx.createReply.map(_.bindToRandomPort(uri)))
+        request <- Resource.suspend(ctx.createRequest.map(_.connect(reply.uri)))
       } yield Pair(request, reply)).use(fa)
     }
 

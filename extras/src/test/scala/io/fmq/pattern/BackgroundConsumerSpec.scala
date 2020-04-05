@@ -36,10 +36,8 @@ class BackgroundConsumerSpec extends IOSpec {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        pub        <- Resource.liftF(ctx.createPublisher)
-        sub        <- Resource.liftF(ctx.createSubscriber(Subscriber.Topic.All))
-        publisher  <- pub.bindToRandomPort(uri)
-        subscriber <- sub.connect(publisher.uri)
+        publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+        subscriber <- Resource.suspend(ctx.createSubscriber(Subscriber.Topic.All).map(_.connect(publisher.uri)))
       } yield Pair(publisher, subscriber)).use(fa)
     }
 

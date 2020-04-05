@@ -50,10 +50,8 @@ class RequestReplySpec extends IOSpec {
       val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(53123)))
 
       (for {
-        req     <- Resource.liftF(ctx.createRequest)
-        rep     <- Resource.liftF(ctx.createReply)
-        reply   <- rep.bind(uri)
-        request <- req.connect(reply.uri)
+        reply   <- Resource.suspend(ctx.createReply.map(_.bind(uri)))
+        request <- Resource.suspend(ctx.createRequest.map(_.connect(reply.uri)))
       } yield Pair(request, reply)).use(fa)
     }
 

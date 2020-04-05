@@ -118,12 +118,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       }
 
       (for {
-        pub       <- Resource.liftF(ctx.createXPublisher)
-        sub1      <- Resource.liftF(ctx.createXSubscriber)
-        sub2      <- Resource.liftF(ctx.createXSubscriber)
-        producer  <- pub.bind(uri)
-        consumer1 <- sub1.connect(uri)
-        consumer2 <- sub2.connect(uri)
+        producer  <- Resource.suspend(ctx.createXPublisher.map(_.bind(uri)))
+        consumer1 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
+        consumer2 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
       } yield (producer, consumer1, consumer2)).use(program)
     }
 
@@ -134,10 +131,8 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
 
       (for {
-        pub      <- Resource.liftF(ctx.createXPublisher)
-        sub      <- Resource.liftF(ctx.createXSubscriber)
-        producer <- pub.bindToRandomPort(uri)
-        consumer <- sub.connect(producer.uri)
+        producer <- Resource.suspend(ctx.createXPublisher.map(_.bindToRandomPort(uri)))
+        consumer <- Resource.suspend(ctx.createXSubscriber.map(_.connect(producer.uri)))
       } yield XPubXSubSpec.Pair(producer, consumer)).use(fa)
     }
 

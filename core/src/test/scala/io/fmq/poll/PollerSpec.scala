@@ -30,9 +30,9 @@ class PollerSpec extends IOSpec {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
-          publisher       <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
-          consumerA      <- Resource.suspend(ctx.createSubscriber(topicA).map(_.connect(publisher.uri)))
-          consumerB      <- Resource.suspend(ctx.createSubscriber(topicB).map(_.connect(publisher.uri)))
+          publisher <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+          consumerA <- Resource.suspend(ctx.createSubscriber(topicA).map(_.connect(publisher.uri)))
+          consumerB <- Resource.suspend(ctx.createSubscriber(topicB).map(_.connect(publisher.uri)))
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 
@@ -74,12 +74,9 @@ class PollerSpec extends IOSpec {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
-          pub       <- Resource.liftF(ctx.createPublisher)
-          subA      <- Resource.liftF(ctx.createSubscriber(topicA))
-          subB      <- Resource.liftF(ctx.createSubscriber(topicB))
-          publisher <- pub.bindToRandomPort(uri)
-          consumerA <- subA.connect(publisher.uri)
-          consumerB <- subB.connect(publisher.uri)
+          publisher <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+          consumerA <- Resource.suspend(ctx.createSubscriber(topicA).map(_.connect(publisher.uri)))
+          consumerB <- Resource.suspend(ctx.createSubscriber(topicB).map(_.connect(publisher.uri)))
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 
@@ -136,12 +133,9 @@ class PollerSpec extends IOSpec {
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
-          pub       <- Resource.liftF(ctx.createPublisher)
-          subA      <- Resource.liftF(ctx.createSubscriber(topicA))
-          subB      <- Resource.liftF(ctx.createSubscriber(topicB))
-          publisher <- pub.bindToRandomPort(uri)
-          consumerA <- subA.connect(publisher.uri)
-          consumerB <- subB.connect(publisher.uri)
+          publisher <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+          consumerA <- Resource.suspend(ctx.createSubscriber(topicA).map(_.connect(publisher.uri)))
+          consumerB <- Resource.suspend(ctx.createSubscriber(topicB).map(_.connect(publisher.uri)))
           poller    <- ctx.createPoller
         } yield (publisher, consumerA, consumerB, poller)
 

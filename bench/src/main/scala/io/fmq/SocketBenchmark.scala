@@ -40,10 +40,8 @@ class SocketBenchmark {
       (for {
         blocker  <- Blocker[IO]
         context  <- Context.create[IO](1, blocker)
-        pull     <- Resource.liftF(context.createPull)
-        push     <- Resource.liftF(context.createPush)
-        consumer <- pull.bindToRandomPort(uri)
-        producer <- push.connect(consumer.uri)
+        consumer <- Resource.suspend(context.createPull.map(_.bindToRandomPort(uri)))
+        producer <- Resource.suspend(context.createPush.map(_.connect(consumer.uri)))
       } yield (consumer, producer)).allocated.unsafeRunSync()
 
     // Wait for connection

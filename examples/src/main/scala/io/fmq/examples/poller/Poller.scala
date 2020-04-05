@@ -37,9 +37,9 @@ class PollerDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
     for {
       pub    <- Resource.suspend(context.createPublisher.map(_.bindToRandomPort(uri)))
       addr   <- Resource.pure(pub.uri)
-      subA   <- Resource.liftF(context.createSubscriber(Subscriber.Topic.utf8String(topicA))).flatMap(_.connect(addr))
-      subB   <- Resource.liftF(context.createSubscriber(Subscriber.Topic.utf8String(topicB))).flatMap(_.connect(addr))
-      subAll <- Resource.liftF(context.createSubscriber(Subscriber.Topic.All)).flatMap(_.connect(addr))
+      subA   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicA)).map(_.connect(addr)))
+      subB   <- Resource.suspend(context.createSubscriber(Subscriber.Topic.utf8String(topicB)).map(_.connect(addr)))
+      subAll <- Resource.suspend(context.createSubscriber(Subscriber.Topic.All).map(_.connect(addr)))
       poller <- context.createPoller
     } yield (pub, subA, subB, subAll, poller)
 

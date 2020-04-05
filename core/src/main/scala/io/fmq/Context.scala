@@ -7,7 +7,6 @@ import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
-@SuppressWarnings(Array("org.wartremover.warts.Overloading"))
 final class Context[F[_]: Sync: ContextShift] private (private[fmq] val ctx: ZContext, blocker: Blocker) {
 
   def createSubscriber(topic: Subscriber.Topic): F[Subscriber[F]] =

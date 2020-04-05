@@ -63,7 +63,7 @@ class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: B
 
   private def processRequest(request: Frame[String]): F[Unit] = {
     val action = request match {
-      case Frame.Single(value) => socket.sendFrame(Frame.Single(s"$value-response"))
+      case Frame.Single(value)       => socket.sendFrame(Frame.Single(s"$value-response"))
       case Frame.Multipart(value, _) => socket.sendFrame(Frame.Single(s"$value-multipart-response"))
     }
 
