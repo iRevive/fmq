@@ -50,17 +50,18 @@ class PollerSpec extends IOSpec {
         for {
           _       <- Timer[IO].sleep(200.millis)
           _       <- producer.send("Topic-A")
-          events2 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          events1 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          _       <- Timer[IO].sleep(100.millis)
           _       <- producer.send("Topic-B")
-          events3 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          _       <- Timer[IO].sleep(100.millis)
+          events2 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
           _       <- producer.send("Topic-A")
           _       <- producer.send("Topic-B")
-          events4 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
+          events3 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
         } yield {
-          //events1 shouldBe 0
-          events2 shouldBe 1
+          events1 shouldBe 1
+          events2 shouldBe 2
           events3 shouldBe 2
-          events4 shouldBe 2
         }
       }
 
