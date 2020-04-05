@@ -10,6 +10,7 @@ import cats.syntax.functor._
 import io.fmq.poll.{ConsumerHandler, PollTimeout, Poller}
 import io.fmq.socket.{BidirectionalSocket, ConsumerSocket, ProducerSocket}
 
+@SuppressWarnings(Array("org.wartremover.warts.Overloading"))
 final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
 
   def unidirectional(frontend: ConsumerSocket[F], backend: ProducerSocket[F]): Resource[F, Proxy.Configured[F]] =
