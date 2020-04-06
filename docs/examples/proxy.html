@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Proxy · ƒMQ</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The `Proxy` connects a frontend socket to a backend socket. Conceptually, data flows from frontend to backend. "/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Proxy · ƒMQ"/><meta property="og:type" content="website"/><meta property="og:url" content="https://irevive.github.io/fmq/index.html"/><meta property="og:description" content="The `Proxy` connects a frontend socket to a backend socket. Conceptually, data flows from frontend to backend. "/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/fmq/undefined"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/fmq/js/scrollSpy.js"></script><link rel="stylesheet" href="/fmq/css/main.css"/><script src="/fmq/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/fmq/"><h2 class="headerTitle">ƒMQ</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="https://github.com/iRevive/fmq" target="_blank">GitHub</a></li><li class=""><a href="https://www.javadoc.io/doc/io.github.irevive/fmq-core_2.13/latest/index.html" target="_blank">Documentation</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Examples</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/index.html">Getting started</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/sockets-overview.html">Sockets overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/receiving-sending.html">Receiving and Sending</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/consuming-strategy.html">Consuming strategy</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Sockets</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/publisher.html">Publisher</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/subscriber.html">Subscriber</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Extras</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/overview.html">Overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/background-consumer.html">Background consumer</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/request-reply.html">Request Reply</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/pubsub.html">PubSub</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/poller.html">Poller</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/fmq/docs/examples/proxy.html">Proxy</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Proxy</h1></header><article><div><span><p>The <code>Proxy</code> connects a frontend socket to a backend socket. Conceptually, data flows from frontend to backend.
+Depending on the socket types, replies may flow in the opposite direction.</p>
+<p>If the capture socket is defined, the proxy shall send all messages, received on both frontend and backend, to the capture socket.
+The capture socket should be a <strong>Publisher</strong>, <strong>Dealer</strong>, <strong>Push</strong>, or <strong>Pair</strong> socket.</p>
+<h2><a class="anchor" aria-hidden="true" id="example"></a><a href="#example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Example</h2>
+<p>When the frontend is a <strong>Router</strong> socket, and the backend is a <strong>Dealer</strong> socket,
+the proxy shall act as a shared queue that collects requests from a set of clients, and distributes these fairly among a set of services.
+Requests shall be fair-queued from frontend connections and distributed evenly across backend connections.
+Replies shall automatically return to the client that made the original request.</p>
+<p>First of all, let's introduce a <code>Server</code> that replies to the requests:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">Concurrent</span>, <span class="hljs-type">ContextShift</span>}
+<span class="hljs-keyword">import</span> cats.effect.syntax.concurrent._
+<span class="hljs-keyword">import</span> cats.syntax.flatMap._
+<span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
+<span class="hljs-keyword">import</span> fs2.concurrent.<span class="hljs-type">Queue</span>
+<span class="hljs-keyword">import</span> io.fmq.frame.<span class="hljs-type">Frame</span>
+<span class="hljs-keyword">import</span> io.fmq.socket.reqrep.<span class="hljs-type">Reply</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Server</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>](socket: <span class="hljs-type">Reply</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">serve</span></span>: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Unit</span>] = {
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">process</span></span>(queue: <span class="hljs-type">Queue</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]]) =
+      blocker.blockOn(<span class="hljs-type">Stream</span>.repeatEval(socket.receiveFrame[<span class="hljs-type">String</span>]).through(queue.enqueue).compile.drain)
+
+    <span class="hljs-keyword">for</span> {
+      queue  &lt;- <span class="hljs-type">Stream</span>.eval(<span class="hljs-type">Queue</span>.unbounded[<span class="hljs-type">F</span>, <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]])
+      _      &lt;- <span class="hljs-type">Stream</span>.resource(process(queue).background)
+      result &lt;- queue.dequeue.evalMap(processRequest)
+    } <span class="hljs-keyword">yield</span> result
+  }
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">processRequest</span></span>(request: <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]): <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] = {
+    <span class="hljs-keyword">val</span> action = request <span class="hljs-keyword">match</span> {
+      <span class="hljs-keyword">case</span> <span class="hljs-type">Frame</span>.<span class="hljs-type">Single</span>(value)       =&gt; socket.sendFrame(<span class="hljs-type">Frame</span>.<span class="hljs-type">Single</span>(<span class="hljs-string">s"<span class="hljs-subst">$value</span>-response"</span>))
+      <span class="hljs-keyword">case</span> <span class="hljs-type">Frame</span>.<span class="hljs-type">Multipart</span>(value, _) =&gt; socket.sendFrame(<span class="hljs-type">Frame</span>.<span class="hljs-type">Single</span>(<span class="hljs-string">s"<span class="hljs-subst">$value</span>-multipart-response"</span>))
+    }
+
+    log(<span class="hljs-string">s"Server. Received request <span class="hljs-subst">$request</span>"</span>) &gt;&gt; action
+  }
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">log</span></span>(message: =&gt; <span class="hljs-type">String</span>): <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] =
+    <span class="hljs-type">Concurrent</span>[<span class="hljs-type">F</span>].delay(println(message))
+
+}
+</code></pre>
+<p>Secondly, we need a <code>Client</code> that sends requests:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Sync</span>, <span class="hljs-type">Timer</span>}
+<span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
+<span class="hljs-keyword">import</span> io.fmq.pattern.<span class="hljs-type">RequestReply</span>
+
+<span class="hljs-keyword">import</span> scala.concurrent.duration._
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Client</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Sync</span>: <span class="hljs-type">Timer</span>](dispatcher: <span class="hljs-type">RequestReply</span>[<span class="hljs-type">F</span>]) {
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">start</span></span>: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Unit</span>] =
+    <span class="hljs-type">Stream</span>
+      .awakeEvery[<span class="hljs-type">F</span>](<span class="hljs-number">1.</span>second)
+      .zipWithIndex
+      .evalMap {
+        <span class="hljs-keyword">case</span> (_, idx) =&gt;
+          log(<span class="hljs-string">s"Client. Sending request [<span class="hljs-subst">$idx</span>]"</span>) &gt;&gt; dispatcher.submit[<span class="hljs-type">String</span>, <span class="hljs-type">String</span>](<span class="hljs-type">Frame</span>.<span class="hljs-type">Single</span>(idx.toString))
+      }
+      .evalMap(response =&gt; log(<span class="hljs-string">s"Client. Received response <span class="hljs-subst">$response</span>"</span>))
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">log</span></span>(message: =&gt; <span class="hljs-type">String</span>): <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] =
+    <span class="hljs-type">Sync</span>[<span class="hljs-type">F</span>].delay(println(message))
+
+}
+</code></pre>
+<p>Also, we can add a <code>MessageObserver</code> that observers all proxied messages:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Sync</span>, <span class="hljs-type">Timer</span>}
+<span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
+<span class="hljs-keyword">import</span> io.fmq.socket.pipeline.<span class="hljs-type">Pull</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MessageObserver</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Sync</span>: <span class="hljs-type">Timer</span>](pull: <span class="hljs-type">Pull</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>]) {
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">start</span></span>: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Unit</span>] =
+    <span class="hljs-type">Stream</span>
+      .repeatEval(pull.receiveFrame[<span class="hljs-type">String</span>])
+      .evalTap(frame =&gt; log(<span class="hljs-string">s"Control message <span class="hljs-subst">$frame</span>"</span>))
+      .drain
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">log</span></span>(message: =&gt; <span class="hljs-type">String</span>): <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] =
+    <span class="hljs-type">Sync</span>[<span class="hljs-type">F</span>].delay(println(message))
+
+}
+</code></pre>
+<p>And the <code>ProxyDemo</code> to put everything together:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">Concurrent</span>, <span class="hljs-type">ContextShift</span>, <span class="hljs-type">Resource</span>, <span class="hljs-type">Timer</span>}
+<span class="hljs-keyword">import</span> cats.syntax.flatMap._
+<span class="hljs-keyword">import</span> cats.syntax.functor._
+<span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
+<span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
+<span class="hljs-keyword">import</span> io.fmq.address.{<span class="hljs-type">Address</span>, <span class="hljs-type">Host</span>, <span class="hljs-type">Uri</span>}
+<span class="hljs-keyword">import</span> io.fmq.options.<span class="hljs-type">Identity</span>
+<span class="hljs-keyword">import</span> io.fmq.pattern.<span class="hljs-type">RequestReply</span>
+<span class="hljs-keyword">import</span> io.fmq.proxy.<span class="hljs-type">Control</span>
+<span class="hljs-keyword">import</span> io.fmq.socket.pipeline.{<span class="hljs-type">Pull</span>, <span class="hljs-type">Push</span>}
+<span class="hljs-keyword">import</span> io.fmq.socket.reqrep.{<span class="hljs-type">Dealer</span>, <span class="hljs-type">Reply</span>, <span class="hljs-type">Request</span>, <span class="hljs-type">Router</span>}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ProxyDemo</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>: <span class="hljs-type">Timer</span>](context: <span class="hljs-type">Context</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
+
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> frontendUri = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"frontend"</span>)))
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> backendUri  = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"backend"</span>)))
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> controlUri  = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"control"</span>)))
+
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> identity = <span class="hljs-type">Identity</span>.utf8String(<span class="hljs-string">"my-identity"</span>)
+
+  <span class="hljs-keyword">val</span> program: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Unit</span>] =
+    <span class="hljs-keyword">for</span> {
+      (proxy, observer, client, server) &lt;- <span class="hljs-type">Stream</span>.resource(appResource) <span class="hljs-comment">// initialize app components</span>
+      _                                 &lt;- <span class="hljs-type">Stream</span>.resource(proxy.start(blocker)) <span class="hljs-comment">// start proxy</span>
+      _                                 &lt;- <span class="hljs-type">Stream</span>(server.serve, client.start, observer.start).parJoinUnbounded <span class="hljs-comment">// start components</span>
+    } <span class="hljs-keyword">yield</span> ()
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">appResource</span> </span>=
+    <span class="hljs-keyword">for</span> {
+      (router, dealer) &lt;- createProxySockets
+      (pull, push)     &lt;- createControlSockets
+      (request, reply) &lt;- createReqRepSockets
+      requestReply     &lt;- <span class="hljs-type">RequestReply</span>.create[<span class="hljs-type">F</span>](blocker, request, queueSize = <span class="hljs-number">128</span>)
+      control          &lt;- <span class="hljs-type">Resource</span>.pure(<span class="hljs-type">Control</span>.push(push))
+      proxy            &lt;- context.proxy.bidirectional(router, dealer, <span class="hljs-type">Some</span>(control), <span class="hljs-type">Some</span>(control))
+    } <span class="hljs-keyword">yield</span> (proxy, <span class="hljs-keyword">new</span> <span class="hljs-type">MessageObserver</span>[<span class="hljs-type">F</span>](pull), <span class="hljs-keyword">new</span> <span class="hljs-type">Client</span>[<span class="hljs-type">F</span>](requestReply), <span class="hljs-keyword">new</span> <span class="hljs-type">Server</span>[<span class="hljs-type">F</span>](reply, blocker))
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">createProxySockets</span></span>: <span class="hljs-type">Resource</span>[<span class="hljs-type">F</span>, (<span class="hljs-type">Router</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], <span class="hljs-type">Dealer</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>])] =
+    <span class="hljs-keyword">for</span> {
+      router &lt;- <span class="hljs-type">Resource</span>.suspend(context.createRouter.map(_.bind(frontendUri)))
+      dealer &lt;- <span class="hljs-type">Resource</span>.suspend(context.createDealer.map(_.bind(backendUri)))
+    } <span class="hljs-keyword">yield</span> (router, dealer)
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">createControlSockets</span></span>: <span class="hljs-type">Resource</span>[<span class="hljs-type">F</span>, (<span class="hljs-type">Pull</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], <span class="hljs-type">Push</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>])] =
+    <span class="hljs-keyword">for</span> {
+      pull &lt;- <span class="hljs-type">Resource</span>.suspend(context.createPull.map(_.bind(controlUri)))
+      push &lt;- <span class="hljs-type">Resource</span>.suspend(context.createPush.map(_.connect(controlUri)))
+    } <span class="hljs-keyword">yield</span> (pull, push)
+
+  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">createReqRepSockets</span></span>: <span class="hljs-type">Resource</span>[<span class="hljs-type">F</span>, (<span class="hljs-type">Request</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], <span class="hljs-type">Reply</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>])] =
+    <span class="hljs-keyword">for</span> {
+      request &lt;- <span class="hljs-type">Resource</span>.suspend(context.createRequest.flatTap(_.setIdentity(identity)).map(_.connect(frontendUri)))
+      reply   &lt;- <span class="hljs-type">Resource</span>.suspend(context.createReply.map(_.connect(backendUri)))
+    } <span class="hljs-keyword">yield</span> (request, reply)
+
+}
+</code></pre>
+<p>At the edge of out program we define our effect, <code>cats.effect.IO</code> in this case, and ask to evaluate the effects:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">ExitCode</span>, <span class="hljs-type">IO</span>, <span class="hljs-type">IOApp</span>}
+<span class="hljs-keyword">import</span> cats.syntax.functor._
+<span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
+
+<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">ProxyApp</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">IOApp</span> </span>{
+
+ <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span></span>(args: <span class="hljs-type">List</span>[<span class="hljs-type">String</span>]): <span class="hljs-type">IO</span>[<span class="hljs-type">ExitCode</span>] =
+   <span class="hljs-type">Blocker</span>[<span class="hljs-type">IO</span>]
+     .flatMap(blocker =&gt; <span class="hljs-type">Context</span>.create[<span class="hljs-type">IO</span>](ioThreads = <span class="hljs-number">1</span>, blocker).tupleRight(blocker))
+     .use { <span class="hljs-keyword">case</span> (ctx, blocker) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-type">ProxyDemo</span>[<span class="hljs-type">IO</span>](ctx, blocker).program.compile.drain.as(<span class="hljs-type">ExitCode</span>.<span class="hljs-type">Success</span>) }
+
+}
+</code></pre>
+<p>The output will be:</p>
+<pre><code class="hljs css language-text">Client. Sending request [0]
+Server. Received request Single(0)
+Client. Received response Single(0-response)
+Control message Multipart(my-identity,NonEmptyList(, 0))
+Control message Multipart(my-identity,NonEmptyList(, 0-response))
+
+Client. Sending request [1]
+Control message Multipart(my-identity,NonEmptyList(, 1))
+Server. Received request Single(1)
+Client. Received response Single(1-response)
+Control message Multipart(my-identity,NonEmptyList(, 1-response))
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/fmq/docs/examples/poller.html"><span class="arrow-prev">← </span><span>Poller</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#example">Example</a></li></ul></nav></div><footer class="nav-footer" id="footer" style="background-color:#20232a"><section class="sitemap"><div><h5>Docs</h5><a href="/fmq/docs/index.html">Getting started</a></div><div><h5>More</h5><a href="https://github.com/iRevive/fmq" target="_blank">Repository</a></div></section><section class="copyright">Copyright © 2020 irevive.github.io</section></footer></div></body></html>
