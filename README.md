@@ -24,18 +24,18 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 
 ## Sockets matrix
 
-| Socket | Can publish | Can receive | Connectivity method |
-|--------|-------------|-------------|---------------------|
-| Pub    | true        | false       | Bind                |
-| Sub    | false       | true        | Connect             |
-| XPub   | true        | true        | Bind                |
-| XSub   | true        | true        | Connect             |
-| Pull   | false       | true        | Bind                |
-| Push   | true        | false       | Connect             |
-| Rep    | true        | true        | Bind / Connect      |
-| Req    | true        | true        | Connect             |
-| Router | true        | true        | Bind                |
-| Dealer | true        | true        | Bind / Connect      |
+| Socket | Can publish | Can receive |
+|--------|-------------|-------------|
+| Pub    | true        | false       |
+| Sub    | false       | true        |
+| XPub   | true        | true        |
+| XSub   | true        | true        |
+| Pull   | false       | true        |
+| Push   | true        | false       |
+| Rep    | true        | true        |
+| Req    | true        | true        |
+| Router | true        | true        |
+| Dealer | true        | true        |
 
 ## Benchmarks
 

@@ -12,7 +12,7 @@ final class Subscriber[F[_]: Sync: ContextShift] private[fmq] (
     val topic: Subscriber.Topic,
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connectivity.Connect[F, Subscriber.Socket]
+) extends Connectivity.All[F, Subscriber.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with ReceiveOptions.All[F]

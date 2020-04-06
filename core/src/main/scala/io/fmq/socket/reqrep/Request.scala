@@ -9,7 +9,7 @@ import org.zeromq.ZMQ
 final class Request[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connectivity.Connect[F, Request.Socket]
+) extends Connectivity.All[F, Request.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with ReceiveOptions.All[F]
