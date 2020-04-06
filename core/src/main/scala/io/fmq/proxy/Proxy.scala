@@ -72,6 +72,7 @@ object Proxy {
 
     def start(blocker: Blocker): Resource[F, F[Unit]] =
       blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM[Unit]).background
+
   }
 
 }
