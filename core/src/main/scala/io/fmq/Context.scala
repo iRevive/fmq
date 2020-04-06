@@ -1,7 +1,8 @@
 package io.fmq
 
-import cats.effect.{Blocker, ContextShift, Resource, Sync}
+import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
 import io.fmq.poll.Poller
+import io.fmq.proxy.Proxy
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
@@ -47,6 +48,8 @@ final class Context[F[_]: Sync: ContextShift] private (private[fmq] val ctx: ZCo
       selector <- Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay(ctx.getContext.selector()))
       poller   <- Poller.fromSelector[F](selector)
     } yield poller
+
+  def proxy(implicit ev: Concurrent[F]): Proxy[F] = new Proxy[F](this)
 
   def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
 

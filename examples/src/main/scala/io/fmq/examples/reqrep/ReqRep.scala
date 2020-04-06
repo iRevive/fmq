@@ -14,7 +14,7 @@ import io.fmq.socket.reqrep.Reply
 
 import scala.concurrent.duration._
 
-object ReqRep extends IOApp {
+object ReqRepApp extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     Blocker[IO]

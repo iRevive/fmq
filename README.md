@@ -32,7 +32,7 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 | XSub   | true        | true        | Connect             |
 | Pull   | false       | true        | Bind                |
 | Push   | true        | false       | Connect             |
-| Rep    | true        | true        | Bind                |
+| Rep    | true        | true        | Bind / Connect      |
 | Req    | true        | true        | Connect             |
 | Router | true        | true        | Bind                |
 | Dealer | true        | true        | Bind / Connect      |

@@ -14,9 +14,9 @@
       "extras/request-reply"
     ],
     "Examples": [
-      "examples/index",
+      "examples/pubsub",
       "examples/poller",
-      "examples/pubsub"
+      "examples/proxy"
     ]
   }
 }

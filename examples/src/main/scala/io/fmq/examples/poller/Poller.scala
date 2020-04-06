@@ -16,7 +16,7 @@ import io.fmq.socket.pubsub.Subscriber
 
 import scala.concurrent.duration._
 
-object Poller extends IOApp {
+object PollerApp extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     Blocker[IO]
