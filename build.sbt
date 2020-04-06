@@ -52,7 +52,6 @@ lazy val docs = project
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
   .settings(commonSettings)
   .settings(noPublishSettings)
-  .dependsOn(core)
   .settings(
     name                := "fmq-docs",
     libraryDependencies += Dependencies.fs2,
@@ -60,6 +59,7 @@ lazy val docs = project
       "VERSION" -> version.value.replaceFirst("\\+.*", "")
     )
   )
+  .dependsOn(core, extras)
 
 lazy val commonSettings = Seq(
   scalaVersion                          := Versions.scala_213,

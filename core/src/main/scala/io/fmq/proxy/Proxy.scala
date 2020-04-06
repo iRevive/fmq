@@ -19,7 +19,7 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
   def unidirectional(
       frontend: ConsumerSocket[F],
       backend: ProducerSocket[F],
-      control: Option[ProducerSocket[F]]
+      control: Option[Control[F]]
   ): Resource[F, Proxy.Configured[F]] =
     for {
       poller <- ctx.createPoller
@@ -32,8 +32,8 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
   def bidirectional(
       frontend: BidirectionalSocket[F],
       backend: BidirectionalSocket[F],
-      controlIn: Option[ProducerSocket[F]],
-      controlOut: Option[ProducerSocket[F]]
+      controlIn: Option[Control[F]],
+      controlOut: Option[Control[F]]
   ): Resource[F, Proxy.Configured[F]] =
     for {
       poller <- ctx.createPoller
@@ -41,11 +41,11 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
       _      <- Resource.liftF(poller.registerConsumer(backend, forward(frontend, controlOut)))
     } yield new Proxy.Configured[F](poller)
 
-  private def forward(target: ProducerSocket[F], capture: Option[ProducerSocket[F]]): ConsumerHandler[F] = {
+  private def forward(target: ProducerSocket[F], capture: Option[Control[F]]): ConsumerHandler[F] = {
 
     val withCapture: (ProducerSocket[F] => F[Unit]) => F[Unit] =
       capture match {
-        case Some(c) => f => f(c)
+        case Some(c) => f => f(c.socket)
         case None    => _ => Sync[F].unit
       }
 

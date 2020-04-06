@@ -84,7 +84,8 @@ class ProxySpec extends IOSpec {
         subscriber      <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(frontendUri)))
         pull            <- Resource.suspend(ctx.createPull.map(_.bind(controlUri)))
         push            <- Resource.suspend(ctx.createPush.map(_.connect(controlUri)))
-        proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(push))
+        control         <- Resource.pure[IO, Control[IO]](Control.push(push))
+        proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(control))
         _               <- proxy.start(blocker)
       } yield (publisher, subscriber, pull)).use((program _).tupled)
     }
@@ -136,7 +137,8 @@ class ProxySpec extends IOSpec {
         (front, back)    <- createProxySockets
         (pull, push)     <- createControlSockets
         blocker          <- Blocker[IO]
-        proxy            <- ctx.proxy.bidirectional(front, back, Some(push), Some(push))
+        control          <- Resource.pure[IO, Control[IO]](Control.push(push))
+        proxy            <- ctx.proxy.bidirectional(front, back, Some(control), Some(control))
         _                <- proxy.start(blocker)
         (client, server) <- createReqRepSockets
       } yield (client, server, pull)).use((program _).tupled)
@@ -196,7 +198,9 @@ class ProxySpec extends IOSpec {
         (pullIn, pushIn)   <- createControlSockets(controlInUri)
         (pullOut, pushOut) <- createControlSockets(controlOutUri)
         blocker            <- Blocker[IO]
-        proxy              <- ctx.proxy.bidirectional(front, back, Some(pushIn), Some(pushOut))
+        controlIn          <- Resource.pure[IO, Control[IO]](Control.push(pushIn))
+        controlOut         <- Resource.pure[IO, Control[IO]](Control.push(pushOut))
+        proxy              <- ctx.proxy.bidirectional(front, back, Some(controlIn), Some(controlOut))
         _                  <- proxy.start(blocker)
         (client, server)   <- createReqRepSockets
       } yield (client, server, pullIn, pullOut)).use((program _).tupled)

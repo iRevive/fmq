@@ -11,6 +11,7 @@ import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.options.Identity
 import io.fmq.pattern.RequestReply
+import io.fmq.proxy.Control
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 
@@ -46,7 +47,8 @@ class ProxyDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], bloc
       (pull, push)     <- createControlSockets
       (request, reply) <- createReqRepSockets
       requestReply     <- RequestReply.create[F](blocker, request, queueSize = 128)
-      proxy            <- context.proxy.bidirectional(router, dealer, Some(push), Some(push))
+      control          <- Resource.pure(Control.push(push))
+      proxy            <- context.proxy.bidirectional(router, dealer, Some(control), Some(control))
     } yield (proxy, new MessageObserver[F](pull), new Client[F](requestReply), new Server[F](reply, blocker))
 
   private def createProxySockets: Resource[F, (Router.Socket[F], Dealer.Socket[F])] =
@@ -93,7 +95,7 @@ class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: B
   }
 
   private def log(message: => String): F[Unit] =
-    Sync[F].delay(println(message))
+    Concurrent[F].delay(println(message))
 
 }
 
