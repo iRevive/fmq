@@ -25,9 +25,21 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     } yield ()
   }
 
+  /**
+   * Low-level API.
+   *
+   * Queues a message to be sent.
+   *
+   * The data is either a single-part message by itself, or the last part of a multi-part message.
+   */
   def send[A: FrameEncoder](value: A): F[Unit] =
     F.delay(socket.send(FrameEncoder[A].encode(value))).void
 
+  /**
+   * Low-level API.
+   *
+   * Queues a multi-part message to be sent.
+   */
   def sendMore[A: FrameEncoder](value: A): F[Unit] =
     F.delay(socket.sendMore(FrameEncoder[A].encode(value))).void
 

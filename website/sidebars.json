@@ -1,8 +1,12 @@
 {
   "docs": {
     "Getting started": [
-      "index",
-      "consuming-strategy"
+      "index"
+    ],
+    "Concepts": [
+      "concepts/sockets-overview",
+      "concepts/receiving-sending",
+      "concepts/consuming-strategy"
     ],
     "Sockets": [
       "sockets/publisher",
