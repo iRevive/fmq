@@ -60,10 +60,10 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     F.delay(FrameDecoder[A].decode(socket.recv()))
 
   /**
-   * Low-level API.
-   *
-   * Tries to receive a single message without blocking. If message is not available returns `None`.
-   */
+    * Low-level API.
+    *
+    * Tries to receive a single message without blocking. If message is not available returns `None`.
+    */
   def receiveNoWait[A: FrameDecoder]: F[Option[A]] =
     F.delay(Option(socket.recv(ZMQ.DONTWAIT)).map(FrameDecoder[A].decode))
 
