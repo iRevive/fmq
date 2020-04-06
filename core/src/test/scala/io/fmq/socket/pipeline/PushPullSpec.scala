@@ -25,8 +25,8 @@ class PushPullSpec extends IOSpec with SocketBehavior {
   private def tcpSocketResource[F[_]: Sync]: PushPullResource[F] =
     new PushPullResource[F] {
 
-      override def bind(push: Push[F], pull: Pull[F], port: Port): Resource[F, Pair] = {
-        val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), port))
+      override def bind(push: Push[F], pull: Pull[F], port: Int): Resource[F, Pair] = {
+        val uri = Uri.Complete.TCP(Address.Full("localhost", port))
 
         for {
           consumer <- pull.bind(uri)
@@ -35,7 +35,7 @@ class PushPullSpec extends IOSpec with SocketBehavior {
       }
 
       override def bindToRandom(push: Push[F], pull: Pull[F]): Resource[F, Pair] = {
-        val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+        val uri = Uri.Incomplete.TCP(Address.HostOnly("localhost"))
 
         for {
           consumer <- pull.bindToRandomPort(uri)
@@ -43,16 +43,16 @@ class PushPullSpec extends IOSpec with SocketBehavior {
         } yield SocketResource.Pair(producer, consumer)
       }
 
-      override def expectedRandomUri(port: Port): Uri.Complete =
-        Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), port))
+      override def expectedRandomUri(port: Int): Uri.Complete =
+        Uri.Complete.TCP(Address.Full("localhost", port))
 
     }
 
   private def inprocSocketResource[F[_]: Sync]: PushPullResource[F] =
     new PushPullResource[F] {
 
-      override def bind(push: Push[F], pull: Pull[F], port: Port): Resource[F, Pair] = {
-        val uri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed(s"localhost-$port")))
+      override def bind(push: Push[F], pull: Pull[F], port: Int): Resource[F, Pair] = {
+        val uri = Uri.Complete.InProc(Address.HostOnly(s"localhost-$port"))
 
         for {
           consumer <- pull.bind(uri)
@@ -61,7 +61,7 @@ class PushPullSpec extends IOSpec with SocketBehavior {
       }
 
       override def bindToRandom(push: Push[F], pull: Pull[F]): Resource[F, Pair] = {
-        val uri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed(Random.alphanumeric.take(10).mkString)))
+        val uri = Uri.Complete.InProc(Address.HostOnly(Random.alphanumeric.take(10).mkString))
 
         for {
           consumer <- pull.bind(uri)
@@ -69,8 +69,8 @@ class PushPullSpec extends IOSpec with SocketBehavior {
         } yield SocketResource.Pair(producer, consumer)
       }
 
-      override def expectedRandomUri(port: Port): Uri.Complete =
-        Uri.Complete.InProc(Address.HostOnly(Host.Fixed(s"localhost-$port")))
+      override def expectedRandomUri(port: Int): Uri.Complete =
+        Uri.Complete.InProc(Address.HostOnly(s"localhost-$port"))
 
     }
 

@@ -37,12 +37,12 @@ The `Subscriber[F]` is a valid instance of the socket but it's not connect to th
 Subscriber can connect to the specific port and host.
 
 ```scala mdoc:silent
-import io.fmq.address.{Address, Host, Port, Uri}
+import io.fmq.syntax.literals._
 
 val connected: Resource[IO, Subscriber.Socket[IO]] = 
   for {
     subscriber <- topicSubscriberResource
-    connected  <- subscriber.connect(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
+    connected  <- subscriber.connect(tcp"://localhost:31234")
   } yield connected
 ```
 

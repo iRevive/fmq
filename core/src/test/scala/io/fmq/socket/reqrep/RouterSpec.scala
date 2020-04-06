@@ -3,11 +3,11 @@ package io.fmq.socket.reqrep
 import cats.effect.{IO, Resource, Timer}
 import cats.syntax.flatMap._
 import io.fmq.{Context, IOSpec}
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.options.{Identity, RouterHandover, RouterMandatory}
 import io.fmq.socket.SocketBehavior
 import io.fmq.socket.reqrep.RouterSpec.Pair
+import io.fmq.syntax.literals._
 
 import scala.concurrent.duration._
 
@@ -79,7 +79,7 @@ class RouterSpec extends IOSpec with SocketBehavior {
 
   private def withSockets[A](identity: Identity)(fa: Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = tcp_i"://localhost"
 
       (for {
         router <- Resource.liftF(ctx.createRouter)

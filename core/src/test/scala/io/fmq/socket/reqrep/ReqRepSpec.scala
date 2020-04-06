@@ -4,9 +4,9 @@ package reqrep
 
 import cats.effect.{IO, Resource, Timer}
 import cats.syntax.either._
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.ReqRepSpec.Pair
+import io.fmq.syntax.literals._
 
 import scala.concurrent.duration._
 
@@ -85,7 +85,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
 
   private def withSockets[A](fa: Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = tcp_i"://localhost"
 
       (for {
         reply   <- Resource.suspend(ctx.createReply.map(_.bindToRandomPort(uri)))

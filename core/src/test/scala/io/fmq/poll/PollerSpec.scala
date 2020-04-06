@@ -5,9 +5,9 @@ import cats.effect.{IO, Resource, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.apply._
 import fs2.concurrent.Queue
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
+import io.fmq.syntax.literals._
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 import zmq.ZMQ
@@ -26,7 +26,7 @@ class PollerSpec extends IOSpec {
     "zmq.ZMQ.poll behavior" in withContext() { ctx: Context[IO] =>
       val topicA = Subscriber.Topic.utf8String("Topic-A")
       val topicB = Subscriber.Topic.utf8String("Topic-B")
-      val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri    = tcp_i"://localhost"
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
@@ -71,7 +71,7 @@ class PollerSpec extends IOSpec {
     "not call event handler if message is not available yet" in withContext() { ctx: Context[IO] =>
       val topicA = Subscriber.Topic.utf8String("Topic-A")
       val topicB = Subscriber.Topic.utf8String("Topic-B")
-      val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri    = tcp_i"://localhost"
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {
@@ -130,7 +130,7 @@ class PollerSpec extends IOSpec {
     "read from multiple sockets" in withContext(15.seconds) { ctx: Context[IO] =>
       val topicA = Subscriber.Topic.utf8String("Topic-A")
       val topicB = Subscriber.Topic.utf8String("Topic-B")
-      val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri    = tcp_i"://localhost"
 
       def create: Resource[IO, (ProducerSocket[IO], ConsumerSocket[IO], ConsumerSocket[IO], Poller[IO])] =
         for {

@@ -111,18 +111,18 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
 import io.fmq.Context
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.options.Identity
 import io.fmq.pattern.RequestReply
 import io.fmq.proxy.Control
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
+import io.fmq.syntax.literals._
 
 class ProxyDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
-  private val frontendUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-  private val backendUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
-  private val controlUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("control")))
+  private val frontendUri = inproc"://frontend"
+  private val backendUri  = inproc"://backend"
+  private val controlUri  = inproc"://control"
 
   private val identity = Identity.utf8String("my-identity")
 

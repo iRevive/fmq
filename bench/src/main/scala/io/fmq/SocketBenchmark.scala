@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 import cats.effect.{Blocker, ContextShift, Fiber, IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.SocketBenchmark.MessagesCounter
-import io.fmq.address.{Address, Host, Uri}
+import io.fmq.syntax.literals._
 import org.openjdk.jmh.annotations._
 import zmq.ZMQ
 
@@ -34,7 +34,7 @@ class SocketBenchmark {
 
   @Setup(Level.Iteration)
   def setup(): Unit = {
-    val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+    val uri = tcp_i"://localhost"
 
     val ((pull, push), _) =
       (for {

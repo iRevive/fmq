@@ -2,11 +2,11 @@ package io.fmq.pattern
 
 import cats.effect.{Blocker, IO, Resource, Timer}
 import io.fmq.{Context, IOSpec}
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.pattern.BackgroundConsumerSpec.Pair
+import io.fmq.syntax.literals._
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._
@@ -33,7 +33,7 @@ class BackgroundConsumerSpec extends IOSpec {
 
   private def withSockets[A](fa: Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = tcp_i"://localhost"
 
       (for {
         publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))

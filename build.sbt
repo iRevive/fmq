@@ -11,7 +11,7 @@ lazy val core = project
   .settings(commandSettings)
   .settings(
     name                := "fmq-core",
-    libraryDependencies ++= Dependencies.core
+    libraryDependencies ++= Dependencies.core(scalaVersion.value)
   )
 
 lazy val extras = project

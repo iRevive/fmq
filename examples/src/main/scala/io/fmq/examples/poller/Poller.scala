@@ -8,11 +8,11 @@ import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.poll.{ConsumerHandler, PollTimeout}
 import io.fmq.socket.ProducerSocket
 import io.fmq.socket.pubsub.Subscriber
+import io.fmq.syntax.literals._
 
 import scala.concurrent.duration._
 
@@ -31,7 +31,7 @@ class PollerDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
-  private val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+  private val uri    = tcp_i"://localhost"
 
   private val appResource =
     for {
