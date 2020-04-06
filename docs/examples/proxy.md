@@ -82,7 +82,7 @@ class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
 }
 ```
 
-Also, we can add a `MessageObserver` that all proxied messages:
+Also, we can add a `MessageObserver` that observers all proxied messages:
 
 ```scala mdoc:silent
 import cats.effect.{Sync, Timer}
