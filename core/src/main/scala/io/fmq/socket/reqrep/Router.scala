@@ -10,7 +10,7 @@ import org.zeromq.ZMQ
 final class Router[F[_]: Sync: ContextShift] private[fmq] (
     protected[fmq] val socket: ZMQ.Socket,
     protected val blocker: Blocker
-) extends Connectivity.Bind[F, Router.Socket]
+) extends Connectivity.All[F, Router.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]
     with SendOptions.All[F]
