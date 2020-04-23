@@ -2,12 +2,13 @@ package io.fmq.proxy
 
 import cats.effect.{Blocker, IO, Resource, Timer}
 import cats.syntax.flatMap._
-import io.fmq.address.{Address, Host, Uri}
+import io.fmq.address.Uri
 import io.fmq.frame.Frame
 import io.fmq.options.Identity
 import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.pubsub.{Publisher, Subscriber}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
+import io.fmq.syntax.literals._
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
@@ -22,8 +23,8 @@ class ProxySpec extends IOSpec {
   "Proxy" should {
 
     "proxy messages in bidirectional way" in withContext() { ctx: Context[IO] =>
-      val frontendUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-      val backendUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
+      val frontendUri = inproc"://frontend"
+      val backendUri  = inproc"://backend"
 
       def createProxySockets: Resource[IO, (Router.Socket[IO], Dealer.Socket[IO])] =
         for {
@@ -59,9 +60,9 @@ class ProxySpec extends IOSpec {
     }
 
     "proxy message in unidirectional way" in withContext() { ctx: Context[IO] =>
-      val frontendUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-      val backendUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
-      val controlUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("control")))
+      val frontendUri = inproc"://frontend"
+      val backendUri  = inproc"://backend"
+      val controlUri  = inproc"://control"
 
       def program(publisher: Publisher.Socket[IO], subscriber: Subscriber.Socket[IO], pull: Pull.Socket[IO]): IO[Assertion] =
         for {
@@ -91,9 +92,9 @@ class ProxySpec extends IOSpec {
     }
 
     "control socket observed messages" in withContext() { ctx: Context[IO] =>
-      val frontendUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-      val backendUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
-      val controlUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("control")))
+      val frontendUri = inproc"://frontend"
+      val backendUri  = inproc"://backend"
+      val controlUri  = inproc"://control"
 
       val identity = Identity.utf8String("my-identity")
 
@@ -145,10 +146,10 @@ class ProxySpec extends IOSpec {
     }
 
     "separate control sockets observed messages" in withContext() { ctx: Context[IO] =>
-      val frontendUri   = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-      val backendUri    = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
-      val controlInUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("controlIn")))
-      val controlOutUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("controlOut")))
+      val frontendUri   = inproc"://frontend"
+      val backendUri    = inproc"://backend"
+      val controlInUri  = inproc"://controlIn"
+      val controlOutUri = inproc"://controlOut"
 
       val identity = Identity.utf8String("my-identity")
 
@@ -207,8 +208,8 @@ class ProxySpec extends IOSpec {
     }
 
     /* "start new proxy after termination" in withContext() { ctx: Context[IO] =>
-      val frontendUri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("frontend")))
-      val backendUri  = Uri.Complete.InProc(Address.HostOnly(Host.Fixed("backend")))
+      val frontendUri = inproc"://frontend"
+      val backendUri  = inproc"://backend"
 
       def createProxySockets: Resource[IO, (Router.Socket[IO], Dealer.Socket[IO])] =
         for {

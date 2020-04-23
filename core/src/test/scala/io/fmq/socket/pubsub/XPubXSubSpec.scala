@@ -5,8 +5,8 @@ package pubsub
 import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.frame.Frame
+import io.fmq.syntax.literals._
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._
@@ -95,7 +95,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
     }
 
     "multiple subscribers" in withContext() { ctx: Context[IO] =>
-      val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(53123)))
+      val uri = tcp"://localhost:53123"
 
       val topics1 = List("A", "AB", "B", "C")
       val topics2 = List("A", "AB", "C")
@@ -128,7 +128,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
 
   private def withSockets[A](fa: XPubXSubSpec.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = tcp_i"://localhost"
 
       (for {
         producer <- Resource.suspend(ctx.createXPublisher.map(_.bindToRandomPort(uri)))

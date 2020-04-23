@@ -5,6 +5,7 @@ package pubsub
 import cats.effect.{IO, Resource, Sync}
 import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
+import io.fmq.syntax.literals._
 
 import scala.util.Random
 
@@ -25,8 +26,8 @@ class PubSubSpec extends IOSpec with SocketBehavior {
   private def tcpSocketResource[F[_]: Sync]: PubSubResource[F] =
     new PubSubResource[F] {
 
-      override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Port): Resource[F, Pair] = {
-        val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), port))
+      override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Int): Resource[F, Pair] = {
+        val uri = Uri.Complete.TCP(Address.Full("localhost", port))
 
         for {
           p <- producer.bind(uri)
@@ -35,7 +36,7 @@ class PubSubSpec extends IOSpec with SocketBehavior {
       }
 
       override def bindToRandom(producer: Publisher[F], consumer: Subscriber[F]): Resource[F, Pair] = {
-        val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+        val uri = tcp_i"://localhost"
 
         for {
           p <- producer.bindToRandomPort(uri)
@@ -43,16 +44,16 @@ class PubSubSpec extends IOSpec with SocketBehavior {
         } yield SocketResource.Pair(p, c)
       }
 
-      override def expectedRandomUri(port: Port): Uri.Complete =
-        Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), port))
+      override def expectedRandomUri(port: Int): Uri.Complete =
+        Uri.Complete.TCP(Address.Full("localhost", port))
 
     }
 
   private def inprocSocketResource[F[_]: Sync]: PubSubResource[F] =
     new PubSubResource[F] {
 
-      override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Port): Resource[F, Pair] = {
-        val uri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed(s"localhost-$port")))
+      override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Int): Resource[F, Pair] = {
+        val uri = Uri.Complete.InProc(Address.HostOnly(s"localhost-$port"))
 
         for {
           p <- producer.bind(uri)
@@ -61,7 +62,7 @@ class PubSubSpec extends IOSpec with SocketBehavior {
       }
 
       override def bindToRandom(producer: Publisher[F], consumer: Subscriber[F]): Resource[F, Pair] = {
-        val uri = Uri.Complete.InProc(Address.HostOnly(Host.Fixed(Random.alphanumeric.take(10).mkString)))
+        val uri = Uri.Complete.InProc(Address.HostOnly(Random.alphanumeric.take(10).mkString))
 
         for {
           p <- producer.bind(uri)
@@ -69,8 +70,8 @@ class PubSubSpec extends IOSpec with SocketBehavior {
         } yield SocketResource.Pair(p, c)
       }
 
-      override def expectedRandomUri(port: Port): Uri.Complete =
-        Uri.Complete.InProc(Address.HostOnly(Host.Fixed(s"localhost-$port")))
+      override def expectedRandomUri(port: Int): Uri.Complete =
+        Uri.Complete.InProc(Address.HostOnly(s"localhost-$port"))
 
     }
 

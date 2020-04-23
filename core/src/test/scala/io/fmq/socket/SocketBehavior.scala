@@ -7,7 +7,7 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import fs2.Stream
-import io.fmq.address.{Port, Uri}
+import io.fmq.address.Uri
 import io.fmq.frame.Frame
 import io.fmq.options._
 import io.fmq.socket.SocketBehavior.{Consumer, Producer, SocketResource}
@@ -38,7 +38,7 @@ trait SocketBehavior {
     }
 
     "bind to specific port" in withContext() { ctx: Context[IO] =>
-      val port     = Port(31243)
+      val port     = 31243
       val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
 
       val resource =
@@ -200,10 +200,10 @@ object SocketBehavior {
 
     def createProducer(context: Context[F]): F[P]
     def createConsumer(context: Context[F]): F[C]
-    def bind(producer: P, consumer: C, port: Port): Resource[F, Pair]
+    def bind(producer: P, consumer: C, port: Int): Resource[F, Pair]
     def bindToRandom(producer: P, consumer: C): Resource[F, Pair]
 
-    def expectedRandomUri(port: Port): Uri.Complete
+    def expectedRandomUri(port: Int): Uri.Complete
 
   }
 

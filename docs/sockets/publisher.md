@@ -30,19 +30,19 @@ The `Publisher[F]` is a valid instance of the socket but it's not connect to the
 Publisher can either connect to the specific port or allocate a random port.
 
 ```scala mdoc:silent
-import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.socket.pubsub.Publisher
+import io.fmq.syntax.literals._
 
 val specificPort: Resource[IO, Publisher.Socket[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bind(Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(31234))))
+    connected <- publisher.bind(tcp"://localhost:31234")
   } yield connected
 
 val randomPort: Resource[IO, Publisher.Socket[IO]] = 
   for {
     publisher <- publisherResource
-    connected <- publisher.bindToRandomPort(Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost"))))
+    connected <- publisher.bindToRandomPort(tcp_i"://localhost")
   } yield connected
 ```
 

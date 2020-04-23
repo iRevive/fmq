@@ -2,7 +2,7 @@ package io.fmq.socket.api
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import cats.syntax.functor._
-import io.fmq.address.{Address, Port, Uri}
+import io.fmq.address.{Address, Uri}
 import org.zeromq.ZMQ
 
 trait BindApi[F[_], Socket[_[_]]] {
@@ -26,7 +26,7 @@ trait BindApi[F[_], Socket[_[_]]] {
   final def bindToRandomPort(uri: Uri.Incomplete.TCP): Resource[F, Socket[F]] = {
     val acquire: F[Uri.Complete.TCP] = blocker.delay {
       val port = socket.bindToRandomPort(uri.materialize)
-      Uri.Complete.TCP(Address.Full(uri.address.host, Port(port)))
+      Uri.Complete.TCP(Address.Full(uri.address.host, port))
     }
 
     def release(uri: Uri.Complete.TCP): F[Unit] =

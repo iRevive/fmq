@@ -6,8 +6,8 @@ import cats.effect.{IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.socket.SocketBehavior.SocketResource
+import io.fmq.syntax.literals._
 import org.scalatest.Assertion
 
 import scala.concurrent.duration._
@@ -21,7 +21,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
   "Subscriber" should {
 
     "filter multipart data" in withContext() { ctx: Context[IO] =>
-      val uri   = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri   = tcp_i"://localhost"
       val topic = Subscriber.Topic.utf8String("B")
 
       def sendA(producer: ProducerSocket[IO]): IO[Unit] =
@@ -95,7 +95,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
   def withRandomPortSocket[A](topic: Subscriber.Topic)(fa: SocketResource.Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+      val uri = tcp_i"://localhost"
 
       (for {
         publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))

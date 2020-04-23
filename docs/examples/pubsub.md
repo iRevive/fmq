@@ -64,8 +64,8 @@ And the demo program that evaluates producer and subscribers in parallel:
 import cats.effect.{Concurrent, ContextShift, Resource, Sync, Timer}
 import fs2.Stream
 import io.fmq.Context
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.socket.pubsub.Subscriber
+import io.fmq.syntax.literals._
 
 class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
@@ -73,7 +73,7 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
-  private val uri    = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+  private val uri    = tcp_i"://localhost"
 
   private val appResource =
     for {

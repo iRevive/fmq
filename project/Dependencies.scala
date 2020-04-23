@@ -11,13 +11,15 @@ object Versions {
 
 object Dependencies {
 
-  val fs2 = "co.fs2" %% "fs2-io" % Versions.fs2
+  val fs2                      = "co.fs2"         %% "fs2-io"       % Versions.fs2
+  def scalaReflect(sv: String) = "org.scala-lang" % "scala-reflect" % sv
 
-  val core: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "cats-effect" % Versions.catsEffect,
-    "org.zeromq"    % "jeromq"       % Versions.jeromq,
-    "org.scalatest" %% "scalatest"   % Versions.scalatest % Test,
-    "co.fs2"        %% "fs2-io"      % Versions.fs2 % Test
+  def core(scalaVersion: String): Seq[ModuleID] = Seq(
+    "org.typelevel"  %% "cats-effect"  % Versions.catsEffect,
+    "org.zeromq"     % "jeromq"        % Versions.jeromq,
+    "org.scala-lang" % "scala-reflect" % scalaVersion % Provided,
+    "org.scalatest"  %% "scalatest"    % Versions.scalatest % Test,
+    "co.fs2"         %% "fs2-io"       % Versions.fs2 % Test
   )
 
   val extras: Seq[ModuleID] = Seq(

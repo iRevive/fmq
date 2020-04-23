@@ -2,9 +2,9 @@ package io.fmq.pattern
 
 import cats.effect.{Blocker, IO, Resource, Timer}
 import cats.syntax.flatMap._
-import io.fmq.address.{Address, Host, Port, Uri}
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.{Reply, Request}
+import io.fmq.syntax.literals._
 import io.fmq.pattern.RequestReplySpec.Pair
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
@@ -47,7 +47,7 @@ class RequestReplySpec extends IOSpec {
 
   private def withSockets[A](fa: Pair[IO] => IO[A]): A =
     withContext() { ctx: Context[IO] =>
-      val uri = Uri.Complete.TCP(Address.Full(Host.Fixed("localhost"), Port(53123)))
+      val uri = tcp"://localhost:53123"
 
       (for {
         reply   <- Resource.suspend(ctx.createReply.map(_.bind(uri)))

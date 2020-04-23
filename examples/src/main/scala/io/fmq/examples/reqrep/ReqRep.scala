@@ -7,10 +7,10 @@ import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
-import io.fmq.address.{Address, Host, Uri}
 import io.fmq.frame.Frame
 import io.fmq.pattern.RequestReply
 import io.fmq.socket.reqrep.Reply
+import io.fmq.syntax.literals._
 
 import scala.concurrent.duration._
 
@@ -25,7 +25,7 @@ object ReqRepApp extends IOApp {
 
 class ReqRepDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
 
-  private val uri = Uri.Incomplete.TCP(Address.HostOnly(Host.Fixed("localhost")))
+  private val uri = tcp_i"://localhost"
 
   private val appResource =
     for {
