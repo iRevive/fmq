@@ -2,24 +2,16 @@ package io.fmq.poll
 
 import java.nio.channels.Selector
 
-import cats.effect.concurrent.Ref
-import cats.effect.{Resource, Sync}
+import cats.data.NonEmptyList
+import cats.effect.Sync
 import cats.instances.list._
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import io.fmq.address.{Address, Protocol}
-import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import zmq.poll.{PollItem => ZPollItem}
 
-final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], private[fmq] val selector: Selector) {
-
-  def registerConsumer[P <: Protocol, A <: Address](socket: ConsumerSocket[F], handler: ConsumerHandler[F]): F[Unit] =
-    itemsRef.update(_ :+ PollEntry.Read(socket, handler))
-
-  def registerProducer[P <: Protocol, A <: Address](socket: ProducerSocket[F], handler: ProducerHandler[F]): F[Unit] =
-    itemsRef.update(_ :+ PollEntry.Write(socket, handler))
+final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
 
   /**
     * In the case of [[PollTimeout.Infinity]] the thread will be '''blocked''' until at least one socket
@@ -27,10 +19,9 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], pr
     *
     * @return total number of available events
     */
-  def poll(timeout: PollTimeout): F[Int] =
+  def poll(items: NonEmptyList[PollEntry[F]], timeout: PollTimeout): F[Int] =
     for {
-      items   <- itemsRef.get
-      polling <- items.map(item => (item, toZmqPollItem(item))).pure[F]
+      polling <- items.map(item => (item, toZmqPollItem(item))).toList.pure[F]
       events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, timeout.value))
       _       <- polling.traverse((dispatchItem _).tupled)
     } yield events
@@ -56,9 +47,7 @@ final class Poller[F[_]: Sync] private (itemsRef: Ref[F, List[PollEntry[F]]], pr
 
 object Poller {
 
-  def fromSelector[F[_]: Sync](selector: Selector): Resource[F, Poller[F]] =
-    for {
-      items <- Resource.liftF(Ref.of[F, List[PollEntry[F]]](List.empty))
-    } yield new Poller[F](items, selector)
+  def fromSelector[F[_]: Sync](selector: Selector): Poller[F] =
+    new Poller[F](selector)
 
 }

@@ -14,7 +14,7 @@ def handler(queue: Queue[F, String]): ConsumerHandler[F] =
 
 Then the `poller.poll` operation can be evaluated on the blocking context:
 ```scala
-blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM)
+blocker.blockOn(poller.poll(pollItems, PollTimeout.Infinity).foreverM)
 ```
 
 Thus all consuming operations is being executed on the one blocking thread, while the processing can be performed on the general context.  
@@ -52,14 +52,14 @@ class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Socket[F], topicA: Str
 And the demo program that evaluates producer and subscribers in parallel:
 
 ```scala mdoc:silent
-import cats.data.Kleisli
+import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
 import fs2.concurrent.Queue
 import io.fmq.Context
-import io.fmq.poll.{ConsumerHandler, PollTimeout}
+import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout}
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.syntax.literals._
 
@@ -91,24 +91,24 @@ class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: 
           def handler(queue: Queue[F, String]): ConsumerHandler[F] =
             Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
           
-          def configurePoller(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] =
-            for {
-              _ <- poller.registerConsumer(subscriberA, handler(queueA))
-              _ <- poller.registerConsumer(subscriberB, handler(queueB))
-              _ <- poller.registerConsumer(subscriberAll, handler(queueAll))
-            } yield ()
-          
           // evaluates poll on a blocking context
-          val poll = blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM[Unit])
+          def poll(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] = {
+            val items = NonEmptyList.of(
+              PollEntry.Read(subscriberA, handler(queueA)), 
+              PollEntry.Read(subscriberB, handler(queueB)), 
+              PollEntry.Read(subscriberAll, handler(queueAll))
+            )
+
+            blocker.blockOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit])
+          }
           
           for {
             queueA   <- Stream.eval(Queue.unbounded[F, String])
             queueB   <- Stream.eval(Queue.unbounded[F, String])
             queueAll <- Stream.eval(Queue.unbounded[F, String])
-            _        <- Stream.eval(configurePoller(queueA, queueB, queueAll))
             _ <- Stream(
               producer.generate,
-              Stream.eval(poll),
+              Stream.eval(poll(queueA, queueB, queueAll)),
               queueA.dequeue.evalMap(frame => log(s"ConsumerA. Received $frame")),
               queueB.dequeue.evalMap(frame => log(s"ConsumerB. Received $frame")),
               queueAll.dequeue.evalMap(frame => log(s"ConsumerAll. Received $frame"))

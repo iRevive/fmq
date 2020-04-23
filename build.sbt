@@ -99,6 +99,7 @@ lazy val noPublishSettings = Seq(
 
 inThisBuild(
   Seq(
+    version := "0.4.0-almond",
     organization := "io.github.irevive",
     homepage     := Some(url("https://github.com/iRevive/fmq")),
     licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),

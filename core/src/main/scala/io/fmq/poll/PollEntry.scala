@@ -2,9 +2,9 @@ package io.fmq.poll
 
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 
-private[poll] sealed trait PollEntry[F[_]]
+sealed trait PollEntry[F[_]]
 
-private[poll] object PollEntry {
+object PollEntry {
 
   final case class Read[F[_]](
       socket: ConsumerSocket[F],
