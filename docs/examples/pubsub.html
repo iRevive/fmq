@@ -106,8 +106,8 @@
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Concurrent</span>, <span class="hljs-type">ContextShift</span>, <span class="hljs-type">Resource</span>, <span class="hljs-type">Sync</span>, <span class="hljs-type">Timer</span>}
 <span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
 <span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
-<span class="hljs-keyword">import</span> io.fmq.address.{<span class="hljs-type">Address</span>, <span class="hljs-type">Host</span>, <span class="hljs-type">Uri</span>}
 <span class="hljs-keyword">import</span> io.fmq.socket.pubsub.<span class="hljs-type">Subscriber</span>
+<span class="hljs-keyword">import</span> io.fmq.syntax.literals._
 
 <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Demo</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>: <span class="hljs-type">Timer</span>](context: <span class="hljs-type">Context</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
 
@@ -115,7 +115,7 @@
 
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> topicA = <span class="hljs-string">"my-topic-a"</span>
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> topicB = <span class="hljs-string">"my-topic-b"</span>
-  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> uri    = <span class="hljs-type">Uri</span>.<span class="hljs-type">Incomplete</span>.<span class="hljs-type">TCP</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"localhost"</span>)))
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> uri    = tcp_<span class="hljs-string">i"://localhost"</span>
 
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> appResource =
     <span class="hljs-keyword">for</span> {

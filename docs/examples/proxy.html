@@ -147,18 +147,18 @@ Replies shall automatically return to the client that made the original request.
 <span class="hljs-keyword">import</span> cats.syntax.functor._
 <span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
 <span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
-<span class="hljs-keyword">import</span> io.fmq.address.{<span class="hljs-type">Address</span>, <span class="hljs-type">Host</span>, <span class="hljs-type">Uri</span>}
 <span class="hljs-keyword">import</span> io.fmq.options.<span class="hljs-type">Identity</span>
 <span class="hljs-keyword">import</span> io.fmq.pattern.<span class="hljs-type">RequestReply</span>
 <span class="hljs-keyword">import</span> io.fmq.proxy.<span class="hljs-type">Control</span>
 <span class="hljs-keyword">import</span> io.fmq.socket.pipeline.{<span class="hljs-type">Pull</span>, <span class="hljs-type">Push</span>}
 <span class="hljs-keyword">import</span> io.fmq.socket.reqrep.{<span class="hljs-type">Dealer</span>, <span class="hljs-type">Reply</span>, <span class="hljs-type">Request</span>, <span class="hljs-type">Router</span>}
+<span class="hljs-keyword">import</span> io.fmq.syntax.literals._
 
 <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ProxyDemo</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>: <span class="hljs-type">Timer</span>](context: <span class="hljs-type">Context</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
 
-  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> frontendUri = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"frontend"</span>)))
-  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> backendUri  = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"backend"</span>)))
-  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> controlUri  = <span class="hljs-type">Uri</span>.<span class="hljs-type">Complete</span>.<span class="hljs-type">InProc</span>(<span class="hljs-type">Address</span>.<span class="hljs-type">HostOnly</span>(<span class="hljs-type">Host</span>.<span class="hljs-type">Fixed</span>(<span class="hljs-string">"control"</span>)))
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> frontendUri = <span class="hljs-string">inproc"://frontend"</span>
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> backendUri  = <span class="hljs-string">inproc"://backend"</span>
+  <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> controlUri  = <span class="hljs-string">inproc"://control"</span>
 
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> identity = <span class="hljs-type">Identity</span>.utf8String(<span class="hljs-string">"my-identity"</span>)
 
