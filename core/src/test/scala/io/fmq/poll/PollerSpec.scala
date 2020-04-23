@@ -91,12 +91,12 @@ class PollerSpec extends IOSpec {
           poller: Poller[IO]
       ): IO[Assertion] =
         for {
-          _                  <- Timer[IO].sleep(200.millis)
-          queueA             <- Queue.unbounded[IO, String]
-          queueB             <- Queue.unbounded[IO, String]
+          _      <- Timer[IO].sleep(200.millis)
+          queueA <- Queue.unbounded[IO, String]
+          queueB <- Queue.unbounded[IO, String]
           items = NonEmptyList.of(
             PollEntry.Read(consumerA, handler(queueA)),
-            PollEntry.Read(consumerB, handler(queueB)),
+            PollEntry.Read(consumerB, handler(queueB))
           )
           _                  <- poller.poll(items, PollTimeout.Fixed(200.millis))
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
@@ -161,18 +161,20 @@ class PollerSpec extends IOSpec {
             items = NonEmptyList.of(
               PollEntry.Write(producer, producerHandler),
               PollEntry.Read(consumerA, consumerHandler(queueA)),
-              PollEntry.Read(consumerB, consumerHandler(queueB)),
+              PollEntry.Read(consumerB, consumerHandler(queueB))
             )
             _ <- poller.poll(items, PollTimeout.Infinity).foreverM.background
           } yield (queueA, queueB)
 
-        setup.use { case (queueA, queueB) =>
+        setup.use { pair =>
+          val (queueA, queueB) = pair
+
           for {
-            _      <- Timer[IO].sleep(200.millis)
-            a1     <- queueA.dequeue1
-            a2     <- queueA.dequeue1
-            b1     <- queueB.dequeue1
-            b2     <- queueB.dequeue1
+            _  <- Timer[IO].sleep(200.millis)
+            a1 <- queueA.dequeue1
+            a2 <- queueA.dequeue1
+            b1 <- queueB.dequeue1
+            b2 <- queueB.dequeue1
           } yield {
             List(a1, a2) shouldBe List("Topic-A", "Topic-A")
             List(b1, b2) shouldBe List("Topic-B", "Topic-B")
