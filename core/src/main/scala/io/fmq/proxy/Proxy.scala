@@ -1,13 +1,13 @@
 package io.fmq
 package proxy
 
-import cats.data.Kleisli
+import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
 import cats.effect.syntax.concurrent._
 import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import io.fmq.poll.{ConsumerHandler, PollTimeout, Poller}
+import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout, Poller}
 import io.fmq.socket.{BidirectionalSocket, ConsumerSocket, ProducerSocket}
 
 @SuppressWarnings(Array("org.wartremover.warts.Overloading"))
@@ -23,8 +23,13 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
   ): Resource[F, Proxy.Configured[F]] =
     for {
       poller <- ctx.createPoller
-      _      <- Resource.liftF(poller.registerConsumer(frontend, forward(backend, control)))
-    } yield new Proxy.Configured[F](poller)
+    } yield {
+      val items = NonEmptyList.one(
+        PollEntry.Read(frontend, forward(backend, control))
+      )
+
+      new Proxy.Configured[F](poller, items)
+    }
 
   def bidirectional(frontend: BidirectionalSocket[F], backend: BidirectionalSocket[F]): Resource[F, Proxy.Configured[F]] =
     bidirectional(frontend, backend, None, None)
@@ -37,9 +42,14 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
   ): Resource[F, Proxy.Configured[F]] =
     for {
       poller <- ctx.createPoller
-      _      <- Resource.liftF(poller.registerConsumer(frontend, forward(backend, controlIn)))
-      _      <- Resource.liftF(poller.registerConsumer(backend, forward(frontend, controlOut)))
-    } yield new Proxy.Configured[F](poller)
+    } yield {
+      val items = NonEmptyList.of(
+        PollEntry.Read(frontend, forward(backend, controlIn)),
+        PollEntry.Read(backend, forward(frontend, controlOut))
+      )
+
+      new Proxy.Configured[F](poller, items)
+    }
 
   private def forward(target: ProducerSocket[F], capture: Option[Control[F]]): ConsumerHandler[F] = {
 
@@ -68,10 +78,13 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
 
 object Proxy {
 
-  final class Configured[F[_]: Concurrent: ContextShift] private[Proxy] (poller: Poller[F]) {
+  final class Configured[F[_]: Concurrent: ContextShift] private[Proxy] (
+      poller: Poller[F],
+      items: NonEmptyList[PollEntry[F]]
+  ) {
 
     def start(blocker: Blocker): Resource[F, F[Unit]] =
-      blocker.blockOn(poller.poll(PollTimeout.Infinity).foreverM[Unit]).background
+      blocker.blockOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit]).background
 
   }
 

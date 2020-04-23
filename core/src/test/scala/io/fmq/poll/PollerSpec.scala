@@ -1,6 +1,6 @@
 package io.fmq.poll
 
-import cats.data.Kleisli
+import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.{IO, Resource, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.apply._
@@ -91,24 +91,26 @@ class PollerSpec extends IOSpec {
           poller: Poller[IO]
       ): IO[Assertion] =
         for {
-          _                  <- Timer[IO].sleep(200.millis)
-          queueA             <- Queue.unbounded[IO, String]
-          queueB             <- Queue.unbounded[IO, String]
-          _                  <- poller.registerConsumer(consumerA, handler(queueA))
-          _                  <- poller.registerConsumer(consumerB, handler(queueB))
-          _                  <- poller.poll(PollTimeout.Fixed(200.millis))
+          _      <- Timer[IO].sleep(200.millis)
+          queueA <- Queue.unbounded[IO, String]
+          queueB <- Queue.unbounded[IO, String]
+          items = NonEmptyList.of(
+            PollEntry.Read(consumerA, handler(queueA)),
+            PollEntry.Read(consumerB, handler(queueB))
+          )
+          _                  <- poller.poll(items, PollTimeout.Fixed(200.millis))
           (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-A")
-          _                  <- poller.poll(PollTimeout.Infinity)
+          _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
-          _                  <- poller.poll(PollTimeout.Infinity)
+          _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-A")
           _                  <- producer.send("Topic-B")
           _                  <- Timer[IO].sleep(100.millis)
-          _                  <- poller.poll(PollTimeout.Infinity)
+          _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
           queueA1 shouldBe empty
@@ -152,20 +154,27 @@ class PollerSpec extends IOSpec {
           consumerB: ConsumerSocket[IO],
           poller: Poller[IO]
       ): IO[Assertion] = {
-        val poll = poller.poll(PollTimeout.Infinity).foreverM
-
-        poll.background.use { _ =>
+        val setup: Resource[IO, (Queue[IO, String], Queue[IO, String])] =
           for {
-            _      <- Timer[IO].sleep(200.millis)
-            queueA <- Queue.unbounded[IO, String]
-            queueB <- Queue.unbounded[IO, String]
-            _      <- poller.registerProducer(producer, producerHandler)
-            _      <- poller.registerConsumer(consumerA, consumerHandler(queueA))
-            _      <- poller.registerConsumer(consumerB, consumerHandler(queueB))
-            a1     <- queueA.dequeue1
-            a2     <- queueA.dequeue1
-            b1     <- queueB.dequeue1
-            b2     <- queueB.dequeue1
+            queueA <- Resource.liftF(Queue.unbounded[IO, String])
+            queueB <- Resource.liftF(Queue.unbounded[IO, String])
+            items = NonEmptyList.of(
+              PollEntry.Write(producer, producerHandler),
+              PollEntry.Read(consumerA, consumerHandler(queueA)),
+              PollEntry.Read(consumerB, consumerHandler(queueB))
+            )
+            _ <- poller.poll(items, PollTimeout.Infinity).foreverM.background
+          } yield (queueA, queueB)
+
+        setup.use { pair =>
+          val (queueA, queueB) = pair
+
+          for {
+            _  <- Timer[IO].sleep(200.millis)
+            a1 <- queueA.dequeue1
+            a2 <- queueA.dequeue1
+            b1 <- queueB.dequeue1
+            b2 <- queueB.dequeue1
           } yield {
             List(a1, a2) shouldBe List("Topic-A", "Topic-A")
             List(b1, b2) shouldBe List("Topic-B", "Topic-B")

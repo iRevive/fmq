@@ -46,8 +46,7 @@ final class Context[F[_]: Sync: ContextShift] private (private[fmq] val ctx: ZCo
   def createPoller: Resource[F, Poller[F]] =
     for {
       selector <- Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay(ctx.getContext.selector()))
-      poller   <- Poller.fromSelector[F](selector)
-    } yield poller
+    } yield Poller.fromSelector[F](selector)
 
   def proxy(implicit ev: Concurrent[F]): Proxy[F] = new Proxy[F](this)
 
