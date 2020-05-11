@@ -16,9 +16,10 @@ object HighWaterMark {
 
   final case class Limit(limit: Int) extends HighWaterMark(limit)
 
-  def fromInt(value: Int): HighWaterMark = value match {
-    case 0     => NoLimit
-    case other => Limit(other)
-  }
+  def fromInt(value: Int): HighWaterMark =
+    value match {
+      case 0     => NoLimit
+      case other => Limit(other)
+    }
 
 }

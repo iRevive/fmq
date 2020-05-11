@@ -42,10 +42,11 @@ class PollerSpec extends IOSpec {
           consumerB: ConsumerSocket[IO],
           poller: Poller[IO]
       ): IO[Assertion] = {
-        def items = Array(
-          new PollItem(consumerA.socket.base(), ZMQ.ZMQ_POLLIN),
-          new PollItem(consumerB.socket.base(), ZMQ.ZMQ_POLLIN)
-        )
+        def items =
+          Array(
+            new PollItem(consumerA.socket.base(), ZMQ.ZMQ_POLLIN),
+            new PollItem(consumerB.socket.base(), ZMQ.ZMQ_POLLIN)
+          )
 
         for {
           _       <- Timer[IO].sleep(200.millis)

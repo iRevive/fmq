@@ -30,10 +30,11 @@ object Linger {
     */
   final case class Fixed(duration: FiniteDuration) extends Linger(duration.toMillis.toInt)
 
-  def fromInt(value: Int): Linger = value match {
-    case -1    => Infinity
-    case 0     => Immediately
-    case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
-  }
+  def fromInt(value: Int): Linger =
+    value match {
+      case -1    => Infinity
+      case 0     => Immediately
+      case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
+    }
 
 }

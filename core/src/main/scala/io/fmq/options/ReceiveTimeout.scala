@@ -23,10 +23,11 @@ object ReceiveTimeout {
     */
   final case class Fixed(duration: FiniteDuration) extends ReceiveTimeout(duration.toMillis.toInt)
 
-  def fromInt(value: Int): ReceiveTimeout = value match {
-    case -1    => Infinity
-    case 0     => Immediately
-    case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
-  }
+  def fromInt(value: Int): ReceiveTimeout =
+    value match {
+      case -1    => Infinity
+      case 0     => Immediately
+      case other => Fixed(FiniteDuration(other.toLong, TimeUnit.MILLISECONDS))
+    }
 
 }

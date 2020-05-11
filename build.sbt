@@ -10,7 +10,7 @@ lazy val core = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(
-    name                := "fmq-core",
+    name                 := "fmq-core",
     libraryDependencies ++= Dependencies.core(scalaVersion.value)
   )
 
@@ -19,7 +19,7 @@ lazy val extras = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(
-    name                := "fmq-extras",
+    name                 := "fmq-extras",
     libraryDependencies ++= Dependencies.extras
   )
   .dependsOn(core)
@@ -62,10 +62,10 @@ lazy val docs = project
   .dependsOn(core, extras)
 
 lazy val commonSettings = Seq(
-  scalaVersion                          := Versions.scala_213,
-  crossScalaVersions                    := Seq(scalaVersion.value, Versions.scala_212),
-  Test / fork                           := true,
-  Test / parallelExecution              := false,
+  scalaVersion                           := Versions.scala_213,
+  crossScalaVersions                     := Seq(scalaVersion.value, Versions.scala_212),
+  Test / fork                            := true,
+  Test / parallelExecution               := false,
   Compile / compile / wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing), // false positive
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
