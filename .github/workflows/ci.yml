@@ -35,7 +35,7 @@ jobs:
       - name: Cache SBT coursier cache
         uses: actions/cache@v1
         with:
-          path: ~/.cache/coursier
+          path: ~/.cache/coursier/v1
           key: sbt-coursier-cache
       - name: Cache SBT
         uses: actions/cache@v1
