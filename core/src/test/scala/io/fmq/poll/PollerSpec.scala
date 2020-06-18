@@ -35,11 +35,11 @@ object PollerSpec extends IOSpec {
       } yield (publisher, consumerA, consumerB, poller)
 
     def program(
-                 producer: ProducerSocket[IO],
-                 consumerA: ConsumerSocket[IO],
-                 consumerB: ConsumerSocket[IO],
-                 poller: Poller[IO]
-               ): IO[Expectations] = {
+        producer: ProducerSocket[IO],
+        consumerA: ConsumerSocket[IO],
+        consumerB: ConsumerSocket[IO],
+        poller: Poller[IO]
+    ): IO[Expectations] = {
       def items =
         Array(
           new PollItem(consumerA.socket.base(), ZMQ.ZMQ_POLLIN),
@@ -80,11 +80,11 @@ object PollerSpec extends IOSpec {
       Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
 
     def program(
-                 producer: ProducerSocket[IO],
-                 consumerA: ConsumerSocket[IO],
-                 consumerB: ConsumerSocket[IO],
-                 poller: Poller[IO]
-               ): IO[Expectations] =
+        producer: ProducerSocket[IO],
+        consumerA: ConsumerSocket[IO],
+        consumerB: ConsumerSocket[IO],
+        poller: Poller[IO]
+    ): IO[Expectations] =
       for {
         _      <- Timer[IO].sleep(200.millis)
         queueA <- Queue.unbounded[IO, String]
@@ -107,8 +107,7 @@ object PollerSpec extends IOSpec {
         _                  <- Timer[IO].sleep(100.millis)
         _                  <- poller.poll(items, PollTimeout.Infinity)
         (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
-      } yield {
-        expect(queueA1.isEmpty) and
+      } yield expect(queueA1.isEmpty) and
         expect(queueB1.isEmpty) and
         expect(queueA2.contains("Topic-A")) and
         expect(queueB2.isEmpty) and
@@ -116,7 +115,6 @@ object PollerSpec extends IOSpec {
         expect(queueB3.contains("Topic-B")) and
         expect(queueA4.contains("Topic-A")) and
         expect(queueB4.contains("Topic-B"))
-      }
 
     create.use((program _).tupled)
   }
@@ -141,11 +139,11 @@ object PollerSpec extends IOSpec {
       Kleisli(socket => socket.send("Topic-A") >> socket.send("Topic-B"))
 
     def program(
-                 producer: ProducerSocket[IO],
-                 consumerA: ConsumerSocket[IO],
-                 consumerB: ConsumerSocket[IO],
-                 poller: Poller[IO]
-               ): IO[Expectations] = {
+        producer: ProducerSocket[IO],
+        consumerA: ConsumerSocket[IO],
+        consumerB: ConsumerSocket[IO],
+        poller: Poller[IO]
+    ): IO[Expectations] = {
       val setup: Resource[IO, (Queue[IO, String], Queue[IO, String])] =
         for {
           queueA <- Resource.liftF(Queue.unbounded[IO, String])
@@ -167,10 +165,7 @@ object PollerSpec extends IOSpec {
           a2 <- queueA.dequeue1
           b1 <- queueB.dequeue1
           b2 <- queueB.dequeue1
-        } yield {
-          expect(List(a1, a2) == List("Topic-A", "Topic-A")) and
-          expect(List(b1, b2) == List("Topic-B", "Topic-B"))
-        }
+        } yield expect(List(a1, a2) == List("Topic-A", "Topic-A")) and expect(List(b1, b2) == List("Topic-B", "Topic-B"))
       }
     }
 

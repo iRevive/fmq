@@ -57,11 +57,9 @@ trait SocketBehavior {
             for {
               _      <- messages.traverse(producer.send[String])
               result <- collectMessages(consumer, messages.length.toLong)
-            } yield {
-              expect(producer.uri == expectedUri) and
+            } yield expect(producer.uri == expectedUri) and
               expect(consumer.uri == expectedUri) and
               expect(result == messages)
-            }
 
         Timer[IO].sleep(200.millis) >> program.toIO
       }
@@ -75,7 +73,7 @@ trait SocketBehavior {
 
         val program: IO[Expectations] =
           for {
-            _ <- messages.traverse(producer.send[String])
+            _      <- messages.traverse(producer.send[String])
             result <- collectMessages(consumer, messages.length.toLong)
           } yield expect(result == messages)
 
@@ -130,11 +128,9 @@ trait SocketBehavior {
           linger1 <- changeLinger(Linger.Immediately)
           linger2 <- changeLinger(Linger.Infinity)
           linger3 <- changeLinger(Linger.Fixed(5.seconds))
-        } yield {
-          expect(linger1 == Linger.Immediately) and
+        } yield expect(linger1 == Linger.Immediately) and
           expect(linger2 == Linger.Infinity) and
           expect(linger3 == Linger.Fixed(5.seconds))
-        }
       }
 
       (socketResource.createProducer(ctx) >>= program) <+> (socketResource.createConsumer(ctx) >>= program)
@@ -148,10 +144,8 @@ trait SocketBehavior {
         for {
           hwm1 <- changeWaterMark(HighWaterMark.NoLimit)
           hwm2 <- changeWaterMark(HighWaterMark.Limit(10))
-        } yield {
-          expect(hwm1 == HighWaterMark.NoLimit) and
+        } yield expect(hwm1 == HighWaterMark.NoLimit) and
           expect(hwm2 == HighWaterMark.Limit(10))
-        }
       }
 
       socketResource.createConsumer(ctx) >>= program
@@ -165,21 +159,19 @@ trait SocketBehavior {
         for {
           hwm1 <- changeWaterMark(HighWaterMark.NoLimit)
           hwm2 <- changeWaterMark(HighWaterMark.Limit(10))
-        } yield {
-         expect(hwm1 == HighWaterMark.NoLimit) and
-         expect(hwm2 == HighWaterMark.Limit(10))
-        }
+        } yield expect(hwm1 == HighWaterMark.NoLimit) and
+          expect(hwm2 == HighWaterMark.Limit(10))
       }
 
       socketResource.createProducer(ctx) >>= program
     }
 
     def withRandomPortPair[A](ctx: Context[IO])(fa: SocketResource.Pair[IO] => IO[A]): IO[A] =
-        (for {
-          producer <- Resource.liftF(socketResource.createProducer(ctx))
-          consumer <- Resource.liftF(socketResource.createConsumer(ctx))
-          pair     <- socketResource.bindToRandom(producer, consumer)
-        } yield pair).use(fa)
+      (for {
+        producer <- Resource.liftF(socketResource.createProducer(ctx))
+        consumer <- Resource.liftF(socketResource.createConsumer(ctx))
+        pair     <- socketResource.bindToRandom(producer, consumer)
+      } yield pair).use(fa)
 
   }
 

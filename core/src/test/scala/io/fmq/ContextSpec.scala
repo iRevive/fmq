@@ -15,7 +15,7 @@ object ContextSpec extends SimpleIOSuite {
 
     for {
       (isClosed, ctx) <- terminated.timeout(3.seconds)
-      isClosedNow <- ctx.isClosed
+      isClosedNow     <- ctx.isClosed
     } yield expect(!isClosed) and expect(isClosedNow)
   }
 

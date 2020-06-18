@@ -42,28 +42,26 @@ object SubscriberSpec extends IOSpec with SocketBehavior {
         hasMore1 <- consumer.hasReceiveMore
         msg2     <- consumer.receive[String]
         hasMore2 <- consumer.hasReceiveMore
-      } yield {
-        expect(msg1 == "B") and
-          expect(hasMore1) and
-          expect(msg2 == "We would like to see this") and
-          expect(!hasMore2)
-      }
+      } yield expect(msg1 == "B") and
+        expect(hasMore1) and
+        expect(msg2 == "We would like to see this") and
+        expect(!hasMore2)
 
     create.use((program _).tupled)
   }
 
-    test("subscribe to specific topic") { ctx =>
-      withRandomPortSocket(ctx, Subscriber.Topic.utf8String("my-topic")) { pair =>
-        val SocketResource.Pair(producer, consumer) = pair
+  test("subscribe to specific topic") { ctx =>
+    withRandomPortSocket(ctx, Subscriber.Topic.utf8String("my-topic")) { pair =>
+      val SocketResource.Pair(producer, consumer) = pair
 
-        val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
+      val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
 
-        for {
-          _      <- Timer[IO].sleep(200.millis)
-          _      <- messages.traverse(producer.send[String])
-          result <- collectMessages(consumer, 3L)
-        } yield expect(result == List("my-topic-1", "my-topic2", "my-topic-3"))
-      }
+      for {
+        _      <- Timer[IO].sleep(200.millis)
+        _      <- messages.traverse(producer.send[String])
+        result <- collectMessages(consumer, 3L)
+      } yield expect(result == List("my-topic-1", "my-topic2", "my-topic-3"))
+    }
   }
 
   test("subscribe to specific topic (bytes)") { ctx =>
@@ -76,31 +74,31 @@ object SubscriberSpec extends IOSpec with SocketBehavior {
         _      <- Timer[IO].sleep(200.millis)
         _      <- messages.traverse(producer.send[Array[Byte]])
         result <- consumer.receive[Array[Byte]]
-      } yield expect(result sameElements Array[Byte](3, 1, 2))
+      } yield expect(result.sameElements(Array[Byte](3, 1, 2)))
     }
   }
 
-    test("subscribe to all topics") { ctx =>
-      withRandomPortSocket(ctx, Subscriber.Topic.All) { pair =>
-        val SocketResource.Pair(producer, consumer) = pair
+  test("subscribe to all topics") { ctx =>
+    withRandomPortSocket(ctx, Subscriber.Topic.All) { pair =>
+      val SocketResource.Pair(producer, consumer) = pair
 
-        val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
+      val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
 
-        for {
-          _      <- Timer[IO].sleep(200.millis)
-          _      <- messages.traverse(producer.send[String])
-          result <- collectMessages(consumer, messages.length.toLong)
-        } yield expect(result == messages)
-      }
+      for {
+        _      <- Timer[IO].sleep(200.millis)
+        _      <- messages.traverse(producer.send[String])
+        result <- collectMessages(consumer, messages.length.toLong)
+      } yield expect(result == messages)
+    }
   }
 
   def withRandomPortSocket[A](ctx: Context[IO], topic: Subscriber.Topic)(fa: SocketResource.Pair[IO] => IO[A]): IO[A] = {
-      val uri = tcp_i"://localhost"
+    val uri = tcp_i"://localhost"
 
-      (for {
-        publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
-        subscriber <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(publisher.uri)))
-      } yield SocketResource.Pair(publisher, subscriber)).use(fa)
-    }
+    (for {
+      publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+      subscriber <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(publisher.uri)))
+    } yield SocketResource.Pair(publisher, subscriber)).use(fa)
+  }
 
 }
