@@ -2,26 +2,17 @@ package io.fmq
 package socket
 package pubsub
 
-import cats.effect.{IO, Resource, Sync}
+import cats.effect.{Resource, Sync}
 import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
 import io.fmq.syntax.literals._
 
 import scala.util.Random
 
-class PubSubSpec extends IOSpec with SocketBehavior {
+object PubSubSpec extends IOSpec with SocketBehavior {
 
-  "PubSub[IO]" when afterWord("protocol is") {
-
-    "tcp" should {
-      behave like socketSpec(tcpSocketResource[IO])
-    }
-
-    "inproc" should {
-      behave like socketSpec(inprocSocketResource[IO])
-    }
-
-  }
+  socketSpec("TCP protocol", tcpSocketResource)
+  socketSpec("inproc protocol", inprocSocketResource)
 
   private def tcpSocketResource[F[_]: Sync]: PubSubResource[F] =
     new PubSubResource[F] {

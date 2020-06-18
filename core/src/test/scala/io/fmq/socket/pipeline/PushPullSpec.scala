@@ -2,25 +2,16 @@ package io.fmq
 package socket
 package pipeline
 
-import cats.effect.{IO, Resource, Sync}
+import cats.effect.{Resource, Sync}
 import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
 
 import scala.util.Random
 
-class PushPullSpec extends IOSpec with SocketBehavior {
+object PushPullSpec extends IOSpec with SocketBehavior {
 
-  "PushPull[IO]" when afterWord("protocol is") {
-
-    "tcp" should {
-      behave like socketSpec(tcpSocketResource[IO])
-    }
-
-    "inproc" should {
-      behave like socketSpec(inprocSocketResource[IO])
-    }
-
-  }
+  socketSpec("TCP protocol", tcpSocketResource)
+  socketSpec("inproc protocol", inprocSocketResource)
 
   private def tcpSocketResource[F[_]: Sync]: PushPullResource[F] =
     new PushPullResource[F] {

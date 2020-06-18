@@ -5,7 +5,6 @@ package reqrep
 import cats.effect.{IO, Resource, Timer}
 import cats.syntax.either._
 import io.fmq.frame.Frame
-import io.fmq.socket.reqrep.ReqRepSpec.Pair
 import io.fmq.syntax.literals._
 
 import scala.concurrent.duration._
@@ -14,77 +13,75 @@ import scala.concurrent.duration._
   * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-class ReqRepSpec extends IOSpec with SocketBehavior {
+object ReqRepSpec extends IOSpec with SocketBehavior {
 
-  "ReqRep" should {
-
-    "simple req rep" in withSockets { pair =>
+  test( "simple req rep" ) { ctx =>
+    withSockets(ctx) { pair =>
       val Pair(req, rep) = pair
 
       for {
-        _        <- Timer[IO].sleep(200.millis)
-        _        <- req.send("Hi")
-        request  <- rep.receive[String]
-        _        <- rep.send("Hi2")
+        _ <- Timer[IO].sleep(200.millis)
+        _ <- req.send("Hi")
+        request <- rep.receive[String]
+        _ <- rep.send("Hi2")
         response <- req.receive[String]
-      } yield {
-        request shouldBe "Hi"
-        response shouldBe "Hi2"
+      } yield expect(request == "Hi") and  expect(response == "Hi2")
+    }
+  }
+
+    test( "multipart req rep" ) { ctx =>
+      withSockets(ctx) { pair =>
+        val Pair(req, rep) = pair
+
+        for {
+          _ <- Timer[IO].sleep(200.millis)
+          _ <- req.sendFrame(Frame.Multipart("Hello", "World"))
+          request <- rep.receiveFrame[String]
+          _ <- rep.sendFrame(Frame.Multipart("Hello", "Back"))
+          response <- req.receiveFrame[String]
+        } yield {
+          expect(request  == Frame.Multipart("Hello", "World")) and
+          expect(response == Frame.Multipart("Hello", "Back"))
+        }
+
       }
     }
 
-    "multipart req rep" in withSockets { pair =>
-      val Pair(req, rep) = pair
-
-      for {
-        _        <- Timer[IO].sleep(200.millis)
-        _        <- req.sendFrame(Frame.Multipart("Hello", "World"))
-        request  <- rep.receiveFrame[String]
-        _        <- rep.sendFrame(Frame.Multipart("Hello", "Back"))
-        response <- req.receiveFrame[String]
-      } yield {
-        request shouldBe Frame.Multipart("Hello", "World")
-        response shouldBe Frame.Multipart("Hello", "Back")
-      }
-
-    }
-
-    "fail" when {
-
-      "sending two requests in a row" in withSockets { pair =>
+    test( "fail when sending two requests in a row" ) { ctx =>
+      withSockets(ctx) { pair =>
         val Pair(req, _) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
-          _      <- req.send("Hi")
+          _ <- Timer[IO].sleep(200.millis)
+          _ <- req.send("Hi")
           result <- req.send("Hi2").attempt
-        } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
+        } yield expect(result.leftMap(_.getMessage) == Left("Errno 156384763"))
       }
+    }
 
-      "receiving message before sending" in withSockets { pair =>
+    test("fail when receiving message before sending" ) { ctx =>
+      withSockets(ctx) { pair =>
         val Pair(req, _) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _ <- Timer[IO].sleep(200.millis)
           result <- req.receive[Array[Byte]].attempt
-        } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
+        } yield expect(result.leftMap(_.getMessage) == Left("Errno 156384763"))
       }
+    }
 
-      "sending message in response before receiving" in withSockets { pair =>
+      test("fail when sending message in response before receiving" ) { ctx =>
+      withSockets(ctx) { pair =>
         val Pair(_, rep) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _ <- Timer[IO].sleep(200.millis)
           result <- rep.send("hi").attempt
-        } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
+        } yield expect(result.leftMap(_.getMessage) == Left("Errno 156384763"))
       }
-
     }
 
-  }
-
-  private def withSockets[A](fa: Pair[IO] => IO[A]): A =
-    withContext() { ctx: Context[IO] =>
+  private def withSockets[A](ctx: Context[IO])(fa: Pair[IO] => IO[A]): IO[A] = {
       val uri = tcp_i"://localhost"
 
       (for {
@@ -93,13 +90,9 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
       } yield Pair(request, reply)).use(fa)
     }
 
-}
-
-object ReqRepSpec {
-
-  final case class Pair[F[_]](
-      request: Request.Socket[F],
-      reply: Reply.Socket[F]
-  )
-
+  private final case class Pair[F[_]](
+                               request: Request.Socket[F],
+                               reply: Reply.Socket[F]
+                             )
+  
 }

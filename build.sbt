@@ -3,7 +3,7 @@ lazy val fmq = project
   .settings(commonSettings)
   .settings(commandSettings)
   .settings(noPublishSettings)
-  .aggregate(core, extras)
+  .aggregate(core)
 
 lazy val core = project
   .in(file("core"))
@@ -65,7 +65,6 @@ lazy val commonSettings = Seq(
   scalaVersion                           := Versions.scala_213,
   crossScalaVersions                     := Seq(scalaVersion.value, Versions.scala_212),
   Test / fork                            := true,
-  Test / parallelExecution               := false,
   Compile / compile / wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing), // false positive
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
@@ -99,6 +98,8 @@ lazy val noPublishSettings = Seq(
 
 inThisBuild(
   Seq(
+    libraryDependencies += "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test,
+      testFrameworks += new TestFramework("weaver.framework.TestFramework"),
     organization := "io.github.irevive",
     homepage     := Some(url("https://github.com/iRevive/fmq")),
     licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),

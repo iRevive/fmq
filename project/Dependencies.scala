@@ -19,13 +19,13 @@ object Dependencies {
       "org.typelevel" %% "cats-effect"   % Versions.catsEffect,
       "org.zeromq"     % "jeromq"        % Versions.jeromq,
       "org.scala-lang" % "scala-reflect" % scalaVersion       % Provided,
-      "org.scalatest" %% "scalatest"     % Versions.scalatest % Test,
-      "co.fs2"        %% "fs2-io"        % Versions.fs2       % Test
+      "co.fs2"        %% "fs2-io"        % Versions.fs2       % Test,
+      "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test
     )
 
   val extras: Seq[ModuleID] = Seq(
     "co.fs2"        %% "fs2-io"    % Versions.fs2,
-    "org.scalatest" %% "scalatest" % Versions.scalatest % Test
+    "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test
   )
 
 }
