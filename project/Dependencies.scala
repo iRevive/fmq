@@ -6,7 +6,7 @@ object Versions {
   val catsEffect = "2.2.0"
   val fs2        = "2.4.4"
   val jeromq     = "0.5.2"
-  val scalatest  = "3.2.2"
+  val weaver     = "0.4.0"
 }
 
 object Dependencies {
@@ -16,16 +16,16 @@ object Dependencies {
 
   def core(scalaVersion: String): Seq[ModuleID] =
     Seq(
-      "org.typelevel" %% "cats-effect"   % Versions.catsEffect,
-      "org.zeromq"     % "jeromq"        % Versions.jeromq,
-      "org.scala-lang" % "scala-reflect" % scalaVersion       % Provided,
-      "co.fs2"        %% "fs2-io"        % Versions.fs2       % Test,
-      "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test
+      "org.typelevel"       %% "cats-effect"      % Versions.catsEffect,
+      "org.zeromq"           % "jeromq"           % Versions.jeromq,
+      "org.scala-lang"       % "scala-reflect"    % scalaVersion    % Provided,
+      "co.fs2"              %% "fs2-io"           % Versions.fs2    % Test,
+      "com.disneystreaming" %% "weaver-framework" % Versions.weaver % Test
     )
 
   val extras: Seq[ModuleID] = Seq(
-    "co.fs2"        %% "fs2-io"    % Versions.fs2,
-    "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test
+    "co.fs2"              %% "fs2-io"           % Versions.fs2,
+    "com.disneystreaming" %% "weaver-framework" % Versions.weaver % Test
   )
 
 }

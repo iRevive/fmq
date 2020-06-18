@@ -99,10 +99,10 @@ lazy val noPublishSettings = Seq(
 inThisBuild(
   Seq(
     libraryDependencies += "com.disneystreaming" %% "weaver-framework" % "0.4.0" % Test,
-      testFrameworks += new TestFramework("weaver.framework.TestFramework"),
-    organization := "io.github.irevive",
-    homepage     := Some(url("https://github.com/iRevive/fmq")),
-    licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),
-    developers   := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive")))
+    testFrameworks      += new TestFramework("weaver.framework.TestFramework"),
+    organization        := "io.github.irevive",
+    homepage            := Some(url("https://github.com/iRevive/fmq")),
+    licenses            := List("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers          := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive")))
   )
 )
