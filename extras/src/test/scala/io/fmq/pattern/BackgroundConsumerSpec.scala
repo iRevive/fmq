@@ -1,49 +1,42 @@
 package io.fmq.pattern
 
 import cats.effect.{Blocker, IO, Resource, Timer}
-import io.fmq.{Context, IOSpec}
+import io.fmq.Context
 import io.fmq.frame.Frame
-import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.socket.pubsub.Subscriber
-import io.fmq.pattern.BackgroundConsumerSpec.Pair
+import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.syntax.literals._
-import org.scalatest.Assertion
+import weaver.IOSuite
 
 import scala.concurrent.duration._
 
-class BackgroundConsumerSpec extends IOSpec {
+object BackgroundConsumerSpec extends IOSuite {
 
-  "BackgroundConsumer" should {
+  override type Res = Pair[IO]
 
-    "consume messages" in withSockets { pair =>
-      val Pair(publisher, subscriber) = pair
+  override def sharedResource: Resource[IO, Pair[IO]] = {
+    val uri = tcp_i"://localhost"
 
-      def program(blocker: Blocker): IO[Assertion] =
-        for {
-          _        <- Timer[IO].sleep(200.millis)
-          _        <- publisher.send("hello")
-          _        <- publisher.send("world")
-          messages <- BackgroundConsumer.consume[IO, String](blocker, subscriber, 128).take(2).compile.toList
-        } yield messages shouldBe List(Frame.Single("hello"), Frame.Single("world"))
-
-      Blocker[IO].use(program)
-    }
-
+    for {
+      blocker    <- Blocker[IO]
+      ctx        <- Context.create[IO](1, blocker)
+      publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
+      subscriber <- Resource.suspend(ctx.createSubscriber(Subscriber.Topic.All).map(_.connect(publisher.uri)))
+    } yield Pair(publisher, subscriber)
   }
 
-  private def withSockets[A](fa: Pair[IO] => IO[A]): A =
-    withContext() { ctx: Context[IO] =>
-      val uri = tcp_i"://localhost"
+  test("consume messages") { pair =>
+    val Pair(publisher, subscriber) = pair
 
-      (for {
-        publisher  <- Resource.suspend(ctx.createPublisher.map(_.bindToRandomPort(uri)))
-        subscriber <- Resource.suspend(ctx.createSubscriber(Subscriber.Topic.All).map(_.connect(publisher.uri)))
-      } yield Pair(publisher, subscriber)).use(fa)
-    }
-
-}
-
-object BackgroundConsumerSpec {
+    for {
+      _ <- Timer[IO].sleep(200.millis)
+      _ <- publisher.send("hello")
+      _ <- publisher.send("world")
+      messages <- Blocker[IO].use(
+        BackgroundConsumer.consume[IO, String](_, subscriber, 128).take(2).compile.toList
+      )
+    } yield expect(messages == List(Frame.Single("hello"), Frame.Single("world")))
+  }
 
   final case class Pair[F[_]](
       publisher: ProducerSocket[F],
