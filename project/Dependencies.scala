@@ -4,7 +4,7 @@ object Versions {
   val scala_212  = "2.12.10"
   val scala_213  = "2.13.1"
   val catsEffect = "2.1.4"
-  val fs2        = "2.4.2"
+  val fs2        = "2.4.4"
   val jeromq     = "0.5.2"
   val scalatest  = "3.2.1"
 }
