@@ -2,7 +2,6 @@ package io.fmq.address
 
 import java.net.URI
 
-import cats.instances.int._
 import cats.syntax.either._
 import cats.syntax.eq._
 

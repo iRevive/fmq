@@ -1,7 +1,6 @@
 package io.fmq.socket
 
 import cats.effect.Sync
-import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._

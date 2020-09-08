@@ -3,7 +3,6 @@ package socket
 
 import cats.effect.syntax.effect._
 import cats.effect.{IO, Resource, Sync, Timer}
-import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import fs2.Stream

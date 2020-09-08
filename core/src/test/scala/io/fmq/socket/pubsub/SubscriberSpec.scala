@@ -3,7 +3,6 @@ package socket
 package pubsub
 
 import cats.effect.{IO, Resource, Timer}
-import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import io.fmq.socket.SocketBehavior.SocketResource

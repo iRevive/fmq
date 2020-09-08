@@ -4,7 +4,6 @@ import java.nio.channels.Selector
 
 import cats.data.NonEmptyList
 import cats.effect.Sync
-import cats.instances.list._
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
