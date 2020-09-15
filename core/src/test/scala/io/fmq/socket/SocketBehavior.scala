@@ -47,20 +47,19 @@ trait SocketBehavior {
           pair     <- socketResource.bind(producer, consumer, port)
         } yield pair
 
-      resource.use {
-        case SocketResource.Pair(producer, consumer) =>
-          val expectedUri = socketResource.expectedRandomUri(port)
+      resource.use { case SocketResource.Pair(producer, consumer) =>
+        val expectedUri = socketResource.expectedRandomUri(port)
 
-          producer.uri shouldBe expectedUri
-          consumer.uri shouldBe expectedUri
+        producer.uri shouldBe expectedUri
+        consumer.uri shouldBe expectedUri
 
-          val program =
-            for {
-              _      <- messages.traverse(producer.send[String])
-              result <- collectMessages(consumer, messages.length.toLong)
-            } yield result shouldBe messages
+        val program =
+          for {
+            _      <- messages.traverse(producer.send[String])
+            result <- collectMessages(consumer, messages.length.toLong)
+          } yield result shouldBe messages
 
-          Timer[IO].sleep(200.millis) >> program.toIO
+        Timer[IO].sleep(200.millis) >> program.toIO
       }
     }
 
