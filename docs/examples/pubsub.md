@@ -42,7 +42,7 @@ import fs2.concurrent.Queue
 import io.fmq.frame.Frame
 import io.fmq.socket.pubsub.Subscriber
 
-class Consumer[F[_]: Concurrent: ContextShift](socket: Subscriber.Socket[F], blocker: Blocker) {
+class Consumer[F[_]: Concurrent](socket: Subscriber.Socket[F], blocker: Blocker) {
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
@@ -67,7 +67,7 @@ import io.fmq.Context
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.syntax.literals._
 
-class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class Demo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 

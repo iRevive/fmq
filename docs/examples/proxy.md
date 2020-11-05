@@ -27,7 +27,7 @@ import fs2.concurrent.Queue
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.Reply
 
-class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: Blocker) {
+class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =
@@ -118,7 +118,7 @@ import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import io.fmq.syntax.literals._
 
-class ProxyDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private val frontendUri = inproc"://frontend"
   private val backendUri  = inproc"://backend"

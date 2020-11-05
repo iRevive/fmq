@@ -63,7 +63,7 @@ import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout}
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.syntax.literals._
 
-class Demo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class Demo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 

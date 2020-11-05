@@ -23,7 +23,7 @@ object ReqRepApp extends IOApp {
 
 }
 
-class ReqRepDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class ReqRepDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private val uri = tcp_i"://localhost"
 
@@ -48,7 +48,7 @@ class ReqRepDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: Blocker) {
+class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =

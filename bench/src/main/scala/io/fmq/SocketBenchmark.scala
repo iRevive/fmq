@@ -3,7 +3,7 @@ package io.fmq
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 
-import cats.effect.{Blocker, ContextShift, Fiber, IO, Resource}
+import cats.effect.{Fiber, IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.SocketBenchmark.MessagesCounter
 import io.fmq.syntax.literals._
@@ -22,7 +22,7 @@ import scala.concurrent.ExecutionContext
 @SuppressWarnings(Array("org.wartremover.warts.Null", "org.wartremover.warts.Var"))
 class SocketBenchmark {
 
-  private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+  private implicit val contextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   @Param(Array("128", "256", "512", "1024"))
   var messageSize: Int = _

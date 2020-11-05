@@ -26,7 +26,7 @@ object ProxyApp extends IOApp {
 
 }
 
-class ProxyDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private val frontendUri = inproc"://frontend"
   private val backendUri  = inproc"://backend"
@@ -72,7 +72,7 @@ class ProxyDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], bloc
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class Server[F[_]: Concurrent: ContextShift](socket: Reply.Socket[F], blocker: Blocker) {
+class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =

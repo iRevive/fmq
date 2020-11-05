@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class JeroMQSocketBenchmark {
 
-  private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+  private implicit val contextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   @Param(Array("128", "256", "512", "1024"))
   var messageSize: Int = _

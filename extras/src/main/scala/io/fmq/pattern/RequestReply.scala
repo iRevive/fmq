@@ -34,7 +34,7 @@ class RequestReply[F[_]: Concurrent] private (
 
 object RequestReply {
 
-  def create[F[_]: Concurrent: ContextShift](
+  def create[F[_]: Concurrent](
       blocker: Blocker,
       socket: Request.Socket[F],
       queueSize: Int

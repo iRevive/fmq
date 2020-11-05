@@ -12,7 +12,7 @@ object BackgroundConsumer {
   /**
     * Consumes messages in background on a dedicated blocking thread
     */
-  def consume[F[_]: Concurrent: ContextShift, A: FrameDecoder](
+  def consume[F[_]: Concurrent, A: FrameDecoder](
       blocker: Blocker,
       socket: ConsumerSocket[F],
       queueSize: Int

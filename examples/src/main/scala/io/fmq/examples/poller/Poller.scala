@@ -25,7 +25,7 @@ object PollerApp extends IOApp {
 
 }
 
-class PollerDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class PollerDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 

@@ -10,13 +10,13 @@ The subscriber socket can subscribe to a specific topic and can only receive mes
 The subscriber can be created within the `Context`.     
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, ContextShift, Resource, IO}
+import cats.effect.{Resource, IO}
 import io.fmq.Context
 import io.fmq.socket.pubsub.Subscriber
 
 import scala.concurrent.ExecutionContext
 
-implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+implicit val contextShift[IO] = IO.contextShift(ExecutionContext.global)
 
 val topicSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {

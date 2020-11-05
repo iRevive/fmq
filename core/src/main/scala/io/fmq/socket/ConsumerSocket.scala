@@ -39,7 +39,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * import fs2.concurrent.Queue
     * import io.fmq.socket.ConsumerSocket
     *
-    * def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
+    * def consume[F[_]: Concurrent](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
     *   def process(queue: Queue[F, Array[Byte]]) =
     *     blocker.blockOn(Stream.repeatEval(socket.receive[Array[Byte]]).through(queue.enqueue).compile.drain)
     *

@@ -25,7 +25,7 @@ object PubSubApp extends IOApp {
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class PubSubDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class PubSubDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 
@@ -75,7 +75,7 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: Strin
 
 }
 
-class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket[F], blocker: Blocker) {
+class Consumer[F[_]: Concurrent](socket: ConsumerSocket[F], blocker: Blocker) {
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
