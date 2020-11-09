@@ -1,6 +1,6 @@
 package io.fmq.pattern
 
-import cats.effect.{Blocker, IO, Resource, Timer}
+import cats.effect.{Blocker, IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.{Reply, Request}
@@ -28,7 +28,7 @@ class RequestReplySpec extends IOSpec {
 
       def program(dispatcher: RequestReply[IO]): IO[Assertion] =
         for {
-          _         <- Timer[IO].sleep(200.millis)
+          _         <- IO.sleep(200.millis)
           response1 <- dispatcher.submit[String, String](Frame.Single("hello"))
           response2 <- dispatcher.submit[String, String](Frame.Multipart("hello", "world"))
         } yield {

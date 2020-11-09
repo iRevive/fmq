@@ -2,8 +2,7 @@ package io.fmq
 package socket
 package pubsub
 
-import cats.effect.{IO, Resource, Timer}
-import cats.syntax.flatMap._
+import cats.effect.{IO, Resource}
 import cats.syntax.traverse._
 import io.fmq.socket.SocketBehavior.SocketResource
 import io.fmq.syntax.literals._
@@ -12,7 +11,7 @@ import org.scalatest.Assertion
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class SubscriberSpec extends IOSpec with SocketBehavior {
@@ -37,7 +36,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
 
       def program(producer: ProducerSocket[IO], consumer: ConsumerSocket[IO]): IO[Assertion] =
         for {
-          _        <- Timer[IO].sleep(200.millis)
+          _        <- IO.sleep(200.millis)
           _        <- sendA(producer)
           _        <- sendB(producer)
           msg1     <- consumer.receive[String]
@@ -60,7 +59,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
 
       for {
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         _      <- messages.traverse(producer.send[String])
         result <- collectMessages(consumer, 3L)
       } yield result shouldBe List("my-topic-1", "my-topic2", "my-topic-3")
@@ -72,7 +71,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val messages = List[Array[Byte]](Array(1), Array(2, 1, 3), Array(3, 1, 2), Array(3, 2, 1))
 
       for {
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         _      <- messages.traverse(producer.send[Array[Byte]])
         result <- consumer.receive[Array[Byte]]
       } yield result shouldBe Array[Byte](3, 1, 2)
@@ -84,7 +83,7 @@ class SubscriberSpec extends IOSpec with SocketBehavior {
       val messages = List("0", "my-topic-1", "1", "my-topic2", "my-topic-3")
 
       for {
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         _      <- messages.traverse(producer.send[String])
         result <- collectMessages(consumer, messages.length.toLong)
       } yield result shouldBe messages

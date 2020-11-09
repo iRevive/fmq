@@ -1,6 +1,6 @@
 package io.fmq.pattern
 
-import cats.effect.{Blocker, IO, Resource, Timer}
+import cats.effect.{Blocker, IO, Resource}
 import io.fmq.{Context, IOSpec}
 import io.fmq.frame.Frame
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
@@ -20,7 +20,7 @@ class BackgroundConsumerSpec extends IOSpec {
 
       def program(blocker: Blocker): IO[Assertion] =
         for {
-          _        <- Timer[IO].sleep(200.millis)
+          _        <- IO.sleep(200.millis)
           _        <- publisher.send("hello")
           _        <- publisher.send("world")
           messages <- BackgroundConsumer.consume[IO, String](blocker, subscriber, 128).take(2).compile.toList

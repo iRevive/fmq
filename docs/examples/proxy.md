@@ -58,7 +58,7 @@ class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
 Secondly, we need a `Client` that sends requests: 
 
 ```scala mdoc:silent
-import cats.effect.{Sync, Timer}
+import cats.effect.{Sync}
 import fs2.Stream
 import io.fmq.pattern.RequestReply
 
@@ -85,7 +85,7 @@ class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
 Also, we can add a `MessageObserver` that observers all proxied messages:
 
 ```scala mdoc:silent
-import cats.effect.{Sync, Timer}
+import cats.effect.{Sync}
 import fs2.Stream
 import io.fmq.socket.pipeline.Pull
 
@@ -106,7 +106,7 @@ class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
 And the `ProxyDemo` to put everything together:
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream

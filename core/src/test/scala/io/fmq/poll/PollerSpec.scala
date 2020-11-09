@@ -1,7 +1,7 @@
 package io.fmq.poll
 
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.{IO, Resource, Timer}
+import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.apply._
 import fs2.concurrent.Queue
@@ -16,7 +16,7 @@ import zmq.poll.PollItem
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class PollerSpec extends IOSpec {
@@ -49,12 +49,12 @@ class PollerSpec extends IOSpec {
           )
 
         for {
-          _       <- Timer[IO].sleep(200.millis)
+          _       <- IO.sleep(200.millis)
           _       <- producer.send("Topic-A")
           events1 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
-          _       <- Timer[IO].sleep(100.millis)
+          _       <- IO.sleep(100.millis)
           _       <- producer.send("Topic-B")
-          _       <- Timer[IO].sleep(100.millis)
+          _       <- IO.sleep(100.millis)
           events2 <- IO.delay(ZMQ.poll(poller.selector, items, -1))
           _       <- producer.send("Topic-A")
           _       <- producer.send("Topic-B")
@@ -92,7 +92,7 @@ class PollerSpec extends IOSpec {
           poller: Poller[IO]
       ): IO[Assertion] =
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _      <- IO.sleep(200.millis)
           queueA <- Queue.unbounded[IO, String]
           queueB <- Queue.unbounded[IO, String]
           items = NonEmptyList.of(
@@ -105,12 +105,12 @@ class PollerSpec extends IOSpec {
           _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-B")
-          _                  <- Timer[IO].sleep(100.millis)
+          _                  <- IO.sleep(100.millis)
           _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
           _                  <- producer.send("Topic-A")
           _                  <- producer.send("Topic-B")
-          _                  <- Timer[IO].sleep(100.millis)
+          _                  <- IO.sleep(100.millis)
           _                  <- poller.poll(items, PollTimeout.Infinity)
           (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
         } yield {
@@ -171,7 +171,7 @@ class PollerSpec extends IOSpec {
           val (queueA, queueB) = pair
 
           for {
-            _  <- Timer[IO].sleep(200.millis)
+            _  <- IO.sleep(200.millis)
             a1 <- queueA.dequeue1
             a2 <- queueA.dequeue1
             b1 <- queueB.dequeue1

@@ -1,7 +1,7 @@
 package io.fmq.examples.reqrep
 
 import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream

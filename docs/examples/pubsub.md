@@ -61,7 +61,7 @@ class Consumer[F[_]: Concurrent](socket: Subscriber.Socket[F], blocker: Blocker)
 And the demo program that evaluates producer and subscribers in parallel:
 
 ```scala mdoc:silent
-import cats.effect.{Concurrent, ContextShift, Resource, Sync, Timer}
+import cats.effect.{Concurrent, ContextShift, Resource, Sync}
 import fs2.Stream
 import io.fmq.Context
 import io.fmq.socket.pubsub.Subscriber

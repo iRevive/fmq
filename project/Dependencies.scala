@@ -3,8 +3,8 @@ import sbt._
 object Versions {
   val scala_212  = "2.12.10"
   val scala_213  = "2.13.3"
-  val catsEffect = "3.0.0-M1"
-  val fs2        = "3.0.0-M1"
+  val catsEffect = "3.0.0-M3"
+  val fs2        = "3.0.0-M2"
   val jeromq     = "0.5.2"
   val scalatest  = "3.2.2"
 }

@@ -1,8 +1,7 @@
 package io.fmq
 package socket
 
-import cats.effect.syntax.effect._
-import cats.effect.{IO, Resource, Sync, Timer}
+import cats.effect.{IO, Resource, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
 import fs2.Stream
@@ -16,7 +15,7 @@ import org.scalatest.Assertion
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 trait SocketBehavior {
@@ -33,7 +32,7 @@ trait SocketBehavior {
           msg <- consumer.receiveFrame[String]
         } yield msg shouldBe Frame.Multipart("A", "We would like to see this")
 
-      Timer[IO].sleep(200.millis) >> program.toIO
+      IO.sleep(200.millis) >> program
     }
 
     "bind to specific port" in withContext() { ctx: Context[IO] =>
@@ -59,7 +58,7 @@ trait SocketBehavior {
             result <- collectMessages(consumer, messages.length.toLong)
           } yield result shouldBe messages
 
-        Timer[IO].sleep(200.millis) >> program.toIO
+        IO.sleep(200.millis) >> program
       }
     }
 
@@ -74,7 +73,7 @@ trait SocketBehavior {
           result <- collectMessages(consumer, messages.length.toLong)
         } yield result shouldBe messages
 
-      Timer[IO].sleep(200.millis) >> program.toIO
+      IO.sleep(200.millis) >> program
     }
 
     "operate sendTimeout" in withContext() { context: Context[IO] =>

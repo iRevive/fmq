@@ -1,6 +1,6 @@
 package io.fmq.proxy
 
-import cats.effect.{Blocker, IO, Resource, Timer}
+import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.address.Uri
 import io.fmq.frame.Frame
@@ -15,7 +15,7 @@ import org.scalatest.Assertion
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class ProxySpec extends IOSpec {
@@ -40,7 +40,7 @@ class ProxySpec extends IOSpec {
 
       def program(client: Request.Socket[IO], server: Reply.Socket[IO]): IO[Assertion] =
         for {
-          _   <- Timer[IO].sleep(500.millis)
+          _   <- IO.sleep(500.millis)
           _   <- client.send("hello")
           req <- server.receive[String]
           _   <- server.send("reply")
@@ -52,9 +52,8 @@ class ProxySpec extends IOSpec {
 
       (for {
         (front, back)    <- createProxySockets
-        blocker          <- Blocker[IO]
         proxy            <- ctx.proxy.bidirectional(front, back)
-        _                <- proxy.start(blocker)
+        _                <- proxy.start
         (client, server) <- createReqRepSockets
       } yield (client, server)).use((program _).tupled)
     }
@@ -66,7 +65,7 @@ class ProxySpec extends IOSpec {
 
       def program(publisher: Publisher.Socket[IO], subscriber: Subscriber.Socket[IO], pull: Pull.Socket[IO]): IO[Assertion] =
         for {
-          _       <- Timer[IO].sleep(500.millis)
+          _       <- IO.sleep(500.millis)
           _       <- publisher.send("hello")
           msg     <- subscriber.receive[String]
           control <- pull.receive[String]
@@ -78,7 +77,6 @@ class ProxySpec extends IOSpec {
       val topic = Subscriber.Topic.All
 
       (for {
-        blocker         <- Blocker[IO]
         publisherProxy  <- Resource.suspend(ctx.createPublisher.map(_.bind(frontendUri)))
         publisher       <- Resource.suspend(ctx.createPublisher.map(_.bind(backendUri)))
         subscriberProxy <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(backendUri)))
@@ -87,7 +85,7 @@ class ProxySpec extends IOSpec {
         push            <- Resource.suspend(ctx.createPush.map(_.connect(controlUri)))
         control         <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(control))
-        _               <- proxy.start(blocker)
+        _               <- proxy.start
       } yield (publisher, subscriber, pull)).use((program _).tupled)
     }
 
@@ -118,7 +116,7 @@ class ProxySpec extends IOSpec {
 
       def program(client: Request.Socket[IO], server: Reply.Socket[IO], pull: Pull.Socket[IO]): IO[Assertion] =
         for {
-          _          <- Timer[IO].sleep(500.millis)
+          _          <- IO.sleep(500.millis)
           _          <- client.send("hello")
           req        <- server.receive[String]
           _          <- server.send("reply")
@@ -137,10 +135,9 @@ class ProxySpec extends IOSpec {
       (for {
         (front, back)    <- createProxySockets
         (pull, push)     <- createControlSockets
-        blocker          <- Blocker[IO]
         control          <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy            <- ctx.proxy.bidirectional(front, back, Some(control), Some(control))
-        _                <- proxy.start(blocker)
+        _                <- proxy.start
         (client, server) <- createReqRepSockets
       } yield (client, server, pull)).use((program _).tupled)
     }
@@ -178,7 +175,7 @@ class ProxySpec extends IOSpec {
           pullOut: Pull.Socket[IO]
       ): IO[Assertion] =
         for {
-          _          <- Timer[IO].sleep(500.millis)
+          _          <- IO.sleep(500.millis)
           _          <- client.send("hello")
           req        <- server.receive[String]
           _          <- server.send("reply")
@@ -198,11 +195,10 @@ class ProxySpec extends IOSpec {
         (front, back)      <- createProxySockets
         (pullIn, pushIn)   <- createControlSockets(controlInUri)
         (pullOut, pushOut) <- createControlSockets(controlOutUri)
-        blocker            <- Blocker[IO]
         controlIn          <- Resource.pure[IO, Control[IO]](Control.push(pushIn))
         controlOut         <- Resource.pure[IO, Control[IO]](Control.push(pushOut))
         proxy              <- ctx.proxy.bidirectional(front, back, Some(controlIn), Some(controlOut))
-        _                  <- proxy.start(blocker)
+        _                  <- proxy.start
         (client, server)   <- createReqRepSockets
       } yield (client, server, pullIn, pullOut)).use((program _).tupled)
     }
@@ -227,7 +223,7 @@ class ProxySpec extends IOSpec {
         createReqRepSockets.use {
           case (client, server) =>
             for {
-              _   <- Timer[IO].sleep(500.millis)
+              _   <- IO.sleep(500.millis)
               _   <- client.send("hello")
               req <- server.receive[String]
               _   <- server.send("reply")

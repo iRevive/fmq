@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package reqrep
 
-import cats.effect.{IO, Resource, Timer}
+import cats.effect.{IO, Resource}
 import cats.syntax.either._
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.ReqRepSpec.Pair
@@ -11,7 +11,7 @@ import io.fmq.syntax.literals._
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class ReqRepSpec extends IOSpec with SocketBehavior {
@@ -22,7 +22,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
       val Pair(req, rep) = pair
 
       for {
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- req.send("Hi")
         request  <- rep.receive[String]
         _        <- rep.send("Hi2")
@@ -37,7 +37,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
       val Pair(req, rep) = pair
 
       for {
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- req.sendFrame(Frame.Multipart("Hello", "World"))
         request  <- rep.receiveFrame[String]
         _        <- rep.sendFrame(Frame.Multipart("Hello", "Back"))
@@ -55,7 +55,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
         val Pair(req, _) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _      <- IO.sleep(200.millis)
           _      <- req.send("Hi")
           result <- req.send("Hi2").attempt
         } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
@@ -65,7 +65,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
         val Pair(req, _) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _      <- IO.sleep(200.millis)
           result <- req.receive[Array[Byte]].attempt
         } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
       }
@@ -74,7 +74,7 @@ class ReqRepSpec extends IOSpec with SocketBehavior {
         val Pair(_, rep) = pair
 
         for {
-          _      <- Timer[IO].sleep(200.millis)
+          _      <- IO.sleep(200.millis)
           result <- rep.send("hi").attempt
         } yield result.leftMap(_.getMessage) shouldBe Left("Errno 156384763")
       }

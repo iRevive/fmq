@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package pubsub
 
-import cats.effect.{IO, Resource, Timer}
+import cats.effect.{IO, Resource}
 import cats.syntax.traverse._
 import io.fmq.frame.Frame
 import io.fmq.syntax.literals._
@@ -11,7 +11,7 @@ import org.scalatest.Assertion
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class XPubXSubSpec extends IOSpec with SocketBehavior {
@@ -22,9 +22,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val XPubXSubSpec.Pair(pub, sub) = pair
 
       for {
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         _      <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         subMsg <- pub.receive[Array[Byte]]
         _      <- pub.sendMultipart(Frame.Multipart("A", "Hello"))
         msg    <- sub.receiveFrame[String]
@@ -38,7 +38,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val XPubXSubSpec.Pair(pub, sub) = pair
 
       for {
-        _    <- Timer[IO].sleep(200.millis)
+        _    <- IO.sleep(200.millis)
         _    <- sub.send("Message from subscriber")
         msg1 <- pub.receive[String]
         _    <- sub.send(Array.emptyByteArray)
@@ -53,9 +53,9 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val XPubXSubSpec.Pair(pub, sub) = pair
 
       for {
-        _   <- Timer[IO].sleep(200.millis)
+        _   <- IO.sleep(200.millis)
         _   <- sub.sendSubscribe(Subscriber.Topic.All)
-        _   <- Timer[IO].sleep(200.millis)
+        _   <- IO.sleep(200.millis)
         _   <- pub.send("Hello")
         msg <- sub.receive[String]
       } yield msg shouldBe "Hello"
@@ -65,7 +65,7 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val XPubXSubSpec.Pair(pub, sub) = pair
 
       for {
-        _      <- Timer[IO].sleep(200.millis)
+        _      <- IO.sleep(200.millis)
         _      <- pub.send("Hello")
         result <- sub.receiveNoWait[String]
       } yield result shouldBe empty
@@ -78,13 +78,13 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
       val messages = topics.map(_ + "1")
 
       for {
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- topics.traverse(topic => sub.sendSubscribe(Subscriber.Topic.utf8String(topic)))
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- messages.traverse(pub.send[String])
         received <- collectMessages(sub, 5)
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- messages.traverse(pub.send[String])
         result   <- sub.receiveNoWait[String]
       } yield {
@@ -103,10 +103,10 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         val (pub, sub1, sub2) = input
 
         for {
-          _    <- Timer[IO].sleep(200.millis)
+          _    <- IO.sleep(200.millis)
           _    <- topics1.traverse(topic => sub1.sendSubscribe(Subscriber.Topic.utf8String(topic)))
           _    <- topics2.traverse(topic => sub2.sendSubscribe(Subscriber.Topic.utf8String(topic)))
-          _    <- Timer[IO].sleep(200.millis)
+          _    <- IO.sleep(200.millis)
           _    <- pub.send("AB-1")
           msg1 <- sub1.receive[String]
           msg2 <- sub2.receive[String]

@@ -1,6 +1,6 @@
 package io.fmq.socket.reqrep
 
-import cats.effect.{IO, Resource, Timer}
+import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.{Context, IOSpec}
 import io.fmq.frame.Frame
@@ -12,7 +12,7 @@ import io.fmq.syntax.literals._
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class RouterSpec extends IOSpec with SocketBehavior {
@@ -23,14 +23,14 @@ class RouterSpec extends IOSpec with SocketBehavior {
       val Pair(router, dealer, _) = pair
 
       for {
-        _         <- Timer[IO].sleep(200.millis)
+        _         <- IO.sleep(200.millis)
         _         <- dealer.identity
         _         <- dealer.send("Hello")
         request   <- router.receiveFrame[String]
         _         <- router.sendFrame(Frame.Multipart("1", "World-1"))
         _         <- router.sendFrame(Frame.Multipart("2", "World-2"))
         response1 <- dealer.receiveFrame[String]
-        _         <- Timer[IO].sleep(100.millis)
+        _         <- IO.sleep(100.millis)
         response2 <- dealer.receiveNoWait[String]
       } yield {
         request shouldBe Frame.Multipart("1", "Hello")
@@ -54,7 +54,7 @@ class RouterSpec extends IOSpec with SocketBehavior {
             _         <- dealer2.sendFrame(Frame.Multipart("Hello", "World"))
             message2  <- router.receiveFrame[String]
             _         <- router.sendFrame(Frame.Multipart("ID", "Response"))
-            _         <- Timer[IO].sleep(200.millis)
+            _         <- IO.sleep(200.millis)
             response1 <- dealer.receiveNoWait[String]
             response2 <- dealer2.receiveFrame[String]
           } yield {
@@ -67,7 +67,7 @@ class RouterSpec extends IOSpec with SocketBehavior {
 
       for {
         _        <- router.setHandover(RouterHandover.Handover)
-        _        <- Timer[IO].sleep(200.millis)
+        _        <- IO.sleep(200.millis)
         _        <- dealer.sendFrame(Frame.Multipart("Hello", "World"))
         identity <- router.receive[String]
         _        <- IO.delay(identity shouldBe "ID")

@@ -2,7 +2,7 @@ package io.fmq.examples.poller
 
 import cats.FlatMap
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream

@@ -1,6 +1,6 @@
 package io.fmq.examples.proxy
 
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.effect.syntax.concurrent._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -37,7 +37,7 @@ class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) 
   val program: Stream[F, Unit] =
     for {
       (proxy, observer, client, server) <- Stream.resource(appResource)
-      _                                 <- Stream.resource(proxy.start(blocker))
+      _                                 <- Stream.resource(proxy.start)
       _                                 <- Stream(server.serve, client.start, observer.start).parJoinUnbounded
     } yield ()
 

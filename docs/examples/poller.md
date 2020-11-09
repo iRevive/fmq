@@ -53,7 +53,7 @@ And the demo program that evaluates producer and subscribers in parallel:
 
 ```scala mdoc:silent
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync, Timer}
+import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream

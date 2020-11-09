@@ -21,7 +21,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
   def poll(items: NonEmptyList[PollEntry[F]], timeout: PollTimeout): F[Int] =
     for {
       polling <- items.map(item => (item, toZmqPollItem(item))).toList.pure[F]
-      events  <- Sync[F].delay(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, timeout.value))
+      events  <- Sync[F].blocking(zmq.ZMQ.poll(selector, polling.toMap.values.toArray, timeout.value))
       _       <- polling.traverse((dispatchItem _).tupled)
     } yield events
 
