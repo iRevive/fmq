@@ -98,7 +98,7 @@ lazy val noPublishSettings = Seq(
 
 inThisBuild(
   Seq(
-    libraryDependencies += Dependencies.veawer,
+    libraryDependencies += Dependencies.weaver,
     testFrameworks      += new TestFramework("weaver.framework.TestFramework"),
     organization        := "io.github.irevive",
     homepage            := Some(url("https://github.com/iRevive/fmq")),
