@@ -53,13 +53,13 @@ trait SocketBehavior {
       resource.use { case SocketResource.Pair(producer, consumer) =>
         val expectedUri = socketResource.expectedRandomUri(port)
 
-          val program =
-            for {
-              _      <- messages.traverse(producer.send[String])
-              result <- collectMessages(consumer, messages.length.toLong)
-            } yield expect(producer.uri == expectedUri) and
-              expect(consumer.uri == expectedUri) and
-              expect(result == messages)
+        val program =
+          for {
+            _      <- messages.traverse(producer.send[String])
+            result <- collectMessages(consumer, messages.length.toLong)
+          } yield expect(producer.uri == expectedUri) and
+            expect(consumer.uri == expectedUri) and
+            expect(result == messages)
 
         Timer[IO].sleep(200.millis) >> program.toIO
       }
