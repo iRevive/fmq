@@ -6,7 +6,7 @@ object Versions {
   val catsEffect = "2.2.0"
   val fs2        = "2.4.4"
   val jeromq     = "0.5.2"
-  val scalatest  = "3.2.2"
+  val scalatest  = "3.2.3"
 }
 
 object Dependencies {
