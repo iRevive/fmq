@@ -14,22 +14,16 @@ import cats.effect.{Resource, IO}
 import io.fmq.Context
 import io.fmq.socket.pubsub.Subscriber
 
-import scala.concurrent.ExecutionContext
-
-implicit val contextShift[IO] = IO.contextShift(ExecutionContext.global)
-
 val topicSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
-    blocker    <- Blocker[IO]
-    context    <- Context.create[IO](1, blocker)
-    subscriber <- Resource.liftF(context.createSubscriber(Subscriber.Topic.utf8String("my-topic")))
+    context    <- Context.create[IO](1)
+    subscriber <- Resource.eval(context.createSubscriber(Subscriber.Topic.utf8String("my-topic")))
   } yield subscriber
 
 val allSubscriberResource: Resource[IO, Subscriber[IO]] =
   for {
-    blocker    <- Blocker[IO]
-    context    <- Context.create[IO](1, blocker)
-    subscriber <- Resource.liftF(context.createSubscriber(Subscriber.Topic.All))
+    context    <- Context.create[IO](1)
+    subscriber <- Resource.eval(context.createSubscriber(Subscriber.Topic.All))
   } yield subscriber
 ```
 

@@ -19,24 +19,26 @@ Replies shall automatically return to the client that made the original request.
 First of all, let's introduce a `Server` that replies to the requests:
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, Concurrent, ContextShift}
-import cats.effect.syntax.concurrent._
+import cats.effect.Async
+import cats.effect.syntax.async._
+import cats.effect.std.Queue
 import cats.syntax.flatMap._
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.frame.Frame
 import io.fmq.socket.reqrep.Reply
 
-class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
+import scala.concurrent.ExecutionContext
+
+class Server[F[_]: Async](socket: Reply.Socket[F], blocker: ExecutionContext) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =
-      blocker.blockOn(Stream.repeatEval(socket.receiveFrame[String]).through(queue.enqueue).compile.drain)
+      Stream.repeatEval(socket.receiveFrame[String]).evalMap(queue.offer).compile.drain
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])
-      _      <- Stream.resource(process(queue).background)
-      result <- queue.dequeue.evalMap(processRequest)
+      _      <- Stream.resource(process(queue).backgroundOn(blocker))
+      result <- Stream.repeatEval(queue.take).evalMap(processRequest)
     } yield result
   }
 
@@ -50,7 +52,7 @@ class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
   }
 
   private def log(message: => String): F[Unit] =
-    Concurrent[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }
 ```
@@ -58,13 +60,13 @@ class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
 Secondly, we need a `Client` that sends requests: 
 
 ```scala mdoc:silent
-import cats.effect.{Sync}
+import cats.effect.Async
 import fs2.Stream
 import io.fmq.pattern.RequestReply
 
 import scala.concurrent.duration._
 
-class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
+class Client[F[_]: Async](dispatcher: RequestReply[F]) {
 
   def start: Stream[F, Unit] =
     Stream
@@ -77,7 +79,7 @@ class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
       .evalMap(response => log(s"Client. Received response $response"))
 
   private def log(message: => String): F[Unit] =
-    Sync[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }
 ```
@@ -85,11 +87,11 @@ class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
 Also, we can add a `MessageObserver` that observers all proxied messages:
 
 ```scala mdoc:silent
-import cats.effect.{Sync}
+import cats.effect.Async
 import fs2.Stream
 import io.fmq.socket.pipeline.Pull
 
-class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
+class MessageObserver[F[_]: Async](pull: Pull.Socket[F]) {
 
   def start: Stream[F, Unit] =
     Stream
@@ -98,7 +100,7 @@ class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
       .drain
 
   private def log(message: => String): F[Unit] =
-    Sync[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }
 ``` 
@@ -106,7 +108,7 @@ class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
 And the `ProxyDemo` to put everything together:
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import cats.effect.{Async, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
@@ -118,7 +120,9 @@ import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import io.fmq.syntax.literals._
 
-class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
+import scala.concurrent.ExecutionContext
+
+class ProxyDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
 
   private val frontendUri = inproc"://frontend"
   private val backendUri  = inproc"://backend"
@@ -164,20 +168,28 @@ class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) 
 }
 ```
 
-At the edge of out program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
+At the edge of our program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
+import java.util.concurrent.Executors
+
+import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.functor._
 import io.fmq.Context
+
+import scala.concurrent.ExecutionContext
 
 object ProxyApp extends IOApp {
 
  override def run(args: List[String]): IO[ExitCode] =
-   Blocker[IO]
-     .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
+   blockingContext
+     .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
      .use { case (ctx, blocker) => new ProxyDemo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
-
+  
+  private def blockingContext: Resource[IO, ExecutionContext] =
+   Resource
+     .make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+     .map(ExecutionContext.fromExecutor)
 }
 ```
 

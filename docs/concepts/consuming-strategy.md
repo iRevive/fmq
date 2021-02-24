@@ -7,40 +7,42 @@ You can use ƒMQ with any effect that has an instance of `cats.effect.Sync`: `ca
 
 ## The problem
 The `socket.receive` method blocks the thread until a new message is available.  
-The `cats.effect.Blocker` allows to evaluate blocking operations on a separate execution context: `blocker.blockOn(socket.receive)`.  
+The `cats.effect.Async` allows to evaluate blocking operations on a separate execution context: `socker.receive.evalOn(blocker)`.  
 So far so good, but if the expected throughput is high (e.g. 50k per second), you can face a performance degradation due to context switches.
 
 There are several ways to solve the problem:
 
 
-### 1) Call `socket.receive` without `Blocker`  
+### 1) Call `socket.receive` directly
 `fs2.Stream.repeatEval(socket.receive).map(msg => handleMessage(msg)`
 
 The most straightforward solution. Since the message rate is high, the `socket.receive` operation returns the message almost immediately without blocking.
 
 ### 2) Evaluate the program entirely on the blocking context
-`blocker.blockOn(fs2.Stream.repeatEval(socket.receive).map(msg => handleMessage(msg).compile.drain)`
+`fs2.Stream.repeatEval(socket.receive).map(msg => handleMessage(msg).compile.drain).evalOn(blocker)`
 
-The great disadvantage of this solution is evaluation of the lightweight operations on a blocking context. 
+The great disadvantage of this approach is evaluation of the lightweight operations on a blocking context. 
 
 ### 3) Separate consuming operation from the processing
 `fs2.Stream.repeatEval(socket.receive)` can be evaluated on a blocking context in the background. 
 
 ```scala mdoc
-import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift}
+import cats.effect.syntax.async._
+import cats.effect.Async
+import cats.effect.std.Queue
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.socket.ConsumerSocket
 
-def consume[F[_]: Concurrent](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, String] = {
+import scala.concurrent.ExecutionContext
+
+def consume[F[_]: Async](blocker: ExecutionContext, socket: ConsumerSocket[F]): Stream[F, String] = {
   def process(queue: Queue[F, String]) =
-    blocker.blockOn(Stream.repeatEval(socket.receive[String]).through(queue.enqueue).compile.drain)
+    Stream.repeatEval(socket.receive[String]).evalMap(queue.offer).compile.drain
 
   for {
     queue  <- Stream.eval(Queue.unbounded[F, String])
-    _      <- Stream.resource(process(queue).background)
-    result <- queue.dequeue
+    _      <- Stream.resource(process(queue).backgroundOn(blocker))
+    result <- Stream.repeatEval(queue.take)
   } yield result
 }
 ```

@@ -8,8 +8,7 @@ The example shows how to create one publisher and three subscribers with differe
 First of all, let's introduce a `Producer` that sends messages with a specific topic:
 
 ```scala mdoc:silent
-import cats.FlatMap
-import cats.effect.Timer
+import cats.effect.Async
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
@@ -18,10 +17,10 @@ import io.fmq.socket.pubsub.Publisher
 
 import scala.concurrent.duration._
 
-class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Socket[F], topicA: String, topicB: String) {
+class Producer[F[_]: Async](publisher: Publisher.Socket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
-    Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
+    Stream.repeatEval(sendA >> sendB >> Async[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
     publisher.sendFrame(Frame.Multipart(topicA, "We don't want to see this"))
@@ -35,23 +34,25 @@ class Producer[F[_]: FlatMap: Timer](publisher: Publisher.Socket[F], topicA: Str
 Then let's implement a consumer logic: 
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, Concurrent, ContextShift}
-import cats.effect.syntax.concurrent._
+import cats.effect.Async
+import cats.effect.syntax.async._
+import cats.effect.std.Queue
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.frame.Frame
 import io.fmq.socket.pubsub.Subscriber
 
-class Consumer[F[_]: Concurrent](socket: Subscriber.Socket[F], blocker: Blocker) {
+import scala.concurrent.ExecutionContext
+
+class Consumer[F[_]: Async](socket: Subscriber.Socket[F], blocker: ExecutionContext) {
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
-      blocker.blockOn(Stream.repeatEval(socket.receiveFrame[String]).through(queue.enqueue).compile.drain)
+      Stream.repeatEval(socket.receiveFrame[String]).evalMap(queue.offer).compile.drain
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])
-      _      <- Stream.resource(process(queue).background)
-      result <- queue.dequeue
+      _      <- Stream.resource(process(queue).backgroundOn(blocker))
+      result <- Stream.repeatEval(queue.take)
     } yield result
   }
 
@@ -61,13 +62,15 @@ class Consumer[F[_]: Concurrent](socket: Subscriber.Socket[F], blocker: Blocker)
 And the demo program that evaluates producer and subscribers in parallel:
 
 ```scala mdoc:silent
-import cats.effect.{Concurrent, ContextShift, Resource, Sync}
+import cats.effect.{Resource, Sync}
 import fs2.Stream
 import io.fmq.Context
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.syntax.literals._
 
-class Demo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
+import scala.concurrent.ExecutionContext
+
+class Demo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
 
   private def log(message: String): F[Unit] = Sync[F].delay(println(message))
 
@@ -105,20 +108,28 @@ class Demo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
 }
 ```
 
-At the edge of out program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
+At the edge of our program we define our effect, `cats.effect.IO` in this case, and ask to evaluate the effects:
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
+import java.util.concurrent.Executors
+
+import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.functor._
 import io.fmq.Context
+
+import scala.concurrent.ExecutionContext
 
 object PubSub extends IOApp {
 
  override def run(args: List[String]): IO[ExitCode] =
-   Blocker[IO]
-     .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
+   blockingContext
+     .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
      .use { case (ctx, blocker) => new Demo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
 
+ private def blockingContext: Resource[IO, ExecutionContext] =
+   Resource
+     .make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+     .map(ExecutionContext.fromExecutor)
 }
 ```
 

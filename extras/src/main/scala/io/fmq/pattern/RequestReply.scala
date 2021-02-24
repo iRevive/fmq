@@ -2,7 +2,7 @@ package io.fmq.pattern
 
 import cats.effect.std.Queue
 import cats.effect.syntax.async._
-import cats.effect.{Async, Concurrent, Deferred, Resource}
+import cats.effect.{Async, Deferred, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.fmq.frame.{Frame, FrameDecoder, FrameEncoder}
@@ -10,7 +10,7 @@ import io.fmq.socket.reqrep.Request
 
 import scala.concurrent.ExecutionContext
 
-class RequestReply[F[_]: Concurrent] private (
+class RequestReply[F[_]: Async] private (
     socket: Request.Socket[F],
     requestQueue: Queue[F, F[Unit]]
 ) {
