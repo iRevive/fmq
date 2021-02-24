@@ -41,8 +41,8 @@ trait SocketBehavior {
 
       val resource =
         for {
-          producer <- Resource.liftF(socketResource.createProducer(ctx))
-          consumer <- Resource.liftF(socketResource.createConsumer(ctx))
+          producer <- Resource.eval(socketResource.createProducer(ctx))
+          consumer <- Resource.eval(socketResource.createConsumer(ctx))
           pair     <- socketResource.bind(producer, consumer, port)
         } yield pair
 
@@ -170,8 +170,8 @@ trait SocketBehavior {
     def withRandomPortPair[A](fa: SocketResource.Pair[IO] => IO[A]): A =
       withContext() { ctx: Context[IO] =>
         (for {
-          producer <- Resource.liftF(socketResource.createProducer(ctx))
-          consumer <- Resource.liftF(socketResource.createConsumer(ctx))
+          producer <- Resource.eval(socketResource.createProducer(ctx))
+          consumer <- Resource.eval(socketResource.createConsumer(ctx))
           pair     <- socketResource.bindToRandom(producer, consumer)
         } yield pair).use(fa)
       }

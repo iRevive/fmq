@@ -1,10 +1,10 @@
 package io.fmq.poll
 
 import cats.data.{Kleisli, NonEmptyList}
+import cats.effect.std.Queue
 import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.apply._
-import fs2.concurrent.Queue
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.syntax.literals._
@@ -83,7 +83,7 @@ class PollerSpec extends IOSpec {
         } yield (publisher, consumerA, consumerB, poller)
 
       def handler(queue: Queue[IO, String]): ConsumerHandler[IO] =
-        Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
+        Kleisli(socket => socket.receive[String] >>= queue.offer)
 
       def program(
           producer: ProducerSocket[IO],
@@ -100,19 +100,19 @@ class PollerSpec extends IOSpec {
             PollEntry.Read(consumerB, handler(queueB))
           )
           _                  <- poller.poll(items, PollTimeout.Fixed(200.millis))
-          (queueA1, queueB1) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
+          (queueA1, queueB1) <- (queueA.tryTake, queueB.tryTake).tupled
           _                  <- producer.send("Topic-A")
           _                  <- poller.poll(items, PollTimeout.Infinity)
-          (queueA2, queueB2) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
+          (queueA2, queueB2) <- (queueA.tryTake, queueB.tryTake).tupled
           _                  <- producer.send("Topic-B")
           _                  <- IO.sleep(100.millis)
           _                  <- poller.poll(items, PollTimeout.Infinity)
-          (queueA3, queueB3) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
+          (queueA3, queueB3) <- (queueA.tryTake, queueB.tryTake).tupled
           _                  <- producer.send("Topic-A")
           _                  <- producer.send("Topic-B")
           _                  <- IO.sleep(100.millis)
           _                  <- poller.poll(items, PollTimeout.Infinity)
-          (queueA4, queueB4) <- (queueA.tryDequeue1, queueB.tryDequeue1).tupled
+          (queueA4, queueB4) <- (queueA.tryTake, queueB.tryTake).tupled
         } yield {
           queueA1 shouldBe empty
           queueB1 shouldBe empty
@@ -144,7 +144,7 @@ class PollerSpec extends IOSpec {
         } yield (publisher, consumerA, consumerB, poller)
 
       def consumerHandler(queue: Queue[IO, String]): ConsumerHandler[IO] =
-        Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
+        Kleisli(socket => socket.receive[String] >>= queue.offer)
 
       def producerHandler: ProducerHandler[IO] =
         Kleisli(socket => socket.send("Topic-A") >> socket.send("Topic-B"))
@@ -157,8 +157,8 @@ class PollerSpec extends IOSpec {
       ): IO[Assertion] = {
         val setup: Resource[IO, (Queue[IO, String], Queue[IO, String])] =
           for {
-            queueA <- Resource.liftF(Queue.unbounded[IO, String])
-            queueB <- Resource.liftF(Queue.unbounded[IO, String])
+            queueA <- Resource.eval(Queue.unbounded[IO, String])
+            queueB <- Resource.eval(Queue.unbounded[IO, String])
             items = NonEmptyList.of(
               PollEntry.Write(producer, producerHandler),
               PollEntry.Read(consumerA, consumerHandler(queueA)),
@@ -172,10 +172,10 @@ class PollerSpec extends IOSpec {
 
           for {
             _  <- IO.sleep(200.millis)
-            a1 <- queueA.dequeue1
-            a2 <- queueA.dequeue1
-            b1 <- queueB.dequeue1
-            b2 <- queueB.dequeue1
+            a1 <- queueA.take
+            a2 <- queueA.take
+            b1 <- queueB.take
+            b2 <- queueB.take
           } yield {
             List(a1, a2) shouldBe List("Topic-A", "Topic-A")
             List(b1, b2) shouldBe List("Topic-B", "Topic-B")

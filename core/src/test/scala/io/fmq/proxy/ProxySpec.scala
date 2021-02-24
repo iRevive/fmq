@@ -1,5 +1,7 @@
 package io.fmq.proxy
 
+import java.util.concurrent.Executors
+
 import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.address.Uri
@@ -12,6 +14,7 @@ import io.fmq.syntax.literals._
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
@@ -19,6 +22,8 @@ import scala.concurrent.duration._
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class ProxySpec extends IOSpec {
+
+  private val singleThreadContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
   "Proxy" should {
 
@@ -53,7 +58,7 @@ class ProxySpec extends IOSpec {
       (for {
         (front, back)    <- createProxySockets
         proxy            <- ctx.proxy.bidirectional(front, back)
-        _                <- proxy.start
+        _                <- proxy.start(singleThreadContext)
         (client, server) <- createReqRepSockets
       } yield (client, server)).use((program _).tupled)
     }
@@ -85,7 +90,7 @@ class ProxySpec extends IOSpec {
         push            <- Resource.suspend(ctx.createPush.map(_.connect(controlUri)))
         control         <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(control))
-        _               <- proxy.start
+        _               <- proxy.start(singleThreadContext)
       } yield (publisher, subscriber, pull)).use((program _).tupled)
     }
 
@@ -137,7 +142,7 @@ class ProxySpec extends IOSpec {
         (pull, push)     <- createControlSockets
         control          <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy            <- ctx.proxy.bidirectional(front, back, Some(control), Some(control))
-        _                <- proxy.start
+        _                <- proxy.start(singleThreadContext)
         (client, server) <- createReqRepSockets
       } yield (client, server, pull)).use((program _).tupled)
     }
@@ -198,12 +203,12 @@ class ProxySpec extends IOSpec {
         controlIn          <- Resource.pure[IO, Control[IO]](Control.push(pushIn))
         controlOut         <- Resource.pure[IO, Control[IO]](Control.push(pushOut))
         proxy              <- ctx.proxy.bidirectional(front, back, Some(controlIn), Some(controlOut))
-        _                  <- proxy.start
+        _                  <- proxy.start(singleThreadContext)
         (client, server)   <- createReqRepSockets
       } yield (client, server, pullIn, pullOut)).use((program _).tupled)
     }
 
-    /* "start new proxy after termination" in withContext() { ctx: Context[IO] =>
+    "start new proxy after termination" in withContext() { ctx: Context[IO] =>
       val frontendUri = inproc"://frontend"
       val backendUri  = inproc"://backend"
 
@@ -234,15 +239,14 @@ class ProxySpec extends IOSpec {
             }
         }
 
-      def program(proxy: Proxy.Configured[IO], blocker: Blocker): IO[Assertion] =
-        proxy.start(blocker).use(_ => verifyProxy) >> proxy.start(blocker).use(_ => verifyProxy)
+      def program(proxy: Proxy.Configured[IO]): IO[Assertion] =
+        proxy.start(singleThreadContext).use(_ => verifyProxy) >> proxy.start(singleThreadContext).use(_ => verifyProxy)
 
       (for {
         (front, back) <- createProxySockets
-        blocker       <- Blocker[IO]
         proxy         <- ctx.proxy.bidirectional(front, back)
-      } yield (proxy, blocker)).use((program _).tupled)
-    }*/
+      } yield proxy).use(program)
+    }
 
   }
 

@@ -1,7 +1,6 @@
 package io.fmq
 
-import cats.effect.kernel.Async
-import cats.effect.{Resource, Sync}
+import cats.effect.{Resource, Async}
 import io.fmq.poll.Poller
 import io.fmq.proxy.Proxy
 import io.fmq.socket.pipeline.{Pull, Push}
@@ -46,15 +45,15 @@ final class Context[F[_]: Async] private(private[fmq] val ctx: ZContext) {
 
   def createPoller: Resource[F, Poller[F]] =
     for {
-      selector <- Resource.fromAutoCloseable(Sync[F].delay(ctx.getContext.selector()))
+      selector <- Resource.fromAutoCloseable(Async[F].delay(ctx.getContext.selector()))
     } yield Poller.fromSelector[F](selector)
 
   val proxy: Proxy[F] = new Proxy[F](this)
 
-  def isClosed: F[Boolean] = Sync[F].delay(ctx.isClosed)
+  def isClosed: F[Boolean] = Async[F].delay(ctx.isClosed)
 
   private def createSocket[A](tpe: SocketType)(fa: ZMQ.Socket => A): F[A] =
-    Sync[F].delay(fa(ctx.createSocket(tpe)))
+    Async[F].delay(fa(ctx.createSocket(tpe)))
 
 }
 

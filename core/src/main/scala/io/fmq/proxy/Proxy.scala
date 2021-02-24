@@ -3,13 +3,15 @@ package proxy
 
 import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.kernel.{Async, Outcome}
-import cats.effect.syntax.spawn._
+import cats.effect.syntax.async._
 import cats.effect.{Resource, Sync}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout, Poller}
 import io.fmq.socket.{BidirectionalSocket, ConsumerSocket, ProducerSocket}
+
+import scala.concurrent.ExecutionContext
 
 @SuppressWarnings(Array("org.wartremover.warts.Overloading"))
 final class Proxy[F[_]: Async](ctx: Context[F]) {
@@ -84,8 +86,8 @@ object Proxy {
       items: NonEmptyList[PollEntry[F]]
   ) {
 
-    def start: Resource[F, F[Outcome[F, Throwable, Unit]]] =
-      poller.poll(items, PollTimeout.Infinity).foreverM[Unit].background
+    def start(ec: ExecutionContext): Resource[F, F[Outcome[F, Throwable, Unit]]] =
+      poller.poll(items, PollTimeout.Infinity).foreverM[Unit].backgroundOn(ec)
 
   }
 

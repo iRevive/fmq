@@ -1,12 +1,14 @@
 package io.fmq.examples.poller
 
-import cats.FlatMap
+import java.util.concurrent.Executors
+
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
+import cats.effect.std.Queue
+import cats.effect.syntax.async._
+import cats.effect._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.Context
 import io.fmq.frame.Frame
 import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout}
@@ -14,20 +16,26 @@ import io.fmq.socket.ProducerSocket
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.syntax.literals._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 object PollerApp extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO]
-      .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
+    blockingContext
+      .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
       .use { case (ctx, blocker) => new PollerDemo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+
+  private def blockingContext: Resource[IO, ExecutionContext] =
+    Resource
+      .make(IO.delay(Executors.newSingleThreadExecutor()))(e => IO.delay(e.shutdown()))
+      .map(ExecutionContext.fromExecutor)
 
 }
 
-class PollerDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
+class PollerDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
 
-  private def log(message: String): F[Unit] = Sync[F].delay(println(message))
+  private def log(message: String): F[Unit] = Async[F].delay(println(message))
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
@@ -51,7 +59,7 @@ class PollerDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker)
           val producer = new Producer[F](publisher, topicA, topicB)
 
           def handler(queue: Queue[F, String]): ConsumerHandler[F] =
-            Kleisli(socket => socket.receive[String] >>= queue.enqueue1)
+            Kleisli(socket => socket.receive[String] >>= queue.offer)
 
           // evaluates poll on a blocking context
           def poll(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] = {
@@ -61,7 +69,7 @@ class PollerDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker)
               PollEntry.Read(subscriberAll, handler(queueAll))
             )
 
-            blocker.blockOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit])
+            poller.poll(items, PollTimeout.Infinity).foreverM[Unit].evalOn(blocker)
           }
 
           for {
@@ -71,19 +79,19 @@ class PollerDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker)
             _ <- Stream(
               producer.generate,
               Stream.eval(poll(queueA, queueB, queueAll)),
-              queueA.dequeue.evalMap(frame => log(s"ConsumerA. Received $frame")),
-              queueB.dequeue.evalMap(frame => log(s"ConsumerB. Received $frame")),
-              queueAll.dequeue.evalMap(frame => log(s"ConsumerAll. Received $frame"))
+              Stream.repeatEval(queueA.take).evalMap(frame => log(s"ConsumerA. Received $frame")),
+              Stream.repeatEval(queueB.take).evalMap(frame => log(s"ConsumerB. Received $frame")),
+              Stream.repeatEval(queueAll.take).evalMap(frame => log(s"ConsumerAll. Received $frame"))
             ).parJoinUnbounded
           } yield ()
       }
 
 }
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
+class Producer[F[_]: Async](publisher: ProducerSocket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
-    Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
+    Stream.repeatEval(sendA >> sendB >> Async[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
     publisher.sendMultipart(Frame.Multipart(topicA, "We don't want to see this"))

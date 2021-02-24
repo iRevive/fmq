@@ -32,7 +32,7 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * The data is either a single-part message by itself, or the last part of a multi-part message.
     */
   def send[A: FrameEncoder](value: A): F[Unit] =
-    F.delay(socket.send(FrameEncoder[A].encode(value))).void
+    F.blocking(socket.send(FrameEncoder[A].encode(value))).void
 
   /**
     * Low-level API.
@@ -40,7 +40,7 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * Queues a multi-part message to be sent.
     */
   def sendMore[A: FrameEncoder](value: A): F[Unit] =
-    F.delay(socket.sendMore(FrameEncoder[A].encode(value))).void
+    F.blocking(socket.sendMore(FrameEncoder[A].encode(value))).void
 
 }
 

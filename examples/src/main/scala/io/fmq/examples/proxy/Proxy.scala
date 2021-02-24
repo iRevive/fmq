@@ -1,11 +1,13 @@
 package io.fmq.examples.proxy
 
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
-import cats.effect.syntax.concurrent._
+import java.util.concurrent.Executors
+
+import cats.effect.std.Queue
+import cats.effect.syntax.async._
+import cats.effect._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.Context
 import io.fmq.frame.Frame
 import io.fmq.options.Identity
@@ -15,18 +17,24 @@ import io.fmq.socket.pipeline.{Pull, Push}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import io.fmq.syntax.literals._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 object ProxyApp extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO]
-      .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
+   blockingContext
+      .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
       .use { case (ctx, blocker) => new ProxyDemo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+
+  private def blockingContext: Resource[IO, ExecutionContext] =
+    Resource
+      .make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+      .map(ExecutionContext.fromExecutor)
 
 }
 
-class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) {
+class ProxyDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
 
   private val frontendUri = inproc"://frontend"
   private val backendUri  = inproc"://backend"
@@ -37,7 +45,7 @@ class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) 
   val program: Stream[F, Unit] =
     for {
       (proxy, observer, client, server) <- Stream.resource(appResource)
-      _                                 <- Stream.resource(proxy.start)
+      _                                 <- Stream.resource(proxy.start(blocker))
       _                                 <- Stream(server.serve, client.start, observer.start).parJoinUnbounded
     } yield ()
 
@@ -72,16 +80,16 @@ class ProxyDemo[F[_]: Concurrent: Timer](context: Context[F], blocker: Blocker) 
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
+class Server[F[_]: Async](socket: Reply.Socket[F], blocker: ExecutionContext) {
 
   def serve: Stream[F, Unit] = {
     def process(queue: Queue[F, Frame[String]]) =
-      blocker.blockOn(Stream.repeatEval(socket.receiveFrame[String]).through(queue.enqueue).compile.drain)
+      Stream.repeatEval(socket.receiveFrame[String]).evalMap(queue.offer).compile.drain
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])
-      _      <- Stream.resource(process(queue).background)
-      result <- queue.dequeue.evalMap(processRequest)
+      _      <- Stream.resource(process(queue).backgroundOn(blocker))
+      result <- Stream.repeatEval(queue.take).evalMap(processRequest)
     } yield result
   }
 
@@ -95,12 +103,12 @@ class Server[F[_]: Concurrent](socket: Reply.Socket[F], blocker: Blocker) {
   }
 
   private def log(message: => String): F[Unit] =
-    Concurrent[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
+class Client[F[_]: Async](dispatcher: RequestReply[F]) {
 
   def start: Stream[F, Unit] =
     Stream
@@ -113,12 +121,12 @@ class Client[F[_]: Sync: Timer](dispatcher: RequestReply[F]) {
       .evalMap(response => log(s"Client. Received response $response"))
 
   private def log(message: => String): F[Unit] =
-    Sync[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
+class MessageObserver[F[_]: Async](pull: Pull.Socket[F]) {
 
   def start: Stream[F, Unit] =
     Stream
@@ -127,6 +135,6 @@ class MessageObserver[F[_]: Sync: Timer](pull: Pull.Socket[F]) {
       .drain
 
   private def log(message: => String): F[Unit] =
-    Sync[F].delay(println(message))
+    Async[F].delay(println(message))
 
 }

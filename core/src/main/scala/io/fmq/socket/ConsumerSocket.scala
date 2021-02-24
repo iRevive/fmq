@@ -36,7 +36,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * import cats.effect.syntax.concurrent._
     * import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
     * import fs2.Stream
-    * import fs2.concurrent.Queue
+    * import cats.effect.std.Queue
     * import io.fmq.socket.ConsumerSocket
     *
     * def consume[F[_]: Concurrent](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
@@ -57,7 +57,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =
-    F.delay(FrameDecoder[A].decode(socket.recv()))
+    F.blocking(FrameDecoder[A].decode(socket.recv()))
 
   /**
     * Low-level API.

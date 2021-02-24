@@ -1,13 +1,14 @@
 package io.fmq.pattern
 
-import cats.effect.concurrent.Deferred
-import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+import cats.effect.std.Queue
+import cats.effect.syntax.async._
+import cats.effect.{Async, Concurrent, Deferred, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import fs2.concurrent.Queue
 import io.fmq.frame.{Frame, FrameDecoder, FrameEncoder}
 import io.fmq.socket.reqrep.Request
+
+import scala.concurrent.ExecutionContext
 
 class RequestReply[F[_]: Concurrent] private (
     socket: Request.Socket[F],
@@ -25,7 +26,7 @@ class RequestReply[F[_]: Concurrent] private (
 
     for {
       promise <- Deferred[F, Frame[Rep]]
-      _       <- requestQueue.enqueue1(background(promise))
+      _       <- requestQueue.offer(background(promise))
       result  <- promise.get
     } yield result
   }
@@ -34,14 +35,14 @@ class RequestReply[F[_]: Concurrent] private (
 
 object RequestReply {
 
-  def create[F[_]: Concurrent](
-      blocker: Blocker,
+  def create[F[_]: Async](
+      blocker: ExecutionContext,
       socket: Request.Socket[F],
       queueSize: Int
   ): Resource[F, RequestReply[F]] =
     for {
-      queue <- Resource.liftF(Queue.bounded[F, F[Unit]](queueSize))
-      _     <- blocker.blockOn(queue.dequeue.evalMap(identity).compile.drain).background
+      queue <- Resource.eval(Queue.bounded[F, F[Unit]](queueSize))
+      _     <- fs2.Stream.repeatEval(queue.take).evalMap(identity).compile.drain.backgroundOn(blocker)
     } yield new RequestReply[F](socket, queue)
 
 }

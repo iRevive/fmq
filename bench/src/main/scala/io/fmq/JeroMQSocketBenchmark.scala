@@ -3,13 +3,12 @@ package io.fmq
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 
-import cats.effect.{ContextShift, Fiber, IO}
+import cats.effect.unsafe.IORuntime
+import cats.effect.{Fiber, IO}
 import io.fmq.JeroMQSocketBenchmark.MessagesCounter
 import org.openjdk.jmh.annotations._
 import org.zeromq.{SocketType, ZContext}
 import zmq.ZMQ
-
-import scala.concurrent.ExecutionContext
 
 //jmh:run io.fmq.JeroMQSocketBenchmark
 @BenchmarkMode(Array(Mode.Throughput))
@@ -21,15 +20,15 @@ import scala.concurrent.ExecutionContext
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class JeroMQSocketBenchmark {
 
-  private implicit val contextShift[IO] = IO.contextShift(ExecutionContext.global)
+  private implicit val runtime: IORuntime = IORuntime.global
 
   @Param(Array("128", "256", "512", "1024"))
   var messageSize: Int = _
 
   private val recording = new AtomicBoolean
 
-  private var publisher: Fiber[IO, Unit] = _
-  private var consumer: Fiber[IO, Unit]  = _
+  private var publisher: Fiber[IO, Throwable, Unit] = _
+  private var consumer: Fiber[IO, Throwable, Unit]  = _
 
   @Setup(Level.Iteration)
   def setup(): Unit = {

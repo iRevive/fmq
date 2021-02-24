@@ -9,6 +9,7 @@ lazy val core = project
   .in(file("core"))
   .settings(commonSettings)
   .settings(commandSettings)
+  .settings(pluginAbsolutePathSettings)
   .settings(
     name                 := "fmq-core",
     libraryDependencies ++= Dependencies.core(scalaVersion.value)
@@ -96,6 +97,21 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false,
   publish / skip  := true
 )
+
+// See https://github.com/sbt/sbt/issues/6027
+lazy val pluginAbsolutePathSettings = Seq(Compile, Test).map { c =>
+  c / scalacOptions := {
+    val prefix = "-Xplugin:"
+    (c / scalacOptions).value.map { opt =>
+      if (opt.startsWith(prefix)) {
+        val originalPluginFile = file(opt.drop(prefix.length))
+        prefix + originalPluginFile.toPath.toAbsolutePath
+      } else {
+        opt
+      }
+    }
+  }
+}
 
 inThisBuild(
   Seq(

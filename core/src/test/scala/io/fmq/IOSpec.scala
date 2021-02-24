@@ -14,7 +14,7 @@ trait IOSpec extends AnyWordSpecLike with Matchers {
 
   @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   protected def withContext[A](
-      timeout: FiniteDuration = 3.seconds
+      timeout: FiniteDuration = 30.seconds
   )(fa: Context[IO] => IO[A]): A =
     Context.create[IO](1)
       .use(fa)

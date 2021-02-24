@@ -1,14 +1,17 @@
 package io.fmq.pattern
 
-import cats.effect.{Blocker, IO, Resource}
-import io.fmq.{Context, IOSpec}
+import java.util.concurrent.Executors
+
+import cats.effect.{IO, Resource}
 import io.fmq.frame.Frame
-import io.fmq.socket.{ConsumerSocket, ProducerSocket}
-import io.fmq.socket.pubsub.Subscriber
 import io.fmq.pattern.BackgroundConsumerSpec.Pair
+import io.fmq.socket.pubsub.Subscriber
+import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.syntax.literals._
+import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class BackgroundConsumerSpec extends IOSpec {
@@ -18,7 +21,7 @@ class BackgroundConsumerSpec extends IOSpec {
     "consume messages" in withSockets { pair =>
       val Pair(publisher, subscriber) = pair
 
-      def program(blocker: Blocker): IO[Assertion] =
+      def program(blocker: ExecutionContext): IO[Assertion] =
         for {
           _        <- IO.sleep(200.millis)
           _        <- publisher.send("hello")
@@ -26,7 +29,10 @@ class BackgroundConsumerSpec extends IOSpec {
           messages <- BackgroundConsumer.consume[IO, String](blocker, subscriber, 128).take(2).compile.toList
         } yield messages shouldBe List(Frame.Single("hello"), Frame.Single("world"))
 
-      Blocker[IO].use(program)
+      Resource
+        .make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+        .map(ExecutionContext.fromExecutor)
+        .use(program)
     }
 
   }
