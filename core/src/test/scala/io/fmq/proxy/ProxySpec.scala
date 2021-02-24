@@ -225,18 +225,17 @@ class ProxySpec extends IOSpec {
         } yield (request, reply)
 
       def verifyProxy: IO[Assertion] =
-        createReqRepSockets.use {
-          case (client, server) =>
-            for {
-              _   <- IO.sleep(500.millis)
-              _   <- client.send("hello")
-              req <- server.receive[String]
-              _   <- server.send("reply")
-              rep <- client.receive[String]
-            } yield {
-              req shouldBe "hello"
-              rep shouldBe "reply"
-            }
+        createReqRepSockets.use { case (client, server) =>
+          for {
+            _   <- IO.sleep(500.millis)
+            _   <- client.send("hello")
+            req <- server.receive[String]
+            _   <- server.send("reply")
+            rep <- client.receive[String]
+          } yield {
+            req shouldBe "hello"
+            rep shouldBe "reply"
+          }
         }
 
       def program(proxy: Proxy.Configured[IO]): IO[Assertion] =

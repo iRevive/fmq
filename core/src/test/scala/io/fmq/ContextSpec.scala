@@ -11,7 +11,8 @@ class ContextSpec extends IOSpec {
   "Context" should {
 
     "release allocated context" in {
-      val (isClosed, ctx) = Context.create[IO](1)
+      val (isClosed, ctx) = Context
+        .create[IO](1)
         .use(ctx => ctx.isClosed.tupleRight(ctx))
         .unsafeRunTimed(3.seconds)
         .value

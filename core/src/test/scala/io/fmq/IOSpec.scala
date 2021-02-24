@@ -16,7 +16,8 @@ trait IOSpec extends AnyWordSpecLike with Matchers {
   protected def withContext[A](
       timeout: FiniteDuration = 30.seconds
   )(fa: Context[IO] => IO[A]): A =
-    Context.create[IO](1)
+    Context
+      .create[IO](1)
       .use(fa)
       .unsafeRunTimed(timeout)
       .value

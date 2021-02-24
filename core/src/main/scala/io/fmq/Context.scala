@@ -1,6 +1,6 @@
 package io.fmq
 
-import cats.effect.{Resource, Async}
+import cats.effect.{Async, Resource}
 import io.fmq.poll.Poller
 import io.fmq.proxy.Proxy
 import io.fmq.socket.pipeline.{Pull, Push}
@@ -8,7 +8,7 @@ import io.fmq.socket.pubsub.{Publisher, Subscriber, XPublisher, XSubscriber}
 import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import org.zeromq.{SocketType, ZContext, ZMQ}
 
-final class Context[F[_]: Async] private(private[fmq] val ctx: ZContext) {
+final class Context[F[_]: Async] private (private[fmq] val ctx: ZContext) {
 
   def createSubscriber(topic: Subscriber.Topic): F[Subscriber[F]] =
     createSocket(SocketType.SUB) { socket =>

@@ -81,7 +81,7 @@ final class Proxy[F[_]: Async](ctx: Context[F]) {
 
 object Proxy {
 
-  final class Configured[F[_]: Async] private[Proxy](
+  final class Configured[F[_]: Async] private[Proxy] (
       poller: Poller[F],
       items: NonEmptyList[PollEntry[F]]
   ) {
