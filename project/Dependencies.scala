@@ -6,7 +6,7 @@ object Versions {
   val catsEffect       = "3.0.0-RC2"
   val fs2              = "3.0.0-M9"
   val jeromq           = "0.5.2"
-  val scalatest        = "3.2.2"
+  val scalatest        = "3.2.3"
   val betterMonadicFor = "0.3.1"
 }
 
