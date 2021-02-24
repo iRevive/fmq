@@ -15,7 +15,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     */
   def receiveFrame[A: FrameDecoder]: F[Frame[A]] = {
 
-    @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
+    @SuppressWarnings(Array("org.wartremover.warts.Recursion", "org.wartremover.warts.ListAppend"))
     def loop(out: List[A]): F[List[A]] =
       hasReceiveMore.ifM(receive[A].flatMap(message => loop(out :+ message)), F.pure(out))
 
