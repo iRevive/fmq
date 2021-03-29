@@ -113,18 +113,18 @@ At the edge of our program we define our effect, `cats.effect.IO` in this case, 
 ```scala mdoc:silent
 import java.util.concurrent.Executors
 
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{IO, IOApp}
 import cats.syntax.functor._
 import io.fmq.Context
 
 import scala.concurrent.ExecutionContext
 
-object PubSub extends IOApp {
+object PubSub extends IOApp.Simple {
 
- override def run(args: List[String]): IO[ExitCode] =
+ override def run: IO[Unit] =
    blockingContext
      .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
-     .use { case (ctx, blocker) => new Demo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+     .use { case (ctx, blocker) => new Demo[IO](ctx, blocker).program.compile.drain }
 
  private def blockingContext: Resource[IO, ExecutionContext] =
    Resource

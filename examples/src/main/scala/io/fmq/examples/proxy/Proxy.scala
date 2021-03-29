@@ -20,12 +20,12 @@ import io.fmq.syntax.literals._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-object ProxyApp extends IOApp {
+object ProxyApp extends IOApp.Simple {
 
-  override def run(args: List[String]): IO[ExitCode] =
+  override def run: IO[Unit] =
    blockingContext
       .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
-      .use { case (ctx, blocker) => new ProxyDemo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+      .use { case (ctx, blocker) => new ProxyDemo[IO](ctx, blocker).program.compile.drain }
 
   private def blockingContext: Resource[IO, ExecutionContext] =
     Resource
