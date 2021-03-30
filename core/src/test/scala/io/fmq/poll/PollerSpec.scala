@@ -157,8 +157,8 @@ class PollerSpec extends IOSpec {
       ): IO[Assertion] = {
         val setup: Resource[IO, (Queue[IO, String], Queue[IO, String])] =
           for {
-            queueA <- Resource.liftF(Queue.unbounded[IO, String])
-            queueB <- Resource.liftF(Queue.unbounded[IO, String])
+            queueA <- Resource.eval(Queue.unbounded[IO, String])
+            queueB <- Resource.eval(Queue.unbounded[IO, String])
             items = NonEmptyList.of(
               PollEntry.Write(producer, producerHandler),
               PollEntry.Read(consumerA, consumerHandler(queueA)),

@@ -82,10 +82,10 @@ class RouterSpec extends IOSpec with SocketBehavior {
       val uri = tcp_i"://localhost"
 
       (for {
-        router <- Resource.liftF(ctx.createRouter)
-        dealer <- Resource.liftF(ctx.createDealer)
-        _      <- Resource.liftF(router.setMandatory(RouterMandatory.NonMandatory))
-        _      <- Resource.liftF(dealer.setIdentity(identity))
+        router <- Resource.eval(ctx.createRouter)
+        dealer <- Resource.eval(ctx.createDealer)
+        _      <- Resource.eval(router.setMandatory(RouterMandatory.NonMandatory))
+        _      <- Resource.eval(dealer.setIdentity(identity))
         r      <- router.bindToRandomPort(uri)
         d      <- dealer.connect(r.uri)
       } yield Pair(r, d, ctx)).use(fa)
