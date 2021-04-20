@@ -40,7 +40,7 @@ object RequestReply {
       queueSize: Int
   ): Resource[F, RequestReply[F]] =
     for {
-      queue <- Resource.liftF(Queue.bounded[F, F[Unit]](queueSize))
+      queue <- Resource.eval(Queue.bounded[F, F[Unit]](queueSize))
       _     <- blocker.blockOn(queue.dequeue.evalMap(identity).compile.drain).background
     } yield new RequestReply[F](socket, queue)
 
