@@ -1,29 +1,20 @@
 package io.fmq.frame
 
 import cats.data.NonEmptyList
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import weaver.SimpleIOSuite
 
-class FrameSpec extends AnyWordSpecLike with Matchers {
+object FrameSpec extends SimpleIOSuite {
 
-  "Frame.Single" should {
+  pureTest("Frame.Single has 1 part") {
+    val frame = Frame.Single("Part 1")
 
-    "have 1 part" in {
-      val frame = Frame.Single("Part 1")
-
-      frame.parts shouldBe NonEmptyList.one("Part 1")
-    }
-
+    expect(frame.parts == NonEmptyList.one("Part 1"))
   }
 
-  "Frame.Multipart" should {
+  pureTest("Frame.Multipart has at least 2 parts") {
+    val frame = Frame.Multipart("Part 1", "Part 2", "Part 3")
 
-    "concat header and tail" in {
-      val frame = Frame.Multipart("Part 1", "Part 2", "Part 3")
-
-      frame.parts shouldBe NonEmptyList.of("Part 1", "Part 2", "Part 3")
-    }
-
+    expect(frame.parts == NonEmptyList.of("Part 1", "Part 2", "Part 3"))
   }
 
 }

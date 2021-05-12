@@ -2,12 +2,11 @@ package io.fmq.socket.reqrep
 
 import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
-import io.fmq.{Context, IOSpec}
 import io.fmq.frame.Frame
 import io.fmq.options.{Identity, RouterHandover, RouterMandatory}
 import io.fmq.socket.SocketBehavior
-import io.fmq.socket.reqrep.RouterSpec.Pair
 import io.fmq.syntax.literals._
+import io.fmq.{Context, IOSpec}
 
 import scala.concurrent.duration._
 
@@ -15,13 +14,10 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-class RouterSpec extends IOSpec with SocketBehavior {
+object RouterSpec extends IOSpec with SocketBehavior {
 
-  "Router" should {
-
-    "route messages by identity" in withSockets(Identity.utf8String("1")) { pair =>
-      val Pair(router, dealer, _) = pair
-
+  test("route messages by identity") { ctx =>
+    withSockets(ctx, Identity.utf8String("1")) { case Pair(router, dealer, _) =>
       for {
         _         <- IO.sleep(200.millis)
         _         <- dealer.identity
@@ -32,16 +28,14 @@ class RouterSpec extends IOSpec with SocketBehavior {
         response1 <- dealer.receiveFrame[String]
         _         <- IO.sleep(100.millis)
         response2 <- dealer.receiveNoWait[String]
-      } yield {
-        request shouldBe Frame.Multipart("1", "Hello")
-        response1 shouldBe Frame.Single("World-1")
-        response2 shouldBe empty
-      }
+      } yield expect(request == Frame.Multipart("1", "Hello")) and
+        expect(response1 == Frame.Single("World-1")) and
+        expect(response2.isEmpty)
     }
+  }
 
-    "Handover. disconnect socket with existing identity" in withSockets(Identity.utf8String("ID")) { pair =>
-      val Pair(router, dealer, context) = pair
-
+  test("Handover. disconnect socket with existing identity") { ctx =>
+    withSockets(ctx, Identity.utf8String("ID")) { case Pair(router, dealer, context) =>
       val dealer2Resource = context.createDealer
         .flatTap(_.setIdentity(Identity.utf8String("ID")))
         .map(_.connect(router.uri))
@@ -57,12 +51,10 @@ class RouterSpec extends IOSpec with SocketBehavior {
             _         <- IO.sleep(200.millis)
             response1 <- dealer.receiveNoWait[String]
             response2 <- dealer2.receiveFrame[String]
-          } yield {
-            message1 shouldBe Frame.Multipart("Hello", "World")
-            message2 shouldBe Frame.Multipart("ID", "Hello", "World")
-            response1 shouldBe empty
-            response2 shouldBe Frame.Single("Response")
-          }
+          } yield expect(message1 == Frame.Multipart("Hello", "World")) and
+            expect(message2 == Frame.Multipart("ID", "Hello", "World")) and
+            expect(response1.isEmpty) and
+            expect(response2 == Frame.Single("Response"))
         }
 
       for {
@@ -70,35 +62,27 @@ class RouterSpec extends IOSpec with SocketBehavior {
         _        <- IO.sleep(200.millis)
         _        <- dealer.sendFrame(Frame.Multipart("Hello", "World"))
         identity <- router.receive[String]
-        _        <- IO.delay(identity shouldBe "ID")
-        _        <- test
-      } yield ()
+        result   <- test
+      } yield expect(identity == "ID") and result
     }
-
   }
 
-  private def withSockets[A](identity: Identity)(fa: Pair[IO] => IO[A]): A =
-    withContext() { ctx: Context[IO] =>
-      val uri = tcp_i"://localhost"
+  private def withSockets[A](ctx: Context[IO], identity: Identity)(fa: Pair[IO] => IO[A]): IO[A] = {
+    val uri = tcp_i"://localhost"
 
-      (for {
-        router <- Resource.eval(ctx.createRouter)
-        dealer <- Resource.eval(ctx.createDealer)
-        _      <- Resource.eval(router.setMandatory(RouterMandatory.NonMandatory))
-        _      <- Resource.eval(dealer.setIdentity(identity))
-        r      <- router.bindToRandomPort(uri)
-        d      <- dealer.connect(r.uri)
-      } yield Pair(r, d, ctx)).use(fa)
-    }
+    (for {
+      router <- Resource.eval(ctx.createRouter)
+      dealer <- Resource.eval(ctx.createDealer)
+      _      <- Resource.eval(router.setMandatory(RouterMandatory.NonMandatory))
+      _      <- Resource.eval(dealer.setIdentity(identity))
+      r      <- router.bindToRandomPort(uri)
+      d      <- dealer.connect(r.uri)
+    } yield Pair(r, d, ctx)).use(fa)
+  }
 
-}
-
-object RouterSpec {
-
-  final case class Pair[F[_]](
+  private final case class Pair[F[_]](
       router: Router.Socket[F],
       dealer: Dealer.Socket[F],
       context: Context[F]
   )
-
 }

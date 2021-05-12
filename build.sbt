@@ -12,7 +12,8 @@ lazy val core = project
   .settings(pluginAbsolutePathSettings)
   .settings(
     name                 := "fmq-core",
-    libraryDependencies ++= Dependencies.core(scalaVersion.value)
+    libraryDependencies ++= Dependencies.core(scalaVersion.value),
+    testFrameworks       += new TestFramework("weaver.framework.CatsEffect")
   )
 
 lazy val extras = project
@@ -21,7 +22,8 @@ lazy val extras = project
   .settings(commandSettings)
   .settings(
     name                 := "fmq-extras",
-    libraryDependencies ++= Dependencies.extras
+    libraryDependencies ++= Dependencies.extras,
+    testFrameworks       += new TestFramework("weaver.framework.CatsEffect")
   )
   .dependsOn(core)
 
@@ -66,7 +68,6 @@ lazy val commonSettings = Seq(
   scalaVersion                           := Versions.scala_213,
   crossScalaVersions                     := Seq(scalaVersion.value),
   Test / fork                            := true,
-  Test / parallelExecution               := false,
   Compile / compile / wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing), // false positive
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")

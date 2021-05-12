@@ -2,25 +2,21 @@ package io.fmq
 
 import cats.effect.IO
 import cats.syntax.functor._
-import org.scalatest.OptionValues._
+import weaver.SimpleIOSuite
 
 import scala.concurrent.duration._
 
-class ContextSpec extends IOSpec {
+object ContextSpec extends SimpleIOSuite {
 
-  "Context" should {
+  test("release allocated context") {
+    val terminated = Context
+      .create[IO](1)
+      .use(ctx => ctx.isClosed.tupleRight(ctx))
 
-    "release allocated context" in {
-      val (isClosed, ctx) = Context
-        .create[IO](1)
-        .use(ctx => ctx.isClosed.tupleRight(ctx))
-        .unsafeRunTimed(3.seconds)
-        .value
-
-      isClosed shouldBe false
-      ctx.isClosed.unsafeRunSync() shouldBe true
-    }
-
+    for {
+      (isClosed, ctx) <- terminated.timeout(3.seconds)
+      isClosedNow     <- ctx.isClosed
+    } yield expect(!isClosed) and expect(isClosedNow)
   }
 
 }
