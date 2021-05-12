@@ -3,67 +3,52 @@ package io.fmq.pattern
 import java.util.concurrent.Executors
 
 import cats.effect.{IO, Resource}
+import io.fmq.Context
 import io.fmq.frame.Frame
-import io.fmq.pattern.RequestReplySpec.Pair
 import io.fmq.socket.reqrep.{Reply, Request}
 import io.fmq.syntax.literals._
-import io.fmq.{Context, IOSpec}
-import org.scalatest.Assertion
+import weaver.{Expectations, IOSuite}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class RequestReplySpec extends IOSpec {
+object RequestReplySpec extends IOSuite {
 
-  "RequestReply" should {
+  type Res = (Request.Socket[IO], Reply.Socket[IO])
 
-    "process requests one by one" in withSockets { pair =>
-      val Pair(request, reply) = pair
+  test("process requests one by one") { pair =>
+    val (request, reply) = pair
 
-      val server = reply
-        .receiveFrame[String]
-        .flatMap {
-          case Frame.Single(value)   => reply.sendFrame(Frame.Single(value.reverse))
-          case Frame.Multipart(_, _) => reply.sendFrame(Frame.Single("multipart-response"))
-        }
-        .foreverM
+    val server = reply
+      .receiveFrame[String]
+      .flatMap {
+        case Frame.Single(value)   => reply.sendFrame(Frame.Single(value.reverse))
+        case Frame.Multipart(_, _) => reply.sendFrame(Frame.Single("multipart-response"))
+      }
+      .foreverM
 
-      def program(dispatcher: RequestReply[IO]): IO[Assertion] =
-        for {
-          _         <- IO.sleep(200.millis)
-          response1 <- dispatcher.submit[String, String](Frame.Single("hello"))
-          response2 <- dispatcher.submit[String, String](Frame.Multipart("hello", "world"))
-        } yield {
-          response1 shouldBe Frame.Single("olleh")
-          response2 shouldBe Frame.Single("multipart-response")
-        }
+    def program(dispatcher: RequestReply[IO]): IO[Expectations] =
+      for {
+        _         <- IO.sleep(200.millis)
+        response1 <- dispatcher.submit[String, String](Frame.Single("hello"))
+        response2 <- dispatcher.submit[String, String](Frame.Multipart("hello", "world"))
+      } yield expect(response1 == Frame.Single("olleh")) and expect(response2 == Frame.Single("multipart-response"))
 
-      (for {
-        _          <- server.background
-        ec         <- Resource.make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
-        dispatcher <- RequestReply.create[IO](ExecutionContext.fromExecutor(ec), request, 10)
-      } yield dispatcher).use(program)
-    }
-
+    (for {
+      _          <- server.background
+      ec         <- Resource.make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+      dispatcher <- RequestReply.create[IO](ExecutionContext.fromExecutor(ec), request, 10)
+    } yield dispatcher).use(program)
   }
 
-  private def withSockets[A](fa: Pair[IO] => IO[A]): A =
-    withContext() { ctx: Context[IO] =>
-      val uri = tcp"://localhost:53123"
+  override def sharedResource: Resource[IO, Res] = {
+    val uri = tcp"://localhost:53123"
 
-      (for {
-        reply   <- Resource.suspend(ctx.createReply.map(_.bind(uri)))
-        request <- Resource.suspend(ctx.createRequest.map(_.connect(reply.uri)))
-      } yield Pair(request, reply)).use(fa)
-    }
-
-}
-
-object RequestReplySpec {
-
-  final case class Pair[F[_]](
-      request: Request.Socket[F],
-      reply: Reply.Socket[F]
-  )
+    for {
+      ctx     <- Context.create[IO](1)
+      reply   <- Resource.suspend(ctx.createReply.map(_.bind(uri)))
+      request <- Resource.suspend(ctx.createRequest.map(_.connect(reply.uri)))
+    } yield (request, reply)
+  }
 
 }

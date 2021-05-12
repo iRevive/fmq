@@ -1,31 +1,34 @@
 import sbt._
 
 object Versions {
-  val scala_213        = "2.13.5"
-  val catsEffect       = "3.1.0"
-  val fs2              = "3.0.2"
-  val jeromq           = "0.5.2"
-  val scalatest        = "3.2.8"
-  val betterMonadicFor = "0.3.1"
+  val scala_213  = "2.13.5"
+  val catsEffect = "3.1.0"
+  val fs2        = "3.0.2"
+  val jeromq     = "0.5.2"
+  val weaver     = "0.7.2"
+  val bm4        = "0.3.1"
 }
 
 object Dependencies {
 
-  val fs2 = "co.fs2" %% "fs2-io" % Versions.fs2
+  val catsEffect = "org.typelevel"       %% "cats-effect-std"    % Versions.catsEffect
+  val fs2        = "co.fs2"              %% "fs2-io"             % Versions.fs2
+  val jeromq     = "org.zeromq"           % "jeromq"             % Versions.jeromq
+  val weaver     = "com.disneystreaming" %% "weaver-cats"        % Versions.weaver
+  val bm4        = "com.olegpy"          %% "better-monadic-for" % Versions.bm4
+
+  def scalaReflect(version: String): ModuleID = "org.scala-lang" % "scala-reflect" % version
 
   def core(scalaVersion: String): Seq[ModuleID] =
     Seq(
-      "org.typelevel" %% "cats-effect-std" % Versions.catsEffect,
-      "org.zeromq"     % "jeromq"          % Versions.jeromq,
-      "org.scala-lang" % "scala-reflect"   % scalaVersion       % Provided,
-      "org.scalatest" %% "scalatest"       % Versions.scalatest % Test,
-      "co.fs2"        %% "fs2-io"          % Versions.fs2       % Test,
-      compilerPlugin("com.olegpy" %% "better-monadic-for" % Versions.betterMonadicFor)
+      catsEffect,
+      jeromq,
+      scalaReflect(scalaVersion) % Provided,
+      fs2                        % Test,
+      weaver                     % Test,
+      compilerPlugin(bm4)
     )
 
-  val extras: Seq[ModuleID] = Seq(
-    "co.fs2"        %% "fs2-io"    % Versions.fs2,
-    "org.scalatest" %% "scalatest" % Versions.scalatest % Test
-  )
+  val extras: Seq[ModuleID] = Seq(fs2, weaver % Test)
 
 }

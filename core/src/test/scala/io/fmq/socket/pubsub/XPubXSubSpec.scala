@@ -6,7 +6,7 @@ import cats.effect.{IO, Resource}
 import cats.syntax.traverse._
 import io.fmq.frame.Frame
 import io.fmq.syntax.literals._
-import org.scalatest.Assertion
+import weaver.Expectations
 
 import scala.concurrent.duration._
 
@@ -14,13 +14,10 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-class XPubXSubSpec extends IOSpec with SocketBehavior {
+object XPubXSubSpec extends IOSpec with SocketBehavior {
 
-  "XPubXSub" should {
-
-    "topic pub sub" in withSockets { pair =>
-      val XPubXSubSpec.Pair(pub, sub) = pair
-
+  test("topic pub sub") { ctx =>
+    withSockets(ctx) { case Pair(pub, sub) =>
       for {
         _      <- IO.sleep(200.millis)
         _      <- sub.sendSubscribe(Subscriber.Topic.utf8String("A"))
@@ -28,52 +25,47 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         subMsg <- pub.receive[Array[Byte]]
         _      <- pub.sendMultipart(Frame.Multipart("A", "Hello"))
         msg    <- sub.receiveFrame[String]
-      } yield {
-        subMsg shouldBe Array[Byte](XSubscriber.Subscribe, 'A')
-        msg shouldBe Frame.Multipart("A", "Hello")
-      }
+      } yield expect(subMsg.sameElements(Array[Byte](XSubscriber.Subscribe, 'A'))) and
+        expect(msg == Frame.Multipart("A", "Hello"))
     }
+  }
 
-    "census" in withSockets { pair =>
-      val XPubXSubSpec.Pair(pub, sub) = pair
-
+  test("census") { ctx =>
+    withSockets(ctx) { case Pair(pub, sub) =>
       for {
         _    <- IO.sleep(200.millis)
         _    <- sub.send("Message from subscriber")
         msg1 <- pub.receive[String]
         _    <- sub.send(Array.emptyByteArray)
         msg2 <- pub.receive[Array[Byte]]
-      } yield {
-        msg1 shouldBe "Message from subscriber"
-        msg2 shouldBe empty
-      }
+      } yield expect(msg1 == "Message from subscriber") and expect(msg2.isEmpty)
     }
+  }
 
-    "simple pub sub" in withSockets { pair =>
-      val XPubXSubSpec.Pair(pub, sub) = pair
-
+  test("simple pub sub") { ctx =>
+    withSockets(ctx) { case Pair(pub, sub) =>
       for {
         _   <- IO.sleep(200.millis)
         _   <- sub.sendSubscribe(Subscriber.Topic.All)
         _   <- IO.sleep(200.millis)
         _   <- pub.send("Hello")
         msg <- sub.receive[String]
-      } yield msg shouldBe "Hello"
+      } yield expect(msg == "Hello")
     }
+  }
 
-    "not subscribed" in withSockets { pair =>
-      val XPubXSubSpec.Pair(pub, sub) = pair
-
+  test("not subscribed") { ctx =>
+    withSockets(ctx) { case Pair(pub, sub) =>
       for {
         _      <- IO.sleep(200.millis)
         _      <- pub.send("Hello")
         result <- sub.receiveNoWait[String]
-      } yield result shouldBe empty
+      } yield expect(result.isEmpty)
     }
+  }
 
-    "multiple subscriptions" in withSockets { pair =>
-      val XPubXSubSpec.Pair(pub, sub) = pair
-
+  test("multiple subscriptions") { ctx =>
+    withSockets(ctx) { case Pair(pub, sub) =>
       val topics   = List("A", "B", "C", "D", "E")
       val messages = topics.map(_ + "1")
 
@@ -87,61 +79,48 @@ class XPubXSubSpec extends IOSpec with SocketBehavior {
         _        <- IO.sleep(200.millis)
         _        <- messages.traverse(pub.send[String])
         result   <- sub.receiveNoWait[String]
-      } yield {
-        received shouldBe messages
-        result shouldBe empty
-      }
+      } yield expect(received == messages) and expect(result.isEmpty)
     }
-
-    "multiple subscribers" in withContext() { ctx: Context[IO] =>
-      val uri = tcp"://localhost:53123"
-
-      val topics1 = List("A", "AB", "B", "C")
-      val topics2 = List("A", "AB", "C")
-
-      def program(input: (XPublisher.Socket[IO], XSubscriber.Socket[IO], XSubscriber.Socket[IO])): IO[Assertion] = {
-        val (pub, sub1, sub2) = input
-
-        for {
-          _    <- IO.sleep(200.millis)
-          _    <- topics1.traverse(topic => sub1.sendSubscribe(Subscriber.Topic.utf8String(topic)))
-          _    <- topics2.traverse(topic => sub2.sendSubscribe(Subscriber.Topic.utf8String(topic)))
-          _    <- IO.sleep(200.millis)
-          _    <- pub.send("AB-1")
-          msg1 <- sub1.receive[String]
-          msg2 <- sub2.receive[String]
-        } yield {
-          msg1 shouldBe "AB-1"
-          msg2 shouldBe "AB-1"
-        }
-      }
-
-      (for {
-        producer  <- Resource.suspend(ctx.createXPublisher.map(_.bind(uri)))
-        consumer1 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
-        consumer2 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
-      } yield (producer, consumer1, consumer2)).use(program)
-    }
-
   }
 
-  private def withSockets[A](fa: XPubXSubSpec.Pair[IO] => IO[A]): A =
-    withContext() { ctx: Context[IO] =>
-      val uri = tcp_i"://localhost"
+  test("multiple subscribers") { ctx =>
+    val uri = tcp"://localhost:53123"
 
-      (for {
-        producer <- Resource.suspend(ctx.createXPublisher.map(_.bindToRandomPort(uri)))
-        consumer <- Resource.suspend(ctx.createXSubscriber.map(_.connect(producer.uri)))
-      } yield XPubXSubSpec.Pair(producer, consumer)).use(fa)
+    val topics1 = List("A", "AB", "B", "C")
+    val topics2 = List("A", "AB", "C")
+
+    def program(input: (XPublisher.Socket[IO], XSubscriber.Socket[IO], XSubscriber.Socket[IO])): IO[Expectations] = {
+      val (pub, sub1, sub2) = input
+
+      for {
+        _    <- IO.sleep(200.millis)
+        _    <- topics1.traverse(topic => sub1.sendSubscribe(Subscriber.Topic.utf8String(topic)))
+        _    <- topics2.traverse(topic => sub2.sendSubscribe(Subscriber.Topic.utf8String(topic)))
+        _    <- IO.sleep(200.millis)
+        _    <- pub.send("AB-1")
+        msg1 <- sub1.receive[String]
+        msg2 <- sub2.receive[String]
+      } yield expect(msg1 == "AB-1") and expect(msg2 == "AB-1")
     }
 
-}
+    (for {
+      producer  <- Resource.suspend(ctx.createXPublisher.map(_.bind(uri)))
+      consumer1 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
+      consumer2 <- Resource.suspend(ctx.createXSubscriber.map(_.connect(uri)))
+    } yield (producer, consumer1, consumer2)).use(program)
+  }
 
-object XPubXSubSpec {
+  private def withSockets[A](ctx: Context[IO])(fa: XPubXSubSpec.Pair[IO] => IO[A]): IO[A] = {
+    val uri = tcp_i"://localhost"
 
-  final case class Pair[F[_]](
+    (for {
+      producer <- Resource.suspend(ctx.createXPublisher.map(_.bindToRandomPort(uri)))
+      consumer <- Resource.suspend(ctx.createXSubscriber.map(_.connect(producer.uri)))
+    } yield XPubXSubSpec.Pair(producer, consumer)).use(fa)
+  }
+
+  private final case class Pair[F[_]](
       publisher: XPublisher.Socket[F],
       subscriber: XSubscriber.Socket[F]
   )
-
 }
