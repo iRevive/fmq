@@ -1,7 +1,7 @@
 package io.fmq.socket
 
 import cats.data.NonEmptyList
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.fmq.frame.{Frame, FrameDecoder}
@@ -30,23 +30,23 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     *
     * The operation blocks a thread until a new message is available.
     *
-    * Use `blocker.blockOn(socket.receive[Array[Byte]])` or consume messages on a blocking context in the background:
+    * Use `socket.receive[Array[Byte]].evalOn(blocker)` or consume messages on a blocking context in the background:
     *
     * {{{
-    * import cats.effect.syntax.concurrent._
-    * import cats.effect.{Blocker, Concurrent, ContextShift, Resource}
+    * import cats.effect.syntax.async._
+    * import cats.effect.{Async, Concurrent, Resource}
+    * import cats.effect.std.Queue
     * import fs2.Stream
-    * import fs2.concurrent.Queue
     * import io.fmq.socket.ConsumerSocket
     *
-    * def consume[F[_]: Concurrent: ContextShift](blocker: Blocker, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
+    * def consume[F[_]: Async](blocker: ExecutionContext, socket: ConsumerSocket[F]): Stream[F, Array[Byte]] = {
     *   def process(queue: Queue[F, Array[Byte]]) =
-    *     blocker.blockOn(Stream.repeatEval(socket.receive[Array[Byte]]).through(queue.enqueue).compile.drain)
+    *     Stream.repeatEval(socket.receive[Array[Byte]]).evalMap(queue.offer).compile.drain
     *
     *   for {
     *     queue  <- Stream.eval(Queue.unbounded[F, Array[Byte]])
-    *     _      <- Stream.resource(process(queue).background)
-    *     result <- queue.dequeue
+    *     _      <- Stream.resource(process(queue).backgroundOn(blocker))
+    *     result <- Stream.repeatEval(queue.take)
     *   } yield result
     * }
     * }}}
@@ -57,7 +57,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =
-    F.delay(FrameDecoder[A].decode(socket.recv()))
+    F.interruptible(many = true)(FrameDecoder[A].decode(socket.recv()))
 
   /**
     * Low-level API.

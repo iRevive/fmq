@@ -1,6 +1,7 @@
 *.class
 .idea
 .DS_Store
+.bsp
 logs/
 project/target/
 target/

@@ -3,14 +3,12 @@ package io.fmq
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 
-import cats.effect.{Blocker, ContextShift, Fiber, IO, Resource}
-import cats.syntax.flatMap._
+import cats.effect.unsafe.IORuntime
+import cats.effect.{Fiber, IO, Resource}
 import io.fmq.SocketBenchmark.MessagesCounter
 import io.fmq.syntax.literals._
 import org.openjdk.jmh.annotations._
 import zmq.ZMQ
-
-import scala.concurrent.ExecutionContext
 
 //jmh:run io.fmq.SocketBenchmark
 @BenchmarkMode(Array(Mode.Throughput))
@@ -22,15 +20,15 @@ import scala.concurrent.ExecutionContext
 @SuppressWarnings(Array("org.wartremover.warts.Null", "org.wartremover.warts.Var"))
 class SocketBenchmark {
 
-  private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+  private implicit val runtime: IORuntime = IORuntime.global
 
   @Param(Array("128", "256", "512", "1024"))
   var messageSize: Int = _
 
   private val recording = new AtomicBoolean
 
-  private var publisher: Fiber[IO, Nothing] = _
-  private var consumer: Fiber[IO, Nothing]  = _
+  private var publisher: Fiber[IO, Throwable, Nothing] = _
+  private var consumer: Fiber[IO, Throwable, Nothing]  = _
 
   @Setup(Level.Iteration)
   def setup(): Unit = {
@@ -38,8 +36,7 @@ class SocketBenchmark {
 
     val ((pull, push), _) =
       (for {
-        blocker  <- Blocker[IO]
-        context  <- Context.create[IO](1, blocker)
+        context  <- Context.create[IO](1)
         consumer <- Resource.suspend(context.createPull.map(_.bindToRandomPort(uri)))
         producer <- Resource.suspend(context.createPush.map(_.connect(consumer.uri)))
       } yield (consumer, producer)).allocated.unsafeRunSync()
@@ -59,8 +56,8 @@ class SocketBenchmark {
 
   @TearDown(Level.Iteration)
   def teardown(): Unit = {
-    consumer.cancel.unsafeRunSync()
-    publisher.cancel.unsafeRunSync()
+    consumer.cancel.unsafeRunAndForget()
+    publisher.cancel.unsafeRunAndForget()
   }
 
   @Benchmark
@@ -74,6 +71,7 @@ class SocketBenchmark {
 
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Null", "org.wartremover.warts.Var"))
 object SocketBenchmark {
 
   @AuxCounters
@@ -81,11 +79,13 @@ object SocketBenchmark {
   class MessagesCounter {
 
     @Setup(Level.Iteration)
-    def clean(): Unit = messagesCounter.set(0)
+    def clean(): Unit = {
+      messagesCounter = new AtomicLong
+    }
 
     def messagesPerSecond: Long = messagesCounter.get
   }
 
-  private val messagesCounter = new AtomicLong
+  private var messagesCounter = new AtomicLong
 
 }

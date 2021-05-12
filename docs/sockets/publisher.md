@@ -10,19 +10,14 @@ The publisher socket can only publish messages into the queue.
 The publisher can be created within the `Context`.     
 
 ```scala mdoc:silent
-import cats.effect.{Blocker, ContextShift, Resource, IO}
+import cats.effect.{Resource, IO}
 import io.fmq.Context
 import io.fmq.socket.pubsub.Publisher
 
-import scala.concurrent.ExecutionContext
-
-implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
-
 val publisherResource: Resource[IO, Publisher[IO]] =
   for {
-    blocker   <- Blocker[IO]
-    context   <- Context.create[IO](1, blocker)
-    publisher <- Resource.liftF(context.createPublisher)
+    context   <- Context.create[IO](1)
+    publisher <- Resource.eval(context.createPublisher)
   } yield publisher
 ```
 
@@ -68,7 +63,6 @@ def configurePublisher(publisher: Publisher[IO]): IO[Unit] =
 Only connected publisher can send messages:
 
 ```scala mdoc:silent
-import cats.syntax.flatMap._
 import io.fmq.frame.Frame
 
 def sendSingleMessage(publisher: Publisher.Socket[IO]): IO[Unit] = 

@@ -2,16 +2,17 @@ package io.fmq
 package proxy
 
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
-import cats.effect.syntax.concurrent._
+import cats.effect.kernel.{Async, Outcome, Resource}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.fmq.poll.{ConsumerHandler, PollEntry, PollTimeout, Poller}
 import io.fmq.socket.{BidirectionalSocket, ConsumerSocket, ProducerSocket}
 
+import scala.concurrent.ExecutionContext
+
 @SuppressWarnings(Array("org.wartremover.warts.Overloading"))
-final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
+final class Proxy[F[_]: Async](ctx: Context[F]) {
 
   def unidirectional(frontend: ConsumerSocket[F], backend: ProducerSocket[F]): Resource[F, Proxy.Configured[F]] =
     unidirectional(frontend, backend, None)
@@ -56,7 +57,7 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
     val withCapture: (ProducerSocket[F] => F[Unit]) => F[Unit] =
       capture match {
         case Some(c) => f => f(c.socket)
-        case None    => _ => Sync[F].unit
+        case None    => _ => Async[F].unit
       }
 
     def send(message: Array[Byte], socket: ConsumerSocket[F]): F[Unit] =
@@ -78,13 +79,13 @@ final class Proxy[F[_]: Concurrent: ContextShift](ctx: Context[F]) {
 
 object Proxy {
 
-  final class Configured[F[_]: Concurrent: ContextShift] private[Proxy] (
+  final class Configured[F[_]: Async] private[Proxy] (
       poller: Poller[F],
       items: NonEmptyList[PollEntry[F]]
   ) {
 
-    def start(blocker: Blocker): Resource[F, F[Unit]] =
-      blocker.blockOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit]).background
+    def start(ec: ExecutionContext): Resource[F, F[Outcome[F, Throwable, Unit]]] =
+      Async[F].backgroundOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit], ec)
 
   }
 

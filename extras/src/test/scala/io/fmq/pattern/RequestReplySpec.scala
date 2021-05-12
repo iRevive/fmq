@@ -1,14 +1,16 @@
 package io.fmq.pattern
 
-import cats.effect.{Blocker, IO, Resource, Timer}
-import cats.syntax.flatMap._
+import java.util.concurrent.Executors
+
+import cats.effect.{IO, Resource}
 import io.fmq.frame.Frame
+import io.fmq.pattern.RequestReplySpec.Pair
 import io.fmq.socket.reqrep.{Reply, Request}
 import io.fmq.syntax.literals._
-import io.fmq.pattern.RequestReplySpec.Pair
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class RequestReplySpec extends IOSpec {
@@ -28,7 +30,7 @@ class RequestReplySpec extends IOSpec {
 
       def program(dispatcher: RequestReply[IO]): IO[Assertion] =
         for {
-          _         <- Timer[IO].sleep(200.millis)
+          _         <- IO.sleep(200.millis)
           response1 <- dispatcher.submit[String, String](Frame.Single("hello"))
           response2 <- dispatcher.submit[String, String](Frame.Multipart("hello", "world"))
         } yield {
@@ -38,8 +40,8 @@ class RequestReplySpec extends IOSpec {
 
       (for {
         _          <- server.background
-        blocker    <- Blocker[IO]
-        dispatcher <- RequestReply.create[IO](blocker, request, 10)
+        ec         <- Resource.make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+        dispatcher <- RequestReply.create[IO](ExecutionContext.fromExecutor(ec), request, 10)
       } yield dispatcher).use(program)
     }
 

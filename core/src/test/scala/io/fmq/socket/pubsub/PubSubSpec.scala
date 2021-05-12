@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package pubsub
 
-import cats.effect.{IO, Resource, Sync}
+import cats.effect.{IO, Resource}
 import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
 import io.fmq.syntax.literals._
@@ -23,7 +23,7 @@ class PubSubSpec extends IOSpec with SocketBehavior {
 
   }
 
-  private def tcpSocketResource[F[_]: Sync]: PubSubResource[F] =
+  private def tcpSocketResource[F[_]]: PubSubResource[F] =
     new PubSubResource[F] {
 
       override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Int): Resource[F, Pair] = {
@@ -49,7 +49,7 @@ class PubSubSpec extends IOSpec with SocketBehavior {
 
     }
 
-  private def inprocSocketResource[F[_]: Sync]: PubSubResource[F] =
+  private def inprocSocketResource[F[_]]: PubSubResource[F] =
     new PubSubResource[F] {
 
       override def bind(producer: Publisher[F], consumer: Subscriber[F], port: Int): Resource[F, Pair] = {

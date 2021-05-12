@@ -1,6 +1,6 @@
 package io.fmq
 
-import cats.effect.{Blocker, IO}
+import cats.effect.IO
 import cats.syntax.functor._
 import org.scalatest.OptionValues._
 
@@ -11,8 +11,8 @@ class ContextSpec extends IOSpec {
   "Context" should {
 
     "release allocated context" in {
-      val (isClosed, ctx) = Blocker[IO]
-        .flatMap(blocker => Context.create[IO](1, blocker))
+      val (isClosed, ctx) = Context
+        .create[IO](1)
         .use(ctx => ctx.isClosed.tupleRight(ctx))
         .unsafeRunTimed(3.seconds)
         .value

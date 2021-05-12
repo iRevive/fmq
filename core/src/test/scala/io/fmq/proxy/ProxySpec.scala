@@ -1,6 +1,8 @@
 package io.fmq.proxy
 
-import cats.effect.{Blocker, IO, Resource, Timer}
+import java.util.concurrent.Executors
+
+import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.address.Uri
 import io.fmq.frame.Frame
@@ -12,13 +14,16 @@ import io.fmq.syntax.literals._
 import io.fmq.{Context, IOSpec}
 import org.scalatest.Assertion
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
-  * Tests are using Timer[IO].sleep(200.millis) to fix 'slow-joiner' problem.
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 class ProxySpec extends IOSpec {
+
+  private val singleThreadContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
   "Proxy" should {
 
@@ -40,7 +45,7 @@ class ProxySpec extends IOSpec {
 
       def program(client: Request.Socket[IO], server: Reply.Socket[IO]): IO[Assertion] =
         for {
-          _   <- Timer[IO].sleep(500.millis)
+          _   <- IO.sleep(500.millis)
           _   <- client.send("hello")
           req <- server.receive[String]
           _   <- server.send("reply")
@@ -52,9 +57,8 @@ class ProxySpec extends IOSpec {
 
       (for {
         (front, back)    <- createProxySockets
-        blocker          <- Blocker[IO]
         proxy            <- ctx.proxy.bidirectional(front, back)
-        _                <- proxy.start(blocker)
+        _                <- proxy.start(singleThreadContext)
         (client, server) <- createReqRepSockets
       } yield (client, server)).use((program _).tupled)
     }
@@ -66,7 +70,7 @@ class ProxySpec extends IOSpec {
 
       def program(publisher: Publisher.Socket[IO], subscriber: Subscriber.Socket[IO], pull: Pull.Socket[IO]): IO[Assertion] =
         for {
-          _       <- Timer[IO].sleep(500.millis)
+          _       <- IO.sleep(500.millis)
           _       <- publisher.send("hello")
           msg     <- subscriber.receive[String]
           control <- pull.receive[String]
@@ -78,7 +82,6 @@ class ProxySpec extends IOSpec {
       val topic = Subscriber.Topic.All
 
       (for {
-        blocker         <- Blocker[IO]
         publisherProxy  <- Resource.suspend(ctx.createPublisher.map(_.bind(frontendUri)))
         publisher       <- Resource.suspend(ctx.createPublisher.map(_.bind(backendUri)))
         subscriberProxy <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(backendUri)))
@@ -87,7 +90,7 @@ class ProxySpec extends IOSpec {
         push            <- Resource.suspend(ctx.createPush.map(_.connect(controlUri)))
         control         <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(control))
-        _               <- proxy.start(blocker)
+        _               <- proxy.start(singleThreadContext)
       } yield (publisher, subscriber, pull)).use((program _).tupled)
     }
 
@@ -118,7 +121,7 @@ class ProxySpec extends IOSpec {
 
       def program(client: Request.Socket[IO], server: Reply.Socket[IO], pull: Pull.Socket[IO]): IO[Assertion] =
         for {
-          _          <- Timer[IO].sleep(500.millis)
+          _          <- IO.sleep(500.millis)
           _          <- client.send("hello")
           req        <- server.receive[String]
           _          <- server.send("reply")
@@ -137,10 +140,9 @@ class ProxySpec extends IOSpec {
       (for {
         (front, back)    <- createProxySockets
         (pull, push)     <- createControlSockets
-        blocker          <- Blocker[IO]
         control          <- Resource.pure[IO, Control[IO]](Control.push(push))
         proxy            <- ctx.proxy.bidirectional(front, back, Some(control), Some(control))
-        _                <- proxy.start(blocker)
+        _                <- proxy.start(singleThreadContext)
         (client, server) <- createReqRepSockets
       } yield (client, server, pull)).use((program _).tupled)
     }
@@ -178,7 +180,7 @@ class ProxySpec extends IOSpec {
           pullOut: Pull.Socket[IO]
       ): IO[Assertion] =
         for {
-          _          <- Timer[IO].sleep(500.millis)
+          _          <- IO.sleep(500.millis)
           _          <- client.send("hello")
           req        <- server.receive[String]
           _          <- server.send("reply")
@@ -198,16 +200,15 @@ class ProxySpec extends IOSpec {
         (front, back)      <- createProxySockets
         (pullIn, pushIn)   <- createControlSockets(controlInUri)
         (pullOut, pushOut) <- createControlSockets(controlOutUri)
-        blocker            <- Blocker[IO]
         controlIn          <- Resource.pure[IO, Control[IO]](Control.push(pushIn))
         controlOut         <- Resource.pure[IO, Control[IO]](Control.push(pushOut))
         proxy              <- ctx.proxy.bidirectional(front, back, Some(controlIn), Some(controlOut))
-        _                  <- proxy.start(blocker)
+        _                  <- proxy.start(singleThreadContext)
         (client, server)   <- createReqRepSockets
       } yield (client, server, pullIn, pullOut)).use((program _).tupled)
     }
 
-    /* "start new proxy after termination" in withContext() { ctx: Context[IO] =>
+    "start new proxy after termination" in withContext() { ctx: Context[IO] =>
       val frontendUri = inproc"://frontend"
       val backendUri  = inproc"://backend"
 
@@ -224,29 +225,27 @@ class ProxySpec extends IOSpec {
         } yield (request, reply)
 
       def verifyProxy: IO[Assertion] =
-        createReqRepSockets.use {
-          case (client, server) =>
-            for {
-              _   <- Timer[IO].sleep(500.millis)
-              _   <- client.send("hello")
-              req <- server.receive[String]
-              _   <- server.send("reply")
-              rep <- client.receive[String]
-            } yield {
-              req shouldBe "hello"
-              rep shouldBe "reply"
-            }
+        createReqRepSockets.use { case (client, server) =>
+          for {
+            _   <- IO.sleep(500.millis)
+            _   <- client.send("hello")
+            req <- server.receive[String]
+            _   <- server.send("reply")
+            rep <- client.receive[String]
+          } yield {
+            req shouldBe "hello"
+            rep shouldBe "reply"
+          }
         }
 
-      def program(proxy: Proxy.Configured[IO], blocker: Blocker): IO[Assertion] =
-        proxy.start(blocker).use(_ => verifyProxy) >> proxy.start(blocker).use(_ => verifyProxy)
+      def program(proxy: Proxy.Configured[IO]): IO[Assertion] =
+        proxy.start(singleThreadContext).use(_ => verifyProxy) >> proxy.start(singleThreadContext).use(_ => verifyProxy)
 
       (for {
         (front, back) <- createProxySockets
-        blocker       <- Blocker[IO]
         proxy         <- ctx.proxy.bidirectional(front, back)
-      } yield (proxy, blocker)).use((program _).tupled)
-    }*/
+      } yield proxy).use(program)
+    }
 
   }
 

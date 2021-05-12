@@ -1,14 +1,13 @@
 package io.fmq.socket.reqrep
 
-import cats.effect.{Blocker, ContextShift, Sync}
+import cats.effect.kernel.Sync
 import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketFactory, SocketOptions}
 import io.fmq.socket.{BidirectionalSocket, Connectivity}
 import org.zeromq.ZMQ
 
-final class Request[F[_]: Sync: ContextShift] private[fmq] (
-    protected[fmq] val socket: ZMQ.Socket,
-    protected val blocker: Blocker
+final class Request[F[_]: Sync] private[fmq] (
+    protected[fmq] val socket: ZMQ.Socket
 ) extends Connectivity.All[F, Request.Socket]
     with SocketOptions[F]
     with CommonOptions.All[F]

@@ -1,33 +1,40 @@
 package io.fmq.examples.pubsub
 
-import cats.FlatMap
-import cats.effect.syntax.concurrent._
-import cats.effect.{Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
+import java.util.concurrent.Executors
+
+import cats.effect.std.Queue
+import cats.effect.syntax.async._
+import cats.effect._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import fs2.Stream
-import fs2.concurrent.Queue
 import io.fmq.Context
 import io.fmq.frame.Frame
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.syntax.literals._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-object PubSubApp extends IOApp {
+object PubSubApp extends IOApp.Simple {
 
-  override def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO]
-      .flatMap(blocker => Context.create[IO](ioThreads = 1, blocker).tupleRight(blocker))
-      .use { case (ctx, blocker) => new PubSubDemo[IO](ctx, blocker).program.compile.drain.as(ExitCode.Success) }
+  override def run: IO[Unit] =
+    blockingContext
+      .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
+      .use { case (ctx, blocker) => new PubSubDemo[IO](ctx, blocker).program.compile.drain }
+
+  private def blockingContext: Resource[IO, ExecutionContext] =
+    Resource
+      .make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+      .map(ExecutionContext.fromExecutor)
 
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class PubSubDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blocker: Blocker) {
+class PubSubDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
 
-  private def log(message: String): F[Unit] = Sync[F].delay(println(message))
+  private def log(message: String): F[Unit] = Async[F].delay(println(message))
 
   private val topicA = "my-topic-a"
   private val topicB = "my-topic-b"
@@ -62,10 +69,10 @@ class PubSubDemo[F[_]: Concurrent: ContextShift: Timer](context: Context[F], blo
 
 }
 
-class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: String, topicB: String) {
+class Producer[F[_]: Async](publisher: ProducerSocket[F], topicA: String, topicB: String) {
 
   def generate: Stream[F, Unit] =
-    Stream.repeatEval(sendA >> sendB >> Timer[F].sleep(2000.millis))
+    Stream.repeatEval(sendA >> sendB >> Async[F].sleep(2000.millis))
 
   private def sendA: F[Unit] =
     publisher.sendMultipart(Frame.Multipart(topicA, "We don't want to see this"))
@@ -75,16 +82,16 @@ class Producer[F[_]: FlatMap: Timer](publisher: ProducerSocket[F], topicA: Strin
 
 }
 
-class Consumer[F[_]: Concurrent: ContextShift](socket: ConsumerSocket[F], blocker: Blocker) {
+class Consumer[F[_]: Async](socket: ConsumerSocket[F], blocker: ExecutionContext) {
 
   def consume: Stream[F, Frame[String]] = {
     def process(queue: Queue[F, Frame[String]]) =
-      blocker.blockOn(Stream.repeatEval(socket.receiveFrame[String]).through(queue.enqueue).compile.drain)
+      Stream.repeatEval(socket.receiveFrame[String]).evalMap(queue.offer).compile.drain
 
     for {
       queue  <- Stream.eval(Queue.unbounded[F, Frame[String]])
-      _      <- Stream.resource(process(queue).background)
-      result <- queue.dequeue
+      _      <- Stream.resource(process(queue).backgroundOn(blocker))
+      result <- Stream.repeatEval(queue.take)
     } yield result
   }
 

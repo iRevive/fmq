@@ -1,6 +1,6 @@
 package io.fmq.socket.api
 
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import io.fmq.address.Uri
 import org.zeromq.ZMQ
 

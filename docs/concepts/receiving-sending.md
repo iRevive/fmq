@@ -29,7 +29,7 @@ Returns true if message is multipart.
 ### High-level API
 
 The `def receiveFrame[A: FrameDecoder]: F[Frame[A]]` **blocks indefinitely** until a message arrives.   
-Consumes multipart message automatically. The method returns `Frame.Multipart` if message is multipart, otherwise returns `Frame.Single`.
+Consumes a multipart message automatically. The method returns `Frame.Multipart` if message is multipart, otherwise returns `Frame.Single`.
 
 
 ## Sending
@@ -52,5 +52,5 @@ Queues a multi-part message to be sent.
 ### High-level API
 
 The `def sendFrame[A: FrameEncoder](frame: Frame[A]): F[Unit]` queues a message to be sent.
-Sends multipart message automatically.  
+Sends a multipart message automatically.  
 
