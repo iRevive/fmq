@@ -1,6 +1,6 @@
 package io.fmq.socket.api
 
-import cats.effect.{Resource, Sync}
+import cats.effect.kernel.{Resource, Sync}
 import cats.syntax.functor._
 import io.fmq.address.Uri
 import org.zeromq.ZMQ

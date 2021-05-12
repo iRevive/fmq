@@ -1,6 +1,6 @@
 package io.fmq.socket
 
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import io.fmq.socket.api.{BindApi, ConnectApi, SocketFactory}
 
 object Connectivity {

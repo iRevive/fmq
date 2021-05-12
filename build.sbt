@@ -64,7 +64,7 @@ lazy val docs = project
 
 lazy val commonSettings = Seq(
   scalaVersion                           := Versions.scala_213,
-  crossScalaVersions                     := Seq(scalaVersion.value, Versions.scala_212),
+  crossScalaVersions                     := Seq(scalaVersion.value),
   Test / fork                            := true,
   Test / parallelExecution               := false,
   Compile / compile / wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing), // false positive

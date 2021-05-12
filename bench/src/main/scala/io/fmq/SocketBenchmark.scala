@@ -56,8 +56,8 @@ class SocketBenchmark {
 
   @TearDown(Level.Iteration)
   def teardown(): Unit = {
-    consumer.cancel.unsafeRunSync()
-    publisher.cancel.unsafeRunSync()
+    consumer.cancel.unsafeRunAndForget()
+    publisher.cancel.unsafeRunAndForget()
   }
 
   @Benchmark
@@ -71,6 +71,7 @@ class SocketBenchmark {
 
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Null", "org.wartremover.warts.Var"))
 object SocketBenchmark {
 
   @AuxCounters
@@ -78,11 +79,13 @@ object SocketBenchmark {
   class MessagesCounter {
 
     @Setup(Level.Iteration)
-    def clean(): Unit = messagesCounter.set(0)
+    def clean(): Unit = {
+      messagesCounter = new AtomicLong
+    }
 
     def messagesPerSecond: Long = messagesCounter.get
   }
 
-  private val messagesCounter = new AtomicLong
+  private var messagesCounter = new AtomicLong
 
 }

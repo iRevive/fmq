@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 import cats.Monad
 import cats.data.NonEmptyList
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import cats.syntax.applicative._
 import cats.syntax.applicativeError._
 import cats.syntax.order._

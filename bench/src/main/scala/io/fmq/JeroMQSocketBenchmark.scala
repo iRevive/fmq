@@ -52,7 +52,7 @@ class JeroMQSocketBenchmark {
     }
 
     publisher = IO
-      .delay {
+      .interruptible(false) {
         while (true) {
           push.send(msg.data())
         }
@@ -61,7 +61,7 @@ class JeroMQSocketBenchmark {
       .unsafeRunSync()
 
     consumer = IO
-      .delay {
+      .interruptible(false) {
         while (true) {
           pull.recv()
 

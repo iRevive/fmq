@@ -40,8 +40,8 @@ class RequestReplySpec extends IOSpec {
 
       (for {
         _          <- server.background
-        e          <- Resource.make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
-        dispatcher <- RequestReply.create[IO](ExecutionContext.fromExecutor(e), request, 10)
+        ec         <- Resource.make(IO.delay(Executors.newCachedThreadPool()))(e => IO.delay(e.shutdown()))
+        dispatcher <- RequestReply.create[IO](ExecutionContext.fromExecutor(ec), request, 10)
       } yield dispatcher).use(program)
     }
 

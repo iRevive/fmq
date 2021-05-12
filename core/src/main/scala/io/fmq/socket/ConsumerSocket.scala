@@ -1,7 +1,7 @@
 package io.fmq.socket
 
 import cats.data.NonEmptyList
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.fmq.frame.{Frame, FrameDecoder}
@@ -57,7 +57,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =
-    F.blocking(FrameDecoder[A].decode(socket.recv()))
+    F.interruptible(many = true)(FrameDecoder[A].decode(socket.recv()))
 
   /**
     * Low-level API.

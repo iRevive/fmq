@@ -3,7 +3,7 @@ id: consuming-strategy
 title: Consuming strategy
 ---
 
-You can use ƒMQ with any effect that has an instance of `cats.effect.Sync`: `cats.effect.IO`, `EitherT[IO, Error, *]` and so on.
+You can use ƒMQ with any effect that has an instance of `cats.effect.kernel.Sync`: `cats.effect.IO`, `EitherT[IO, Error, *]` and so on.
 
 ## The problem
 The `socket.receive` method blocks the thread until a new message is available.  

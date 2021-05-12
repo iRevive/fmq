@@ -2,7 +2,7 @@ package io.fmq
 package socket
 package pipeline
 
-import cats.effect.{IO, Resource, Sync}
+import cats.effect.{IO, Resource}
 import io.fmq.address._
 import io.fmq.socket.SocketBehavior.SocketResource
 
@@ -22,7 +22,7 @@ class PushPullSpec extends IOSpec with SocketBehavior {
 
   }
 
-  private def tcpSocketResource[F[_]: Sync]: PushPullResource[F] =
+  private def tcpSocketResource[F[_]]: PushPullResource[F] =
     new PushPullResource[F] {
 
       override def bind(push: Push[F], pull: Pull[F], port: Int): Resource[F, Pair] = {
@@ -48,7 +48,7 @@ class PushPullSpec extends IOSpec with SocketBehavior {
 
     }
 
-  private def inprocSocketResource[F[_]: Sync]: PushPullResource[F] =
+  private def inprocSocketResource[F[_]]: PushPullResource[F] =
     new PushPullResource[F] {
 
       override def bind(push: Push[F], pull: Pull[F], port: Int): Resource[F, Pair] = {

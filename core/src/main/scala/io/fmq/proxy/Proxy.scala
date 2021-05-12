@@ -2,9 +2,7 @@ package io.fmq
 package proxy
 
 import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.kernel.{Async, Outcome}
-import cats.effect.syntax.async._
-import cats.effect.{Resource, Sync}
+import cats.effect.kernel.{Async, Outcome, Resource}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -59,7 +57,7 @@ final class Proxy[F[_]: Async](ctx: Context[F]) {
     val withCapture: (ProducerSocket[F] => F[Unit]) => F[Unit] =
       capture match {
         case Some(c) => f => f(c.socket)
-        case None    => _ => Sync[F].unit
+        case None    => _ => Async[F].unit
       }
 
     def send(message: Array[Byte], socket: ConsumerSocket[F]): F[Unit] =
@@ -87,7 +85,7 @@ object Proxy {
   ) {
 
     def start(ec: ExecutionContext): Resource[F, F[Outcome[F, Throwable, Unit]]] =
-      poller.poll(items, PollTimeout.Infinity).foreverM[Unit].backgroundOn(ec)
+      Async[F].backgroundOn(poller.poll(items, PollTimeout.Infinity).foreverM[Unit], ec)
 
   }
 

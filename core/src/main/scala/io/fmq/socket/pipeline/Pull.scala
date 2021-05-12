@@ -1,6 +1,6 @@
 package io.fmq.socket.pipeline
 
-import cats.effect.{Sync}
+import cats.effect.kernel.Sync
 import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SocketFactory, SocketOptions}
 import io.fmq.socket.{Connectivity, ConsumerSocket}

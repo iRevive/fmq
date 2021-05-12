@@ -1,6 +1,6 @@
 package io.fmq.socket.reqrep
 
-import cats.effect.{Sync}
+import cats.effect.kernel.Sync
 import io.fmq.address.Uri
 import io.fmq.socket.api.{CommonOptions, ReceiveOptions, SendOptions, SocketFactory, SocketOptions}
 import io.fmq.socket.{BidirectionalSocket, Connectivity}

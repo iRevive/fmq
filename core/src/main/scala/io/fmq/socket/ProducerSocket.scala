@@ -1,6 +1,6 @@
 package io.fmq.socket
 
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
@@ -32,7 +32,7 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * The data is either a single-part message by itself, or the last part of a multi-part message.
     */
   def send[A: FrameEncoder](value: A): F[Unit] =
-    F.blocking(socket.send(FrameEncoder[A].encode(value))).void
+    F.delay(socket.send(FrameEncoder[A].encode(value))).void
 
   /**
     * Low-level API.
@@ -40,7 +40,7 @@ trait ProducerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * Queues a multi-part message to be sent.
     */
   def sendMore[A: FrameEncoder](value: A): F[Unit] =
-    F.blocking(socket.sendMore(FrameEncoder[A].encode(value))).void
+    F.delay(socket.sendMore(FrameEncoder[A].encode(value))).void
 
 }
 

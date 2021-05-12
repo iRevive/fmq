@@ -1,6 +1,6 @@
 package io.fmq
 
-import cats.effect.{Async, Resource}
+import cats.effect.kernel.{Async, Resource}
 import io.fmq.poll.Poller
 import io.fmq.proxy.Proxy
 import io.fmq.socket.pipeline.{Pull, Push}
