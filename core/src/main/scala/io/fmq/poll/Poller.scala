@@ -46,7 +46,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
         if (firstPass) 0L
         else if (timeout.value === 0L || timeout === PollTimeout.Infinity) -1L
         else {
-          val diff = TimeUnit.NANOSECONDS.toMillis(end - now);
+          val diff = TimeUnit.NANOSECONDS.toMillis(end - now)
           if (diff === 0L) 1L else diff
         }
 
@@ -69,12 +69,12 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
         case nevents if firstPass =>
           val now = zmq.util.Clock.nowNS()
           val end = now + TimeUnit.MILLISECONDS.toNanos(timeout.value)
-          Either.cond(now === end, nevents, (now, end, false)).pure[F]
+          Sync[F].pure(Either.cond(now === end, nevents, (now, end, false)))
 
         //  Find out whether timeout have expired.
         case nevents =>
-          val now = zmq.util.Clock.nowNS();
-          Either.cond(now >= end, nevents, (now, end, false)).pure[F]
+          val now = zmq.util.Clock.nowNS()
+          Sync[F].pure(Either.cond(now >= end, nevents, (now, end, false)))
       }
     }
 
@@ -127,7 +127,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
 
     val result = loop(selector.keys().asScala.toSet, 0, rc)
     if (result >= 0) {
-      selector.selectedKeys().clear();
+      selector.selectedKeys().clear()
     }
     result
   }
