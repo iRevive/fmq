@@ -6,7 +6,7 @@ import io.fmq.frame.Frame
 import io.fmq.options.{Identity, RouterHandover, RouterMandatory}
 import io.fmq.socket.SocketBehavior
 import io.fmq.syntax.literals._
-import io.fmq.{Context, IOSpec}
+import io.fmq.{Context, ContextSuite}
 
 import scala.concurrent.duration._
 
@@ -14,7 +14,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object RouterSpec extends IOSpec with SocketBehavior {
+object RouterSuite extends ContextSuite with SocketBehavior {
 
   test("route messages by identity") { ctx =>
     withSockets(ctx, Identity.utf8String("1")) { case Pair(router, dealer, _) =>

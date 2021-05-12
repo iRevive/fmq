@@ -13,7 +13,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object ReqRepSpec extends IOSpec with SocketBehavior {
+object ReqRepSuite extends ContextSuite with SocketBehavior {
 
   test("simple req rep") { ctx =>
     withSockets(ctx) { case Pair(req, rep) =>

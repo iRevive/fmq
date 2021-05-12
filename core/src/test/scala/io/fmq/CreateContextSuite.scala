@@ -6,7 +6,7 @@ import weaver.SimpleIOSuite
 
 import scala.concurrent.duration._
 
-object ContextSpec extends SimpleIOSuite {
+object CreateContextSuite extends SimpleIOSuite {
 
   test("release allocated context") {
     val terminated = Context

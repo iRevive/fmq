@@ -14,7 +14,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object XPubXSubSpec extends IOSpec with SocketBehavior {
+object XPubXSubSuite extends ContextSuite with SocketBehavior {
 
   test("topic pub sub") { ctx =>
     withSockets(ctx) { case Pair(pub, sub) =>
@@ -110,13 +110,13 @@ object XPubXSubSpec extends IOSpec with SocketBehavior {
     } yield (producer, consumer1, consumer2)).use(program)
   }
 
-  private def withSockets[A](ctx: Context[IO])(fa: XPubXSubSpec.Pair[IO] => IO[A]): IO[A] = {
+  private def withSockets[A](ctx: Context[IO])(fa: XPubXSubSuite.Pair[IO] => IO[A]): IO[A] = {
     val uri = tcp_i"://localhost"
 
     (for {
       producer <- Resource.suspend(ctx.createXPublisher.map(_.bindToRandomPort(uri)))
       consumer <- Resource.suspend(ctx.createXSubscriber.map(_.connect(producer.uri)))
-    } yield XPubXSubSpec.Pair(producer, consumer)).use(fa)
+    } yield XPubXSubSuite.Pair(producer, consumer)).use(fa)
   }
 
   private final case class Pair[F[_]](

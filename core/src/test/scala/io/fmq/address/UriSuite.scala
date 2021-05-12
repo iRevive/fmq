@@ -2,7 +2,7 @@ package io.fmq.address
 
 import weaver.SimpleIOSuite
 
-object UriSpec extends SimpleIOSuite {
+object UriSuite extends SimpleIOSuite {
 
   pureTest("support tcp protocol with host") {
     val uri = Uri.Incomplete.TCP(Address.HostOnly("localhost"))

@@ -12,7 +12,7 @@ import weaver.{Expectations, IOSuite}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-object RequestReplySpec extends IOSuite {
+object RequestReplySuite extends IOSuite {
 
   type Res = (Request.Socket[IO], Reply.Socket[IO])
 
