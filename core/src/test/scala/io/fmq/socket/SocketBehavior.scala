@@ -19,7 +19,7 @@ import scala.concurrent.duration._
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
 trait SocketBehavior {
-  self: IOSpec =>
+  self: ContextSuite =>
 
   protected def socketSpec[P <: Producer[IO], C <: Consumer[IO]](name: String, socketResource: SocketResource[IO, P, C]): Unit = {
 

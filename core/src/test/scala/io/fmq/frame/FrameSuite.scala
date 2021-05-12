@@ -3,7 +3,7 @@ package io.fmq.frame
 import cats.data.NonEmptyList
 import weaver.SimpleIOSuite
 
-object FrameSpec extends SimpleIOSuite {
+object FrameSuite extends SimpleIOSuite {
 
   pureTest("Frame.Single has 1 part") {
     val frame = Frame.Single("Part 1")

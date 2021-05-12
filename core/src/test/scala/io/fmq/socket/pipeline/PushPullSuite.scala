@@ -8,7 +8,7 @@ import io.fmq.socket.SocketBehavior.SocketResource
 
 import scala.util.Random
 
-object PushPullSpec extends IOSpec with SocketBehavior {
+object PushPullSuite extends ContextSuite with SocketBehavior {
 
   socketSpec("TCP protocol", tcpSocketResource)
   socketSpec("inproc protocol", inprocSocketResource)

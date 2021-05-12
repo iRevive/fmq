@@ -5,7 +5,7 @@ import cats.effect.std.Queue
 import cats.effect.{IO, Resource}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
-import io.fmq.IOSpec
+import io.fmq.ContextSuite
 import io.fmq.socket.pubsub.Subscriber
 import io.fmq.socket.{ConsumerSocket, ProducerSocket}
 import io.fmq.syntax.literals._
@@ -19,7 +19,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object PollerSpec extends IOSpec {
+object PollerSuite extends ContextSuite {
 
   test("zmq.ZMQ.poll behavior") { ctx =>
     val topicA = Subscriber.Topic.utf8String("Topic-A")

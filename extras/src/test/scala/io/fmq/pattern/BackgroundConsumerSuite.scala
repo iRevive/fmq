@@ -13,7 +13,7 @@ import weaver.{Expectations, IOSuite}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-object BackgroundConsumerSpec extends IOSuite {
+object BackgroundConsumerSuite extends IOSuite {
 
   type Res = (ProducerSocket[IO], ConsumerSocket[IO])
 

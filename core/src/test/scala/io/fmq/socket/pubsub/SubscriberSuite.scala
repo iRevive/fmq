@@ -14,7 +14,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object SubscriberSpec extends IOSpec with SocketBehavior {
+object SubscriberSuite extends ContextSuite with SocketBehavior {
 
   test("filter multipart data") { ctx =>
     val uri   = tcp_i"://localhost"

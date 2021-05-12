@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
-import io.fmq.IOSpec
+import io.fmq.ContextSuite
 import io.fmq.address.Uri
 import io.fmq.frame.Frame
 import io.fmq.options.Identity
@@ -21,7 +21,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object ProxySpec extends IOSpec {
+object ProxySuite extends ContextSuite {
 
   private val singleThreadContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 

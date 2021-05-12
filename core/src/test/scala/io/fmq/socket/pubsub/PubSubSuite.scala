@@ -9,7 +9,7 @@ import io.fmq.syntax.literals._
 
 import scala.util.Random
 
-object PubSubSpec extends IOSpec with SocketBehavior {
+object PubSubSuite extends ContextSuite with SocketBehavior {
 
   socketSpec("TCP protocol", tcpSocketResource)
   socketSpec("inproc protocol", inprocSocketResource)
