@@ -34,7 +34,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
     } yield events
 
   private def pollInternal(items: List[ZPollItem], timeout: PollTimeout): F[Int] =
-    (Sync[F].delay(attachItemsToSelector(selector, items)) >> doPoll(timeout)).handleErrorWith {
+    (Sync[F].delay(attachItemsToSelector(selector, items)) >> doPoll(timeout)).recoverWith {
       case _: ClosedSelectorException => Sync[F].pure(-1)
       case _: ClosedChannelException  => Sync[F].pure(-1)
       case e: IOException             => Sync[F].raiseError(new ZError.IOException(e))
