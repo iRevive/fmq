@@ -4,6 +4,7 @@ package pubsub
 
 import cats.effect.{IO, Resource}
 import cats.syntax.traverse._
+import fs2.Stream
 import io.fmq.frame.Frame
 import io.fmq.syntax.literals._
 import weaver.Expectations
@@ -14,7 +15,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object XPubXSubSuite extends ContextSuite with SocketBehavior {
+object XPubXSubSuite extends ContextSuite {
 
   test("topic pub sub") { ctx =>
     withSockets(ctx) { case Pair(pub, sub) =>
@@ -74,7 +75,7 @@ object XPubXSubSuite extends ContextSuite with SocketBehavior {
         _        <- topics.traverse(topic => sub.sendSubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- IO.sleep(200.millis)
         _        <- messages.traverse(pub.send[String])
-        received <- collectMessages(sub, 5)
+        received <- Stream.repeatEval(sub.receive[String]).take(5).compile.toList
         _        <- topics.traverse(topic => sub.sendUnsubscribe(Subscriber.Topic.utf8String(topic)))
         _        <- IO.sleep(200.millis)
         _        <- messages.traverse(pub.send[String])

@@ -4,6 +4,7 @@ package pubsub
 
 import cats.effect.{IO, Resource}
 import cats.syntax.traverse._
+import fs2.Stream
 import io.fmq.socket.SocketBehavior.SocketResource
 import io.fmq.syntax.literals._
 import weaver.Expectations
@@ -14,7 +15,7 @@ import scala.concurrent.duration._
   * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
   * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
   */
-object SubscriberSuite extends ContextSuite with SocketBehavior {
+object SubscriberSuite extends ContextSuite {
 
   test("filter multipart data") { ctx =>
     val uri   = tcp_i"://localhost"
@@ -95,5 +96,8 @@ object SubscriberSuite extends ContextSuite with SocketBehavior {
       subscriber <- Resource.suspend(ctx.createSubscriber(topic).map(_.connect(publisher.uri)))
     } yield SocketResource.Pair(publisher, subscriber)).use(fa)
   }
+
+  protected def collectMessages(consumer: ConsumerSocket[IO], limit: Long): IO[List[String]] =
+    Stream.repeatEval(consumer.receive[String]).take(limit).compile.toList
 
 }
