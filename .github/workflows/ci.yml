@@ -32,12 +32,12 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Cache SBT coursier cache
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.cache/coursier/v1
           key: sbt-coursier-cache
       - name: Cache SBT
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: ~/.sbt
           key: sbt-${{ hashFiles('**/build.sbt') }}
