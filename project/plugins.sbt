@@ -1,4 +1,4 @@
-addSbtPlugin("org.scoverage"             % "sbt-scoverage"   % "1.8.0")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage"   % "1.8.2")
 addSbtPlugin("org.scalameta"             % "sbt-scalafmt"    % "2.4.2")
 addSbtPlugin("org.scalameta"             % "sbt-mdoc"        % "2.2.20")
 addSbtPlugin("org.wartremover"           % "sbt-wartremover" % "2.4.13")
