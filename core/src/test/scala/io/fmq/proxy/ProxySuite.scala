@@ -1,5 +1,6 @@
 package io.fmq.proxy
 
+/*
 import java.util.concurrent.Executors
 
 import cats.effect.{IO, Resource}
@@ -18,12 +19,12 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
-  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
-  * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
-  */
+ * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
+ * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
+ */
 object ProxySuite extends ContextSuite {
 
-  private val singleThreadContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+  private def singleThreadContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
 
   test("proxy messages in bidirectional way") { ctx =>
     val frontendUri = inproc"://frontend"
@@ -229,3 +230,4 @@ object ProxySuite extends ContextSuite {
   }
 
 }
+ */
