@@ -1,8 +1,5 @@
 package io.fmq.proxy
 
-/*
-import java.util.concurrent.Executors
-
 import cats.effect.{IO, Resource}
 import cats.syntax.flatMap._
 import io.fmq.ContextSuite
@@ -15,16 +12,13 @@ import io.fmq.socket.reqrep.{Dealer, Reply, Request, Router}
 import io.fmq.syntax.literals._
 import weaver.Expectations
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
- * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
- * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
- */
-object ProxySuite extends ContextSuite {
-
-  private def singleThreadContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+  * Tests are using IO.sleep(200.millis) to fix 'slow-joiner' problem.
+  * More details: http://zguide.zeromq.org/page:all#Missing-Message-Problem-Solver
+  */
+object ProxySuite1 extends ContextSuite {
 
   test("proxy messages in bidirectional way") { ctx =>
     val frontendUri = inproc"://frontend"
@@ -54,10 +48,15 @@ object ProxySuite extends ContextSuite {
     (for {
       (front, back)    <- createProxySockets
       proxy            <- ctx.proxy.bidirectional(front, back)
-      _                <- proxy.start(singleThreadContext)
+      singleThreadEc   <- singleThreadExecutionContext
+      _                <- proxy.start(singleThreadEc)
       (client, server) <- createReqRepSockets
     } yield (client, server)).use((program _).tupled)
   }
+
+}
+
+object ProxySuite2 extends ContextSuite {
 
   test("proxy message in unidirectional way") { ctx =>
     val frontendUri = inproc"://frontend1"
@@ -83,9 +82,14 @@ object ProxySuite extends ContextSuite {
       push            <- Resource.suspend(ctx.createPush.map(_.connect(controlUri)))
       control         <- Resource.pure[IO, Control[IO]](Control.push(push))
       proxy           <- ctx.proxy.unidirectional(subscriberProxy, publisherProxy, Some(control))
-      _               <- proxy.start(singleThreadContext)
+      singleThreadEc  <- singleThreadExecutionContext
+      _               <- proxy.start(singleThreadEc)
     } yield (publisher, subscriber, pull)).use((program _).tupled)
   }
+
+}
+
+object ProxySuite3 extends ContextSuite {
 
   test("control socket observed messages") { ctx =>
     val frontendUri = inproc"://frontend2"
@@ -131,10 +135,15 @@ object ProxySuite extends ContextSuite {
       (pull, push)     <- createControlSockets
       control          <- Resource.pure[IO, Control[IO]](Control.push(push))
       proxy            <- ctx.proxy.bidirectional(front, back, Some(control), Some(control))
-      _                <- proxy.start(singleThreadContext)
+      singleThreadEc   <- singleThreadExecutionContext
+      _                <- proxy.start(singleThreadEc)
       (client, server) <- createReqRepSockets
     } yield (client, server, pull)).use((program _).tupled)
   }
+
+}
+
+object ProxySuite4 extends ContextSuite {
 
   test("separate control sockets observed messages") { ctx =>
     val frontendUri   = inproc"://frontend3"
@@ -188,10 +197,15 @@ object ProxySuite extends ContextSuite {
       controlIn          <- Resource.pure[IO, Control[IO]](Control.push(pushIn))
       controlOut         <- Resource.pure[IO, Control[IO]](Control.push(pushOut))
       proxy              <- ctx.proxy.bidirectional(front, back, Some(controlIn), Some(controlOut))
-      _                  <- proxy.start(singleThreadContext)
+      singleThreadEc     <- singleThreadExecutionContext
+      _                  <- proxy.start(singleThreadEc)
       (client, server)   <- createReqRepSockets
     } yield (client, server, pullIn, pullOut)).use((program _).tupled)
   }
+
+}
+
+object ProxySuite5 extends ContextSuite {
 
   test("start new proxy after termination") { ctx =>
     val frontendUri = inproc"://frontend4"
@@ -221,7 +235,9 @@ object ProxySuite extends ContextSuite {
       }
 
     def program(proxy: Proxy.Configured[IO]): IO[Expectations] =
-      proxy.start(singleThreadContext).use(_ => verifyProxy) >> proxy.start(singleThreadContext).use(_ => verifyProxy)
+      singleThreadExecutionContext.use { singleThreadEc =>
+        proxy.start(singleThreadEc).use(_ => verifyProxy) >> proxy.start(singleThreadEc).use(_ => verifyProxy)
+      }
 
     (for {
       (front, back) <- createProxySockets
@@ -230,4 +246,3 @@ object ProxySuite extends ContextSuite {
   }
 
 }
- */
