@@ -15,7 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: olafurpg/setup-scala@v11
-      - run: sbt ++2.13.5 docs/docusaurusCreateSite
+      - uses: coursier/cache-action@v5
+      - run: sbt ++2.13.6 docs/docusaurusCreateSite
 
   test:
     name: ${{ matrix.command }} ${{ matrix.java }}
@@ -25,22 +26,14 @@ jobs:
       matrix:
         java: ['adopt@1.8', 'adopt@1.11']
         command:
-          - "++2.13.5 ci"
+          - "++2.13.6 ci"
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: olafurpg/setup-scala@v11
         with:
           java-version: ${{ matrix.java }}
-      - name: Cache SBT coursier cache
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.cache/coursier/v1
-          key: sbt-coursier-cache
-      - name: Cache SBT
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.sbt
-          key: sbt-${{ hashFiles('**/build.sbt') }}
+      - name: Cache
+        uses: coursier/cache-action@v6
       - run: sbt ${{ matrix.command }}
       - uses: codecov/codecov-action@v1
         if: startsWith(matrix.command, '++2.13')

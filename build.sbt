@@ -68,6 +68,7 @@ lazy val commonSettings = Seq(
   scalaVersion                           := Versions.scala_213,
   crossScalaVersions                     := Seq(scalaVersion.value),
   Test / fork                            := true,
+  Test / parallelExecution               := false,
   Compile / compile / wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing), // false positive
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.0" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
