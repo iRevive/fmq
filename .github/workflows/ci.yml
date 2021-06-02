@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
-      - uses: olafurpg/setup-scala@v11
+      - uses: olafurpg/setup-scala@v12
       - run: sbt ++2.13.5 docs/docusaurusCreateSite
 
   test:
@@ -28,7 +28,7 @@ jobs:
           - "++2.13.5 ci"
     steps:
       - uses: actions/checkout@v2.3.4
-      - uses: olafurpg/setup-scala@v11
+      - uses: olafurpg/setup-scala@v12
         with:
           java-version: ${{ matrix.java }}
       - name: Cache SBT coursier cache
