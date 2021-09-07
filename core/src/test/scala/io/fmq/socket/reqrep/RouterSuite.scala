@@ -1,7 +1,6 @@
 package io.fmq.socket.reqrep
 
 import cats.effect.{IO, Resource}
-import cats.syntax.flatMap._
 import io.fmq.frame.Frame
 import io.fmq.options.{Identity, RouterHandover, RouterMandatory}
 import io.fmq.syntax.literals._
