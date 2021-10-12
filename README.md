@@ -1,7 +1,7 @@
 # ƒMQ
 [![Build Status](https://github.com/iRevive/fmq/workflows/CI/badge.svg)](https://github.com/iRevive/fmq/actions)
 [![codecov](https://codecov.io/gh/iRevive/fmq/branch/master/graph/badge.svg)](https://codecov.io/gh/iRevive/fmq)
-[![Maven Version](https://maven-badges.herokuapp.com/maven-central/io.github.irevive/fmq-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.irevive/fmq-core_2.13)
+[![fmq-core Scala version support](https://index.scala-lang.org/irevive/fmq/fmq-core/latest-by-scala-version.svg)](https://index.scala-lang.org/irevive/fmq/fmq-core)  
 
 Functional bindings for ZeroMQ built-in on top of [cats-effect](https://github.com/typelevel/cats-effect) and [JeroMQ](https://github.com/zeromq/jeromq).
 
