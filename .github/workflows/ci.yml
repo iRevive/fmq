@@ -13,7 +13,7 @@ jobs:
     name: Website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - uses: olafurpg/setup-scala@v13
       - run: sbt ++2.13.5 docs/docusaurusCreateSite
 
@@ -27,7 +27,7 @@ jobs:
         command:
           - "++2.13.5 ci"
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: ${{ matrix.java }}
