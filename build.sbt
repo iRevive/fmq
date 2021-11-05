@@ -116,9 +116,10 @@ lazy val pluginAbsolutePathSettings = Seq(Compile, Test).map { c =>
 
 inThisBuild(
   Seq(
-    organization := "io.github.irevive",
-    homepage     := Some(url("https://github.com/iRevive/fmq")),
-    licenses     := List("MIT" -> url("http://opensource.org/licenses/MIT")),
-    developers   := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive")))
+    organization  := "io.github.irevive",
+    homepage      := Some(url("https://github.com/iRevive/fmq")),
+    licenses      := List("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers    := List(Developer("iRevive", "Maksim Ochenashko", "", url("https://github.com/iRevive"))),
+    versionScheme := Some("semver-spec")
   )
 )
