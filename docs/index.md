@@ -3,7 +3,7 @@ id: index
 title: Getting started
 ---
 
-To use ƒMQ in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your `build.sbt`:
+To use ƒMQ in an existing SBT project with Scala 2.13 or a later version, add the following dependency to your `build.sbt`:
  
 ```scala
 libraryDependencies += "io.github.irevive" %% "fmq-core" % "@VERSION@"

@@ -7,7 +7,7 @@ Functional bindings for ZeroMQ built-in on top of [cats-effect](https://github.c
 
 ## Quick Start
 
-To use ƒMQ in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your `build.sbt`:
+To use ƒMQ in an existing SBT project with Scala 2.13 or a later version, add the following dependency to your `build.sbt`:
  
 ```scala
 libraryDependencies += "io.github.irevive" %% "fmq-core" % "<version>"
@@ -39,7 +39,7 @@ Check the [official guide](https://irevive.github.io/fmq/) for additional inform
 
 ## Benchmarks
 
-ƒMQ provides a great message throughput comparing to the native implementation.
+ƒMQ provides an acceptable message throughput in comparison to the native implementation.
 
 [ƒMQ](https://github.com/iRevive/fmq/blob/master/bench/src/main/scala/io/fmq/SocketBenchmark.scala) msgs/s:
 
