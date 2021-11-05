@@ -8,6 +8,9 @@ on:
     branches:
       - master
 
+env:
+  JABBA_INDEX: 'https://github.com/typelevel/jdk-index/raw/main/index.json'
+
 jobs:
   docs:
     name: Website
@@ -15,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: olafurpg/setup-scala@v13
-      - run: sbt ++2.13.5 docs/docusaurusCreateSite
+      - run: sbt ++2.13.7 docs/docusaurusCreateSite
 
   test:
     name: ${{ matrix.command }} ${{ matrix.java }}
@@ -23,25 +26,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['adopt@1.8', 'adopt@1.11']
+        java:
+          - adoptium@8
+          - adoptium@11
+          - adoptium@17
         command:
-          - "++2.13.5 ci"
+          - "++2.13.7 ci"
     steps:
       - uses: actions/checkout@v2.4.0
+
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: ${{ matrix.java }}
-      - name: Cache SBT coursier cache
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.cache/coursier/v1
-          key: sbt-coursier-cache
-      - name: Cache SBT
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.sbt
-          key: sbt-${{ hashFiles('**/build.sbt') }}
+
+      - name: Cache coursier
+        uses: coursier/cache-action@v6.3
+
       - run: sbt ${{ matrix.command }}
+
       - uses: codecov/codecov-action@v2.1.0
         if: startsWith(matrix.command, '++2.13')
         with:
