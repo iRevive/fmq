@@ -1,6 +1,11 @@
 name: Website manual
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -13,6 +18,7 @@ jobs:
       - run: sbt '++2.13.7 docs/docusaurusPublishGhpages'
         env:
           GIT_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
       - name: Check git diff
         if: ${{ failure() }}
         run: git diff

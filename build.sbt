@@ -58,9 +58,12 @@ lazy val docs = project
   .settings(
     name                := "fmq-docs",
     libraryDependencies += Dependencies.fs2,
-    mdocVariables := Map(
-      "VERSION" -> version.value.replaceFirst("\\+.*", "")
-    )
+    mdocVariables := {
+      val currentValue = version.value.replaceFirst("\\+.*", "")
+      Map(
+        "VERSION" -> sys.env.getOrElse("RELEASE_VERSION", currentValue)
+      )
+    }
   )
   .dependsOn(core, extras)
 
