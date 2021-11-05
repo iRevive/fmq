@@ -21,4 +21,4 @@ jobs:
       - name: Publish docs
         run: sbt ++2.13.7 docs/docusaurusPublishGhpages
         env:
-          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
+          GIT_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
