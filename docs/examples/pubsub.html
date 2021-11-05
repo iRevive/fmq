@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>PubSub · ƒMQ</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The example shows how to create one publisher and three subscribers with different subscription rules."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="PubSub · ƒMQ"/><meta property="og:type" content="website"/><meta property="og:url" content="https://irevive.github.io/fmq/index.html"/><meta property="og:description" content="The example shows how to create one publisher and three subscribers with different subscription rules."/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/fmq/undefined"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/fmq/js/scrollSpy.js"></script><link rel="stylesheet" href="/fmq/css/main.css"/><script src="/fmq/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/fmq/"><h2 class="headerTitle">ƒMQ</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="https://github.com/iRevive/fmq" target="_blank">GitHub</a></li><li class=""><a href="https://www.javadoc.io/doc/io.github.irevive/fmq-core_2.13/latest/index.html" target="_blank">Documentation</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Examples</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/index.html">Getting started</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/sockets-overview.html">Sockets overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/receiving-sending.html">Receiving and Sending</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/consuming-strategy.html">Consuming strategy</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Sockets</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/publisher.html">Publisher</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/subscriber.html">Subscriber</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Extras</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/overview.html">Overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/background-consumer.html">Background consumer</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/request-reply.html">Request Reply</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/fmq/docs/examples/pubsub.html">PubSub</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/poller.html">Poller</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/proxy.html">Proxy</a></li></ul></div></div></section></div><script>
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>PubSub · ƒMQ</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The example shows how to create one publisher and three subscribers with different subscription rules."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="PubSub · ƒMQ"/><meta property="og:type" content="website"/><meta property="og:url" content="https://irevive.github.io/fmq/index.html"/><meta property="og:description" content="The example shows how to create one publisher and three subscribers with different subscription rules."/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/fmq/undefined"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script src="/fmq/js/scrollSpy.js"></script><link rel="stylesheet" href="/fmq/css/main.css"/><script src="/fmq/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/fmq/"><h2 class="headerTitle">ƒMQ</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="https://github.com/iRevive/fmq" target="_blank">GitHub</a></li><li class=""><a href="https://www.javadoc.io/doc/io.github.irevive/fmq-core_2.13/latest/index.html" target="_blank">Documentation</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Examples</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/index.html">Getting started</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/sockets-overview.html">Sockets overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/receiving-sending.html">Receiving and Sending</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/concepts/consuming-strategy.html">Consuming strategy</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Sockets</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/publisher.html">Publisher</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/sockets/subscriber.html">Subscriber</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Extras</h3><ul class=""><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/overview.html">Overview</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/background-consumer.html">Background consumer</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/extras/request-reply.html">Request Reply</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/fmq/docs/examples/pubsub.html">PubSub</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/poller.html">Poller</a></li><li class="navListItem"><a class="navItem" href="/fmq/docs/examples/proxy.html">Proxy</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
             for (var i = 0; i < coll.length; i++) {
@@ -56,8 +56,7 @@
             });
         </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">PubSub</h1></header><article><div><span><p>The example shows how to create one publisher and three subscribers with different subscription rules.</p>
 <p>First of all, let's introduce a <code>Producer</code> that sends messages with a specific topic:</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.<span class="hljs-type">FlatMap</span>
-<span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">Timer</span>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">Async</span>
 <span class="hljs-keyword">import</span> cats.syntax.flatMap._
 <span class="hljs-keyword">import</span> cats.syntax.functor._
 <span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
@@ -66,10 +65,10 @@
 
 <span class="hljs-keyword">import</span> scala.concurrent.duration._
 
-<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Producer</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">FlatMap</span>: <span class="hljs-type">Timer</span>](publisher: <span class="hljs-type">Publisher</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], topicA: <span class="hljs-type">String</span>, topicB: <span class="hljs-type">String</span>) {
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Producer</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Async</span>](publisher: <span class="hljs-type">Publisher</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], topicA: <span class="hljs-type">String</span>, topicB: <span class="hljs-type">String</span>) {
 
   <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">generate</span></span>: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Unit</span>] =
-    <span class="hljs-type">Stream</span>.repeatEval(sendA &gt;&gt; sendB &gt;&gt; <span class="hljs-type">Timer</span>[<span class="hljs-type">F</span>].sleep(<span class="hljs-number">2000.</span>millis))
+    <span class="hljs-type">Stream</span>.repeatEval(sendA &gt;&gt; sendB &gt;&gt; <span class="hljs-type">Async</span>[<span class="hljs-type">F</span>].sleep(<span class="hljs-number">2000.</span>millis))
 
   <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">sendA</span></span>: <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] =
     publisher.sendFrame(<span class="hljs-type">Frame</span>.<span class="hljs-type">Multipart</span>(topicA, <span class="hljs-string">"We don't want to see this"</span>))
@@ -80,36 +79,40 @@
 }
 </code></pre>
 <p>Then let's implement a consumer logic:</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">Concurrent</span>, <span class="hljs-type">ContextShift</span>}
-<span class="hljs-keyword">import</span> cats.effect.syntax.concurrent._
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">Async</span>
+<span class="hljs-keyword">import</span> cats.effect.syntax.async._
+<span class="hljs-keyword">import</span> cats.effect.std.<span class="hljs-type">Queue</span>
 <span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
-<span class="hljs-keyword">import</span> fs2.concurrent.<span class="hljs-type">Queue</span>
 <span class="hljs-keyword">import</span> io.fmq.frame.<span class="hljs-type">Frame</span>
 <span class="hljs-keyword">import</span> io.fmq.socket.pubsub.<span class="hljs-type">Subscriber</span>
 
-<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Consumer</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>](socket: <span class="hljs-type">Subscriber</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Consumer</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Async</span>](socket: <span class="hljs-type">Subscriber</span>.<span class="hljs-type">Socket</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">ExecutionContext</span>) {
 
   <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">consume</span></span>: <span class="hljs-type">Stream</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]] = {
     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">process</span></span>(queue: <span class="hljs-type">Queue</span>[<span class="hljs-type">F</span>, <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]]) =
-      blocker.blockOn(<span class="hljs-type">Stream</span>.repeatEval(socket.receiveFrame[<span class="hljs-type">String</span>]).through(queue.enqueue).compile.drain)
+      <span class="hljs-type">Stream</span>.repeatEval(socket.receiveFrame[<span class="hljs-type">String</span>]).evalMap(queue.offer).compile.drain
 
     <span class="hljs-keyword">for</span> {
       queue  &lt;- <span class="hljs-type">Stream</span>.eval(<span class="hljs-type">Queue</span>.unbounded[<span class="hljs-type">F</span>, <span class="hljs-type">Frame</span>[<span class="hljs-type">String</span>]])
-      _      &lt;- <span class="hljs-type">Stream</span>.resource(process(queue).background)
-      result &lt;- queue.dequeue
+      _      &lt;- <span class="hljs-type">Stream</span>.resource(process(queue).backgroundOn(blocker))
+      result &lt;- <span class="hljs-type">Stream</span>.repeatEval(queue.take)
     } <span class="hljs-keyword">yield</span> result
   }
 
 }
 </code></pre>
 <p>And the demo program that evaluates producer and subscribers in parallel:</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Concurrent</span>, <span class="hljs-type">ContextShift</span>, <span class="hljs-type">Resource</span>, <span class="hljs-type">Sync</span>, <span class="hljs-type">Timer</span>}
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Resource</span>, <span class="hljs-type">Sync</span>}
 <span class="hljs-keyword">import</span> fs2.<span class="hljs-type">Stream</span>
 <span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
 <span class="hljs-keyword">import</span> io.fmq.socket.pubsub.<span class="hljs-type">Subscriber</span>
 <span class="hljs-keyword">import</span> io.fmq.syntax.literals._
 
-<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Demo</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Concurrent</span>: <span class="hljs-type">ContextShift</span>: <span class="hljs-type">Timer</span>](context: <span class="hljs-type">Context</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">Blocker</span>) {
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Demo</span>[<span class="hljs-type">F</span>[_]</span>: <span class="hljs-type">Async</span>](context: <span class="hljs-type">Context</span>[<span class="hljs-type">F</span>], blocker: <span class="hljs-type">ExecutionContext</span>) {
 
   <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">log</span></span>(message: <span class="hljs-type">String</span>): <span class="hljs-type">F</span>[<span class="hljs-type">Unit</span>] = <span class="hljs-type">Sync</span>[<span class="hljs-type">F</span>].delay(println(message))
 
@@ -146,18 +149,26 @@
 
 }
 </code></pre>
-<p>At the edge of out program we define our effect, <code>cats.effect.IO</code> in this case, and ask to evaluate the effects:</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">Blocker</span>, <span class="hljs-type">ExitCode</span>, <span class="hljs-type">IO</span>, <span class="hljs-type">IOApp</span>}
+<p>At the edge of our program we define our effect, <code>cats.effect.IO</code> in this case, and ask to evaluate the effects:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> java.util.concurrent.<span class="hljs-type">Executors</span>
+
+<span class="hljs-keyword">import</span> cats.effect.{<span class="hljs-type">IO</span>, <span class="hljs-type">IOApp</span>}
 <span class="hljs-keyword">import</span> cats.syntax.functor._
 <span class="hljs-keyword">import</span> io.fmq.<span class="hljs-type">Context</span>
 
-<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">PubSub</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">IOApp</span> </span>{
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
 
- <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span></span>(args: <span class="hljs-type">List</span>[<span class="hljs-type">String</span>]): <span class="hljs-type">IO</span>[<span class="hljs-type">ExitCode</span>] =
-   <span class="hljs-type">Blocker</span>[<span class="hljs-type">IO</span>]
-     .flatMap(blocker =&gt; <span class="hljs-type">Context</span>.create[<span class="hljs-type">IO</span>](ioThreads = <span class="hljs-number">1</span>, blocker).tupleRight(blocker))
-     .use { <span class="hljs-keyword">case</span> (ctx, blocker) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-type">Demo</span>[<span class="hljs-type">IO</span>](ctx, blocker).program.compile.drain.as(<span class="hljs-type">ExitCode</span>.<span class="hljs-type">Success</span>) }
+<span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">PubSub</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">IOApp</span>.<span class="hljs-title">Simple</span> </span>{
 
+ <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span></span>: <span class="hljs-type">IO</span>[<span class="hljs-type">Unit</span>] =
+   blockingContext
+     .flatMap(blocker =&gt; <span class="hljs-type">Context</span>.create[<span class="hljs-type">IO</span>](ioThreads = <span class="hljs-number">1</span>).tupleRight(blocker))
+     .use { <span class="hljs-keyword">case</span> (ctx, blocker) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-type">Demo</span>[<span class="hljs-type">IO</span>](ctx, blocker).program.compile.drain }
+
+ <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">blockingContext</span></span>: <span class="hljs-type">Resource</span>[<span class="hljs-type">IO</span>, <span class="hljs-type">ExecutionContext</span>] =
+   <span class="hljs-type">Resource</span>
+     .make(<span class="hljs-type">IO</span>.delay(<span class="hljs-type">Executors</span>.newCachedThreadPool()))(e =&gt; <span class="hljs-type">IO</span>.delay(e.shutdown()))
+     .map(<span class="hljs-type">ExecutionContext</span>.fromExecutor)
 }
 </code></pre>
 <p>The output will be:</p>
@@ -166,4 +177,4 @@ ConsumerAll. Received Multipart(my-topic-a, NonEmptyList(We don't want to see th
 ConsumerA. Received Multipart(my-topic-a, NonEmptyList(We don't want to see this))
 ConsumerAll. Received Multipart(my-topic-b, NonEmptyList(We would like to see this))
 </code></pre>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/fmq/docs/extras/request-reply.html"><span class="arrow-prev">← </span><span>Request Reply</span></a><a class="docs-next button" href="/fmq/docs/examples/poller.html"><span>Poller</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer" style="background-color:#20232a"><section class="sitemap"><div><h5>Docs</h5><a href="/fmq/docs/index.html">Getting started</a></div><div><h5>More</h5><a href="https://github.com/iRevive/fmq" target="_blank">Repository</a></div></section><section class="copyright">Copyright © 2020 irevive.github.io</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/fmq/docs/extras/request-reply.html"><span class="arrow-prev">← </span><span>Request Reply</span></a><a class="docs-next button" href="/fmq/docs/examples/poller.html"><span>Poller</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer" style="background-color:#20232a"><section class="sitemap"><div><h5>Docs</h5><a href="/fmq/docs/index.html">Getting started</a></div><div><h5>More</h5><a href="https://github.com/iRevive/fmq" target="_blank">Repository</a></div></section><section class="copyright">Copyright © 2021 irevive.github.io</section></footer></div></body></html>
