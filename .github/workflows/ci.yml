@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: olafurpg/setup-scala@v13
+        with:
+          java-version: adoptium@11
       - run: sbt ++2.13.7 docs/docusaurusCreateSite
 
   test:
