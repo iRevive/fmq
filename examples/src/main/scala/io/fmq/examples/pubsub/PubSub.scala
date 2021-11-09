@@ -52,19 +52,18 @@ class PubSubDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
   val program: Stream[F, Unit] =
     Stream
       .resource(appResource)
-      .flatMap {
-        case (publisher, subscriberA, subscriberB, subscriberAll) =>
-          val producer    = new Producer[F](publisher, topicA, topicB)
-          val consumerA   = new Consumer[F](subscriberA, blocker)
-          val consumerB   = new Consumer[F](subscriberB, blocker)
-          val consumerAll = new Consumer[F](subscriberAll, blocker)
+      .flatMap { case (publisher, subscriberA, subscriberB, subscriberAll) =>
+        val producer    = new Producer[F](publisher, topicA, topicB)
+        val consumerA   = new Consumer[F](subscriberA, blocker)
+        val consumerB   = new Consumer[F](subscriberB, blocker)
+        val consumerAll = new Consumer[F](subscriberAll, blocker)
 
-          Stream(
-            producer.generate,
-            consumerA.consume.evalMap(frame => log(s"ConsumerA. Received $frame")),
-            consumerB.consume.evalMap(frame => log(s"ConsumerB. Received $frame")),
-            consumerAll.consume.evalMap(frame => log(s"ConsumerAll. Received $frame"))
-          ).parJoin(4)
+        Stream(
+          producer.generate,
+          consumerA.consume.evalMap(frame => log(s"ConsumerA. Received $frame")),
+          consumerB.consume.evalMap(frame => log(s"ConsumerB. Received $frame")),
+          consumerAll.consume.evalMap(frame => log(s"ConsumerAll. Received $frame"))
+        ).parJoin(4)
       }
 
 }
