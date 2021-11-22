@@ -54,36 +54,35 @@ class PollerDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
   val program: Stream[F, Unit] =
     Stream
       .resource(appResource)
-      .flatMap {
-        case (publisher, subscriberA, subscriberB, subscriberAll, poller) =>
-          val producer = new Producer[F](publisher, topicA, topicB)
+      .flatMap { case (publisher, subscriberA, subscriberB, subscriberAll, poller) =>
+        val producer = new Producer[F](publisher, topicA, topicB)
 
-          def handler(queue: Queue[F, String]): ConsumerHandler[F] =
-            Kleisli(socket => socket.receive[String] >>= queue.offer)
+        def handler(queue: Queue[F, String]): ConsumerHandler[F] =
+          Kleisli(socket => socket.receive[String] >>= queue.offer)
 
-          // evaluates poll on a blocking context
-          def poll(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] = {
-            val items = NonEmptyList.of(
-              PollEntry.Read(subscriberA, handler(queueA)),
-              PollEntry.Read(subscriberB, handler(queueB)),
-              PollEntry.Read(subscriberAll, handler(queueAll))
-            )
+        // evaluates poll on a blocking context
+        def poll(queueA: Queue[F, String], queueB: Queue[F, String], queueAll: Queue[F, String]): F[Unit] = {
+          val items = NonEmptyList.of(
+            PollEntry.Read(subscriberA, handler(queueA)),
+            PollEntry.Read(subscriberB, handler(queueB)),
+            PollEntry.Read(subscriberAll, handler(queueAll))
+          )
 
-            poller.poll(items, PollTimeout.Infinity).foreverM[Unit].evalOn(blocker)
-          }
+          poller.poll(items, PollTimeout.Infinity).foreverM[Unit].evalOn(blocker)
+        }
 
-          for {
-            queueA   <- Stream.eval(Queue.unbounded[F, String])
-            queueB   <- Stream.eval(Queue.unbounded[F, String])
-            queueAll <- Stream.eval(Queue.unbounded[F, String])
-            _ <- Stream(
-              producer.generate,
-              Stream.eval(poll(queueA, queueB, queueAll)),
-              Stream.repeatEval(queueA.take).evalMap(frame => log(s"ConsumerA. Received $frame")),
-              Stream.repeatEval(queueB.take).evalMap(frame => log(s"ConsumerB. Received $frame")),
-              Stream.repeatEval(queueAll.take).evalMap(frame => log(s"ConsumerAll. Received $frame"))
-            ).parJoinUnbounded
-          } yield ()
+        for {
+          queueA   <- Stream.eval(Queue.unbounded[F, String])
+          queueB   <- Stream.eval(Queue.unbounded[F, String])
+          queueAll <- Stream.eval(Queue.unbounded[F, String])
+          _ <- Stream(
+            producer.generate,
+            Stream.eval(poll(queueA, queueB, queueAll)),
+            Stream.repeatEval(queueA.take).evalMap(frame => log(s"ConsumerA. Received $frame")),
+            Stream.repeatEval(queueB.take).evalMap(frame => log(s"ConsumerB. Received $frame")),
+            Stream.repeatEval(queueAll.take).evalMap(frame => log(s"ConsumerAll. Received $frame"))
+          ).parJoinUnbounded
+        } yield ()
       }
 
 }

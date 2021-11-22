@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 object ProxyApp extends IOApp.Simple {
 
   override def run: IO[Unit] =
-   blockingContext
+    blockingContext
       .flatMap(blocker => Context.create[IO](ioThreads = 1).tupleRight(blocker))
       .use { case (ctx, blocker) => new ProxyDemo[IO](ctx, blocker).program.compile.drain }
 
@@ -114,9 +114,8 @@ class Client[F[_]: Async](dispatcher: RequestReply[F]) {
     Stream
       .awakeEvery[F](1.second)
       .zipWithIndex
-      .evalMap {
-        case (_, idx) =>
-          log(s"Client. Sending request [$idx]") >> dispatcher.submit[String, String](Frame.Single(idx.toString))
+      .evalMap { case (_, idx) =>
+        log(s"Client. Sending request [$idx]") >> dispatcher.submit[String, String](Frame.Single(idx.toString))
       }
       .evalMap(response => log(s"Client. Received response $response"))
 
