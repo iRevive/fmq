@@ -79,9 +79,8 @@ object SocketBenchmark {
   class MessagesCounter {
 
     @Setup(Level.Iteration)
-    def clean(): Unit = {
+    def clean(): Unit =
       messagesCounter = new AtomicLong
-    }
 
     def messagesPerSecond: Long = messagesCounter.get
   }

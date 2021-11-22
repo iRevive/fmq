@@ -53,9 +53,8 @@ class JeroMQSocketBenchmark {
 
     publisher = IO
       .interruptible(false) {
-        while (true) {
+        while (true)
           push.send(msg.data())
-        }
       }
       .start
       .unsafeRunSync()

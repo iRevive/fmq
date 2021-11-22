@@ -45,12 +45,11 @@ class ReqRepDemo[F[_]: Async](context: Context[F], blocker: ExecutionContext) {
   val program: Stream[F, Unit] =
     Stream
       .resource(appResource)
-      .flatMap {
-        case (replySocket, dispatcher) =>
-          val server = new Server(replySocket, blocker)
-          val client = new Client(dispatcher)
+      .flatMap { case (replySocket, dispatcher) =>
+        val server = new Server(replySocket, blocker)
+        val client = new Client(dispatcher)
 
-          Stream(server.serve, client.start).parJoinUnbounded
+        Stream(server.serve, client.start).parJoinUnbounded
       }
 
 }
@@ -90,9 +89,8 @@ class Client[F[_]: Async](dispatcher: RequestReply[F]) {
     Stream
       .awakeEvery[F](1.second)
       .zipWithIndex
-      .evalMap {
-        case (_, idx) =>
-          log(s"Client. Sending request [$idx]") >> dispatcher.submit[String, String](Frame.Single(idx.toString))
+      .evalMap { case (_, idx) =>
+        log(s"Client. Sending request [$idx]") >> dispatcher.submit[String, String](Frame.Single(idx.toString))
       }
       .evalMap(response => log(s"Client. Received response $response"))
 
