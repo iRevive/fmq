@@ -8,19 +8,17 @@ on:
     branches:
       - master
 
-env:
-  JABBA_INDEX: 'https://github.com/typelevel/jdk-index/raw/main/index.json'
-
 jobs:
   docs:
     name: Website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: olafurpg/setup-scala@v13
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
         with:
-          java-version: adoptium@11
-      - run: sbt ++2.13.7 docs/docusaurusCreateSite
+          distribution: temurin
+          java-version: 11
+      - run: sbt ++2.13.8 docs/docusaurusCreateSite
 
   test:
     name: ${{ matrix.command }} ${{ matrix.java }}
@@ -29,24 +27,25 @@ jobs:
       fail-fast: false
       matrix:
         java:
-          - adoptium@8
-          - adoptium@11
-          - adoptium@17
+          - 8
+          - 11
+          - 17
         command:
-          - "++2.13.7 ci"
+          - "++2.13.8 ci"
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v2
 
-      - uses: olafurpg/setup-scala@v13
+      - uses: actions/setup-java@v2
         with:
+          distribution: temurin
           java-version: ${{ matrix.java }}
 
       - name: Cache coursier
-        uses: coursier/cache-action@v6.3
+        uses: coursier/cache-action@v6
 
       - run: sbt ${{ matrix.command }}
 
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v2
         if: startsWith(matrix.command, '++2.13')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
