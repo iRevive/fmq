@@ -104,7 +104,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
 
   private def readyKeys(waitMillis: Long): Int = {
 
-    @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.AsInstanceOf"))
+    @SuppressWarnings(Array("org.wartremover.warts.IterableOps", "org.wartremover.warts.AsInstanceOf"))
     @scala.annotation.tailrec
     def loop(keys: Set[SelectionKey], counter: Int, rc: Int): Int =
       if (keys.nonEmpty) {
