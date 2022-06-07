@@ -57,7 +57,7 @@ trait ConsumerSocket[F[_]] extends ConnectedSocket with SocketOptions[F] with Co
     * }}}
     */
   def receive[A: FrameDecoder]: F[A] =
-    F.interruptible(many = true)(FrameDecoder[A].decode(socket.recv()))
+    F.interruptibleMany(FrameDecoder[A].decode(socket.recv()))
 
   /**
     * Low-level API.
