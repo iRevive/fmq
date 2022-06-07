@@ -50,7 +50,7 @@ final class Poller[F[_]: Sync] private (private[fmq] val selector: Selector) {
           if (diff === 0L) 1L else diff
         }
 
-      Sync[F].interruptible(many = false)(readyKeys(waitMillis)).flatMap {
+      Sync[F].interruptible(readyKeys(waitMillis)).flatMap {
         case nevents if nevents > 0 =>
           Sync[F].pure(Right(nevents))
 
