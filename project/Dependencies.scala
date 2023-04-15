@@ -5,7 +5,7 @@ object Versions {
   val catsEffect = "3.4.4"
   val fs2        = "3.4.0"
   val jeromq     = "0.5.3"
-  val weaver     = "0.8.1"
+  val weaver     = "0.8.3"
   val bm4        = "0.3.1"
 }
 
