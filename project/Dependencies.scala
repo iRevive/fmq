@@ -2,7 +2,7 @@ import sbt._
 
 object Versions {
   val scala_213  = "2.13.8"
-  val catsEffect = "3.4.4"
+  val catsEffect = "3.4.9"
   val fs2        = "3.4.0"
   val jeromq     = "0.5.3"
   val weaver     = "0.8.1"
